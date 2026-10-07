@@ -519,7 +519,157 @@ Changelog v0.1:
       { id: 'D-ADM-02-02', tipo: 'verdadeiro_falso', subtopico: 'Controle', pergunta: 'O controle é etapa estanque, aplicada apenas ao final do processo administrativo.', alternativas: [{ id: 'V', texto: 'Verdadeiro' }, { id: 'F', texto: 'Falso' }], gabarito: 'F', explicacao: 'Falso. O controle é contínuo e retroalimenta o planejamento.' },
       { id: 'D-ADM-02-03', tipo: 'situacao', subtopico: 'Direção', pergunta: 'O gerente reúne a equipe, delega responsabilidades, orienta servidores e mantém o grupo motivado. Qual função?', alternativas: [{ id: 'A', texto: 'Planejamento.' }, { id: 'B', texto: 'Organização.' }, { id: 'C', texto: 'Direção.' }, { id: 'D', texto: 'Controle.' }], gabarito: 'C', explicacao: 'Liderar, motivar, comunicar é DIREÇÃO.' },
       { id: 'D-ADM-02-04', tipo: 'autoavaliacao', subtopico: 'Integração das funções', pergunta: 'Você sabe diferenciar PODC de PDCA?', resposta: 'PODC: Planejamento, Organização, Direção e Controle. PDCA: Plan, Do, Check, Act.' },
-      { id: 'D-ADM-02-05', tipo: 'multipla_escolha', subtopico: 'Organização', pergunta: 'Sobre a função de organização:', alternativas: [{ id: 'A', texto: 'Define objetivos de longo prazo.' }, { id: 'B', texto: 'Estrutura recursos, define autoridade, responsabilidade e departamentalização.' }, { id: 'C', texto: 'Mede desempenho e corrige desvios.' }, { id: 'D', texto: 'Lida exclusivamente com motivação.' }], gabarito: 'B', explicacao: 'Organização é estrutural: define órgãos, cargos, hierarquia, autoridade, responsabilidade.' }
+      { id: 'D-ADM-02-05', tipo: 'multipla_escolha', subtopico: 'Organização', pergunta: 'Sobre a função de organização:', alternativas: [{ id: 'A', texto: 'Define objetivos de longo prazo.' }, { id: 'B', texto: 'Estrutura recursos, define autoridade, responsabilidade e departamentalização.' }, { id: 'C', texto: 'Mede desempenho e corrige desvios.' }, { id: 'D', texto: 'Lida exclusivamente com motivação.' }], gabarito: 'B', explicacao: 'Organização é estrutural: define órgãos, cargos, hierarquia, autoridade, responsabilidade.' },
+    'ADM-03': {
+      id: 'L-ADM-03',
+      moduloId: 'ADM-03',
+      objetivo: 'Compreender o conceito de planejamento, distinguir os três níveis (estratégico, tático e operacional), diferenciar objetivos de metas e reconhecer os instrumentos básicos do planejamento. Base para entender PPA, LDO e LOA na Administração Pública.',
+      prerequisitos: ['ADM-02'],
+      introducao: 'Planejamento é decidir antecipadamente o que fazer, como fazer, quando fazer e com quais recursos. É a primeira função do ciclo PODC. Sem planejamento, a organização reage ao acaso; com planejamento, antecipa problemas e direciona esforços.',
+      explicacaoSimples: 'Planejar é como preparar uma viagem: você escolhe o destino (objetivo), vê quanto dinheiro tem (recursos), traça o roteiro (estratégia) e define o que fazer em cada dia (metas). No setor público é a mesma coisa — só que o "destino" é o interesse público.',
+      explicacaoTecnica: 'Planejamento é o processo de definir objetivos, analisar o ambiente interno e externo, formular alternativas e escolher cursos de ação. Divide-se em três níveis: ESTRATÉGICO (institucional, longo prazo, alta direção, missão/visão/valores), TÁTICO (gerencial, médio prazo, por área ou departamento) e OPERACIONAL (execução, curto prazo, tarefas do dia a dia). Ferramentas clássicas: análise SWOT (Forças, Fraquezas, Oportunidades, Ameaças), objetivos SMART, planos, programas e projetos.',
+      exemplos: [
+        'Planejamento estratégico: a Prefeitura define a meta de reduzir em 30% o analfabetismo no município em 4 anos.',
+        'Planejamento tático: a Secretaria de Educação desdobra essa meta por escola e por ano.',
+        'Planejamento operacional: cada diretor define ações mensais de reforço escolar.',
+        'Análise SWOT: o órgão avalia forças internas (equipe capacitada), fraquezas (orçamento limitado), oportunidades (parceria com ONGs) e ameaças (corte de repasses).'
+      ],
+      comparacoes: [
+        { termoA: 'Objetivo', termoB: 'Meta', diferenca: 'Objetivo é a intenção genérica e qualitativa (reduzir a evasão escolar). Meta é o objetivo quantificado, com prazo e valor (reduzir a evasão em 15% até dezembro de 2026). Objetivo aponta o norte; meta mede o resultado.' },
+        { termoA: 'Planejamento estratégico', termoB: 'Planejamento operacional', diferenca: 'Estratégico: longo prazo, alta direção, toda a organização, define missão/visão. Operacional: curto prazo, execução, tarefas do dia a dia. O tático faz a ponte entre eles.' },
+        { termoA: 'Planejamento', termoB: 'Previsão', diferenca: 'Prever é estimar o futuro (o que pode acontecer). Planejar é decidir o que fazer diante desse futuro (ação). Planejamento engloba a previsão, mas vai além: define cursos de ação.' }
+      ],
+      aplicacaoAdministracaoPublica: 'Na Administração Pública o planejamento é obrigatório por lei. O PPA (Plano Plurianual) é o planejamento estratégico de 4 anos; a LDO (Lei de Diretrizes Orçamentárias) é o planejamento tático anual; a LOA (Lei Orçamentária Anual) é o planejamento operacional. O art. 174 da CF/88 traz o planejamento como determinante para o setor público. A Lei de Responsabilidade Fiscal (LC 101/2000) exige planejamento fiscal em todos os entes.',
+      pegadinhas: [
+        'Inverter estratégico com operacional. Bancas adoram dizer que "o planejamento operacional define missão e visão" — está errado. Missão e visão são do ESTRATÉGICO.',
+        'Achar que objetivo e meta são sinônimos. Objetivo é amplo; meta é quantificada.',
+        'Dizer que o planejamento é exclusivo do setor privado. Na Administração Pública é obrigatório (PPA, LDO, LOA).',
+        'Confundir SWOT com PDCA. SWOT é ferramenta de análise do planejamento estratégico; PDCA é ciclo de melhoria contínua da qualidade.'
+      ],
+      errosComuns: [
+        'Decorar os três níveis sem saber identificar em exemplos práticos.',
+        'Confundir planejamento com execução (executar é a fase seguinte).',
+        'Ignorar que no serviço público o planejamento decorre de lei, não é opcional.'
+      ],
+      resumo: [
+        'Planejamento é a primeira função administrativa: define o que, como, quando e com quais recursos.',
+        'Três níveis: estratégico (longo prazo, alta direção), tático (médio prazo, gerência) e operacional (curto prazo, execução).',
+        'Objetivo é qualitativo; meta é quantificada, com prazo e valor.',
+        'Ferramentas: análise SWOT, objetivos SMART, planos, programas e projetos.',
+        'Na Administração Pública: PPA (estratégico), LDO (tático), LOA (operacional).'
+      ],
+      modoProfessor: {
+        explicarMaisSimples: 'Planejar é decidir antes de agir. Pense num jogo de futebol: o técnico define a meta (vencer o campeonato), o esquema de jogo (estratégia) e o que cada jogador faz em campo (execução). Sem plano, é chute pra todo lado.',
+        outroExemplo: 'Um hospital público precisa reduzir filas. Planejamento estratégico: definir a meta geral para 3 anos. Tático: distribuir metas entre setores. Operacional: escalas, plantões e ações diárias. Controle: medir o tempo de espera e ajustar.',
+        compararConceitos: 'Previsão estima o futuro. Planejamento decide o que fazer nele. Estratégico olha longe. Tático olha o meio. Operacional olha o chão. Objetivo é o norte. Meta é o marco com régua.',
+        mostrarPegadinha: 'Cuidado: "O planejamento operacional define a missão da organização". ERRADO. Missão é do nível ESTRATÉGICO. Outra pegadinha: "planejamento é facultativo na Administração Pública" — é OBRIGATÓRIO (PPA, LDO, LOA).',
+        comoApareceEmConcurso: 'Cai em duas formas: (1) correspondência entre exemplo e nível de planejamento; (2) diferença entre objetivo e meta. Também aparece em prova de Direito Financeiro, ligado ao PPA/LDO/LOA.',
+        fazerPergunta: {
+          pergunta: 'Uma Secretaria define que, em 3 anos, reduzirá em 25% o tempo médio de espera por consultas, e para isso distribui metas anuais entre postos de saúde. Qual nível de planejamento está sendo exercido?',
+          resposta: 'O objetivo geral (25% em 3 anos) é do nível ESTRATÉGICO. A distribuição das metas entre postos de saúde é do nível TÁTICO. Se cada posto definir ações diárias, passa a ser OPERACIONAL.'
+        }
+      }
+    },
+    'ADM-04': {
+      id: 'L-ADM-04',
+      moduloId: 'ADM-04',
+      objetivo: 'Compreender a função Organização: estrutura organizacional, divisão do trabalho, hierarquia, autoridade, responsabilidade, amplitude de controle, centralização/descentralização e tipos de departamentalização.',
+      prerequisitos: ['ADM-02'],
+      introducao: 'Organizar é arrumar os recursos da empresa para que o planejamento possa ser executado. Sem estrutura clara, cada um faz o que quer. É a segunda função do PODC.',
+      explicacaoSimples: 'Organizar é montar o time. Você já decidiu o objetivo (planejamento). Agora precisa dizer: quem faz o quê? quem manda em quem? quantas pessoas cada chefe coordena? como dividir as áreas (vendas, produção, finanças)? Isso é organizar.',
+      explicacaoTecnica: 'Organização é a função administrativa que estrutura recursos, define autoridade, responsabilidade e canais de comunicação. Componentes principais: (1) divisão do trabalho — separar tarefas em atividades especializadas; (2) hierarquia — cadeia de comando do topo à base; (3) autoridade — direito de dar ordens e cobrar execução; (4) responsabilidade — dever de cumprir e prestar contas; (5) amplitude de controle (ou de comando) — número de subordinados por chefe; (6) centralização x descentralização — onde fica o poder de decisão; (7) departamentalização — agrupamento de atividades (funcional, por produtos, geográfica, por clientes, por processos, matricial).',
+      exemplos: [
+        'Divisão do trabalho: em uma prefeitura, um setor cuida de compras, outro de licitações, outro de contratos.',
+        'Hierarquia: secretário → diretor → coordenador → assistente.',
+        'Amplitude de controle: um supervisor com 15 subordinados diretos tem amplitude maior que um com 4.',
+        'Departamentalização funcional: secretarias por especialidade (Saúde, Educação, Obras).'
+      ],
+      comparacoes: [
+        { termoA: 'Autoridade', termoB: 'Responsabilidade', diferenca: 'Autoridade é o direito de mandar. Responsabilidade é o dever de responder pelos resultados. A autoridade pode ser delegada; a responsabilidade, em regra, NÃO (o chefe continua responsável pelo que o subordinado faz).' },
+        { termoA: 'Centralização', termoB: 'Descentralização', diferenca: 'Centralização: decisões concentradas no topo da hierarquia. Descentralização: decisões delegadas a níveis inferiores ou a unidades locais. A descentralização tende a dar mais agilidade, mas exige controle.' },
+        { termoA: 'Amplitude estreita', termoB: 'Amplitude larga', diferenca: 'Estreita: cada chefe tem poucos subordinados → mais níveis hierárquicos → comunicação mais lenta, controle mais fácil. Larga: cada chefe tem muitos subordinados → menos níveis → comunicação mais rápida, exige subordinados mais autônomos.' }
+      ],
+      aplicacaoAdministracaoPublica: 'Toda estrutura do Estado é uma grande organização: ministérios, secretarias, autarquias, fundações. A divisão do trabalho aparece nos cargos e funções criados por lei. A hierarquia aparece nas carreiras e no poder hierárquico. A departamentalização é o que define as secretarias por área. A descentralização administrativa (criação de autarquias, empresas públicas etc.) é uma forma de organizar o Estado.',
+      pegadinhas: [
+        'Dizer que responsabilidade pode ser delegada como a autoridade. A responsabilidade NÃO se delega integralmente: quem delega continua responsável perante seus superiores.',
+        'Confundir amplitude estreita com menos níveis. É o contrário: amplitude ESTREITA gera MAIS níveis hierárquicos.',
+        'Achar que centralização é sempre ruim. Depende do contexto: decisões estratégicas podem exigir centralização.',
+        'Trocar departamentalização funcional (por áreas: Saúde, Educação) com geográfica (por região: zona Norte, zona Sul).'
+      ],
+      errosComuns: [
+        'Decorar tipos de departamentalização sem saber identificar em exemplos.',
+        'Confundir hierarquia (estrutura de níveis) com disciplina (obediência a normas).',
+        'Ignorar que a departamentalização pode ser mista — várias formas ao mesmo tempo na mesma organização.'
+      ],
+      resumo: [
+        'Organização é a função que estrutura recursos, autoridade e responsabilidade.',
+        'Divisão do trabalho: especialização por tarefas.',
+        'Hierarquia: cadeia de comando. Autoridade: direito de mandar. Responsabilidade: dever de responder.',
+        'Amplitude: número de subordinados por chefe. Estreita → mais níveis; larga → menos níveis.',
+        'Centralização x descentralização: onde fica o poder de decisão.',
+        'Departamentalização: funcional, por produtos, geográfica, por clientes, por processos, matricial.'
+      ],
+      modoProfessor: {
+        explicarMaisSimples: 'Organizar é montar o organograma. Quem responde a quem, quem cuida do quê, quantas pessoas cada chefe coordena. É como a hierarquia de um time: técnico, capitão, jogadores.',
+        outroExemplo: 'Um hospital público: diretor-geral (topo), diretores por área (clínica, administrativa, enfermagem), coordenadores por setor, equipes. Cada nível tem autoridade e responsabilidade definidas.',
+        compararConceitos: 'Autoridade = direito de mandar. Responsabilidade = dever de responder. Hierarquia = níveis de comando. Amplitude = quantos subordinados por chefe. Departamentalização = como agrupar áreas.',
+        mostrarPegadinha: 'Cuidado: "A responsabilidade pode ser integralmente delegada, como a autoridade". ERRADO. A autoridade se delega; a responsabilidade permanece com quem delegou.',
+        comoApareceEmConcurso: 'Cobrado com exemplos práticos: "determinada prefeitura organiza secretarias por área, isso é departamentalização do tipo...". Também aparece sobre amplitude e centralização/descentralização.',
+        fazerPergunta: {
+          pergunta: 'Um gerente com 3 subordinados diretos tem amplitude de controle maior ou menor que um gerente com 12 subordinados?',
+          resposta: 'MENOR. Amplitude de controle é o número de subordinados por chefe. 3 < 12, logo a amplitude do primeiro é MENOR.'
+        }
+      }
+    },
+    'ADM-05': {
+      id: 'L-ADM-05',
+      moduloId: 'ADM-05',
+      objetivo: 'Compreender a função Direção: liderança, motivação, comunicação, coordenação e comportamento organizacional. Distinguir liderança de chefia e conhecer os estilos de liderança mais cobrados.',
+      prerequisitos: ['ADM-02'],
+      introducao: 'Depois de planejar e organizar, é preciso colocar as pessoas em movimento. Isso é a Direção — a função que lida com gente: liderar, motivar, comunicar e coordenar.',
+      explicacaoSimples: 'Imagine um maestro. A orquestra tem partituras (planejamento) e instrumentos distribuídos (organização). Mas sem o maestro dando o ritmo, orientando e motivando, não sai música. Direção é esse papel: conduzir pessoas.',
+      explicacaoTecnica: 'Direção é a função administrativa que conduz e coordena pessoas para executar o planejado. Envolve: (1) liderança — capacidade de influenciar pessoas para atingir objetivos; (2) motivação — processos que estimulam o comportamento humano em direção a metas; (3) comunicação — transmissão de informação entre emissor e receptor; (4) coordenação — integração dos esforços de diferentes áreas. Estilos clássicos de liderança: autocrático (centralizador), democrático (participativo) e liberal (laissez-faire). Teorias da motivação mais cobradas: Maslow (hierarquia das necessidades), Herzberg (fatores higiênicos x motivacionais), McGregor (X e Y).',
+      exemplos: [
+        'Liderança democrática: o coordenador reúne a equipe, ouve sugestões e decide em conjunto.',
+        'Liderança autocrática: o gerente decide sozinho e comunica a ordem.',
+        'Motivação intrínseca: o servidor se sente realizado com o trabalho em si.',
+        'Motivação extrínseca: o servidor se esforça por causa do bônus ou da promoção.'
+      ],
+      comparacoes: [
+        { termoA: 'Chefe', termoB: 'Líder', diferenca: 'Chefe é uma posição formal na hierarquia (autoridade legal). Líder é quem influencia pessoas, mesmo sem cargo. Um pode ter cargo e não ser líder; outro pode ser líder sem cargo.' },
+        { termoA: 'Liderança autocrática', termoB: 'Liderança democrática', diferenca: 'Autocrática: decisões centralizadas no líder; comunicação de cima para baixo; foco na tarefa. Democrática: decisões compartilhadas; comunicação aberta; foco no grupo.' },
+        { termoA: 'Motivação intrínseca', termoB: 'Motivação extrínseca', diferenca: 'Intrínseca: vem de dentro (satisfação, propósito, realização). Extrínseca: vem de fora (salário, bônus, promoção, medo de punição). As duas se combinam no ambiente de trabalho.' }
+      ],
+      aplicacaoAdministracaoPublica: 'Na Administração Pública, a direção aparece na atuação de gestores junto às equipes. A Lei 8.112/1990 traz deveres dos servidores (lealdade, urbanidade, respeito) e deveres dos chefes (orientar, delegar, avaliar). A gestão por competências (Decreto 5.707/2006) reforça liderança e desenvolvimento. Liderança também é cobrada em concursos como competência comportamental em avaliações de desempenho.',
+      pegadinhas: [
+        'Dizer que todo chefe é líder. Falso. Chefia é cargo; liderança é influência.',
+        'Confundir motivação intrínseca com extrínseca. Intrínseca vem da própria tarefa; extrínseca vem de recompensa externa.',
+        'Trocar estilos de liderança. Autocrático centraliza; democrático compartilha; liberal (laissez-faire) deixa a equipe à vontade, quase sem interferência.',
+        'Achar que a Direção é opcional quando há bom planejamento. Não é: mesmo com bom plano, é preciso conduzir pessoas.'
+      ],
+      errosComuns: [
+        'Decorar nomes de teorias sem entender a ideia central de cada uma.',
+        'Confundir Direção com Controle. Direção conduz pessoas; Controle verifica resultados.',
+        'Pensar que liderança é o mesmo que coordenação. Coordenação é integração de esforços; liderança é influência sobre pessoas.'
+      ],
+      resumo: [
+        'Direção é a função administrativa que conduz pessoas para executar o planejado.',
+        'Envolve liderança, motivação, comunicação e coordenação.',
+        'Chefe é cargo; líder é influência. Nem todo chefe é líder.',
+        'Estilos de liderança: autocrático (centralizador), democrático (participativo), liberal (laissez-faire).',
+        'Teorias clássicas: Maslow (necessidades), Herzberg (higiênicos x motivacionais), McGregor (X e Y).'
+      ],
+      modoProfessor: {
+        explicarMaisSimples: 'Direção é o maestro da orquestra: ele não toca todos os instrumentos, mas faz todos tocarem juntos. Liderar é influenciar pessoas. Motivar é dar razão para elas se esforçarem. Comunicar é fazer a informação chegar clara.',
+        outroExemplo: 'Em um posto de saúde, a coordenadora de enfermagem reúne a equipe, ouve queixas, propõe escala negociada e reforça o propósito do atendimento humanizado. Isso é liderança democrática + motivação intrínseca.',
+        compararConceitos: 'Chefe manda; líder inspira. Motivação intrínseca vem de dentro; extrínseca de fora. Autocrático decide sozinho; democrático decide junto; liberal quase não interfere.',
+        mostrarPegadinha: 'Cuidado: "Todo chefe é necessariamente líder, pois ocupa posição formal de comando". ERRADO. Chefia é formal; liderança é influência e pode não acompanhar o cargo.',
+        comoApareceEmConcurso: 'Cai em duas formas: (1) correspondência entre situação e estilo de liderança; (2) diferença entre chefe e líder, ou entre motivação intrínseca e extrínseca. Também aparece em questões de gestão de pessoas.',
+        fazerPergunta: {
+          pergunta: 'Um gerente reúne a equipe, escuta sugestões e decide em conjunto com os servidores. Qual é o estilo de liderança?',
+          resposta: 'LIDERANÇA DEMOCRÁTICA (ou participativa). O líder compartilha decisões e ouve o grupo. Seria autocrático se decidisse sozinho; liberal se deixasse a equipe decidir tudo sem participar.'
+        }
+      }      
     ] },
     'AP-02': { id: 'D-AP-02', moduloId: 'AP-02', itens: [
       { id: 'D-AP-02-01', tipo: 'multipla_escolha', subtopico: 'Patrimonialismo', pergunta: 'Confusão entre patrimônio público e privado, nepotismo e pessoalidade. Modelo:', alternativas: [{ id: 'A', texto: 'Burocrático.' }, { id: 'B', texto: 'Gerencial.' }, { id: 'C', texto: 'Patrimonialista.' }, { id: 'D', texto: 'Nova Gestão Pública.' }], gabarito: 'C', explicacao: 'Patrimonialismo: sem distinção entre público e privado.' },
