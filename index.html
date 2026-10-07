@@ -1,9 +1,16 @@
 <!DOCTYPE html>
 <!--
 Aplicativo: Administracao e Direito Administrativo para Concursos
-Versao: 0.8
-Fase: 8
+Versao: 0.9
+Fase: 9
 Status: funcional
+Changelog v0.9:
+- Tela "Estatisticas" (dashboard avancado)
+- Cards consolidados, evolucao de 14 dias, desempenho por modulo,
+  dificuldade e tipo, ranking de erros, dominio estimado,
+  assuntos fortes e fracos, tempo de estudo estimado
+- Novo item no sidebar: Estatisticas
+- Atalho no dashboard
 Changelog v0.8:
 - Simulados: tela de configuracao, execucao e resultado
 - Modos: Simulado personalizado (10/20/40/personalizado) e Prova de Concurso
@@ -12,8 +19,6 @@ Changelog v0.8:
 - Resultado por modulo, dificuldade e tipo
 - Execucao sem feedback durante a prova; correcao ao final
 - Registro dos erros no caderno e agendamento de revisao
-- Novos cards no dashboard: Simulados realizados e Melhor aproveitamento
-- Nenhuma funcionalidade de v0.1 a v0.7 foi removida
 Changelog v0.7:
 - Revisao espacada e caderno de erros
 Changelog v0.6:
@@ -33,7 +38,7 @@ Changelog v0.1:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ADMIN-DIR v0.8 — Administração e Direito Administrativo</title>
+<title>ADMIN-DIR v0.9 — Administração e Direito Administrativo</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -317,55 +322,72 @@ Changelog v0.1:
   .err-item .ei-meta { font-size: 12px; color: var(--text-muted); }
   .err-item .ei-meta strong { color: var(--text); }
   .err-item .ei-row2 { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-  /* ===== Simulados (v0.8) ===== */
   .sim-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; margin-bottom: 12px; border-left: 4px solid #db2777; }
   .sim-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
   .sim-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5; }
   .sim-mode-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-  .sim-mode-tab {
-    padding: 10px 16px; border-radius: 10px; border: 2px solid var(--border);
-    background: var(--surface); cursor: pointer; font-family: inherit; font-size: 14px;
-    color: var(--text); font-weight: 600; flex: 1; min-width: 180px; text-align: left;
-  }
+  .sim-mode-tab { padding: 10px 16px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface); cursor: pointer; font-family: inherit; font-size: 14px; color: var(--text); font-weight: 600; flex: 1; min-width: 180px; text-align: left; }
   .sim-mode-tab:hover { border-color: #db2777; }
   .sim-mode-tab.active { border-color: #db2777; background: #fce7f3; color: #9d174d; }
   .sim-mode-tab .smt-title { font-size: 15px; font-weight: 700; display: block; margin-bottom: 3px; }
   .sim-mode-tab .smt-desc { font-size: 12px; color: var(--text-muted); font-weight: 400; display: block; line-height: 1.4; }
   .sim-mode-tab.active .smt-desc { color: #9d174d; opacity: .8; }
   .sim-qty-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-  .sim-preview {
-    background: var(--surface-alt); border: 1px dashed var(--border); border-radius: 10px;
-    padding: 14px 16px; font-size: 14px; margin-bottom: 14px;
-  }
+  .sim-preview { background: var(--surface-alt); border: 1px dashed var(--border); border-radius: 10px; padding: 14px 16px; font-size: 14px; margin-bottom: 14px; }
   .sim-preview strong { color: var(--text); }
   .sim-preview.warn { background: var(--warning-soft); border-color: var(--warning); border-style: solid; }
   .sim-preview.err { background: var(--danger-soft); border-color: var(--danger); border-style: solid; }
   .sim-hist-list { display: grid; gap: 8px; }
-  .sim-hist-item {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 14px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
-  }
+  .sim-hist-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
   .sim-hist-item .shi-body { flex: 1; min-width: 0; }
   .sim-hist-item .shi-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-weight: 700; color: var(--text-muted); }
   .sim-hist-item .shi-title { font-size: 14px; font-weight: 600; margin-top: 3px; }
   .sim-hist-item .shi-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
-  .sim-hist-item .shi-score {
-    font-size: 22px; font-weight: 700; min-width: 70px; text-align: center;
-    padding: 4px 10px; border-radius: 8px; background: var(--surface-alt);
-  }
+  .sim-hist-item .shi-score { font-size: 22px; font-weight: 700; min-width: 70px; text-align: center; padding: 4px 10px; border-radius: 8px; background: var(--surface-alt); }
   .sim-hist-item .shi-score.good { background: var(--success-soft); color: var(--success); }
   .sim-hist-item .shi-score.mid { background: var(--warning-soft); color: var(--warning); }
   .sim-hist-item .shi-score.bad { background: var(--danger-soft); color: var(--danger); }
   .sim-review-badge { background: #fce7f3; color: #9d174d; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: .4px; }
   .sim-quicknav { display: grid; grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); gap: 5px; margin-top: 14px; }
-  .sim-quicknav button {
-    width: 100%; aspect-ratio: 1; border-radius: 6px; border: 1px solid var(--border);
-    background: var(--surface); font-family: inherit; font-size: 12px; font-weight: 700;
-    cursor: pointer; color: var(--text-muted); padding: 0;
-  }
+  .sim-quicknav button { width: 100%; aspect-ratio: 1; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--text-muted); padding: 0; }
   .sim-quicknav button.answered { background: #fce7f3; color: #9d174d; border-color: #db2777; }
   .sim-quicknav button.current { outline: 2px solid #db2777; outline-offset: 1px; }
   .sim-quicknav button:hover { border-color: #db2777; }
+  /* ===== Estatísticas (v0.9) ===== */
+  .stats-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .stats-bar-label { font-size: 13px; font-weight: 600; color: var(--text); min-width: 130px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stats-bar-track { flex: 1; min-width: 100px; height: 8px; background: var(--border); border-radius: 999px; overflow: hidden; }
+  .stats-bar-fill { height: 100%; background: var(--primary); transition: width .3s; }
+  .stats-bar-fill.good { background: var(--success); }
+  .stats-bar-fill.mid { background: var(--warning); }
+  .stats-bar-fill.bad { background: var(--danger); }
+  .stats-bar-value { font-size: 12px; font-weight: 700; color: var(--text-muted); min-width: 52px; text-align: right; }
+  .stats-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .stats-row:last-child { border-bottom: none; }
+  .evolution-grid { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; align-items: end; height: 130px; padding: 10px; background: var(--surface-alt); border-radius: 10px; }
+  .evolution-day { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+  .evolution-bar { width: 100%; background: var(--primary); border-radius: 3px 3px 0 0; min-height: 2px; transition: height .3s; }
+  .evolution-bar.today { background: var(--purple); }
+  .evolution-bar.fc { background: #0e7490; }
+  .evolution-label { font-size: 9px; color: var(--text-muted); font-weight: 600; }
+  .evolution-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--text-muted); }
+  .evolution-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+  .rank-list { display: grid; gap: 6px; }
+  .rank-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+  .rank-item .rank-pos { font-family: ui-monospace, monospace; font-size: 13px; font-weight: 700; color: var(--text-muted); min-width: 22px; }
+  .rank-item .rank-body { flex: 1; min-width: 0; }
+  .rank-item .rank-title { font-size: 13.5px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank-item .rank-meta { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+  .rank-item .rank-value { font-size: 13px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: var(--surface-alt); color: var(--text-muted); }
+  .rank-item .rank-value.bad { background: var(--danger-soft); color: var(--danger); }
+  .rank-item .rank-value.good { background: var(--success-soft); color: var(--success); }
+  .stats-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 780px) { .stats-grid-2 { grid-template-columns: 1fr; } }
+  .stats-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+  .stats-block h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .stats-block h3 .sb-icon { font-size: 15px; }
+  .weak-strong-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 780px) { .weak-strong-grid { grid-template-columns: 1fr; } }
   .app-footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
   @media (max-width: 780px) {
     #app { grid-template-columns: 1fr; grid-template-areas: "header" "main"; }
@@ -394,7 +416,7 @@ Changelog v0.1:
         <span class="brand-sub">Administração &amp; Direito Administrativo</span>
       </div>
       <div class="header-spacer"></div>
-      <span class="version-badge" id="appVersionBadge">v0.8</span>
+      <span class="version-badge" id="appVersionBadge">v0.9</span>
     </header>
 
     <aside class="sidebar" id="sidebar">
@@ -412,6 +434,9 @@ Changelog v0.1:
       <div class="nav-section-title">Simulados</div>
       <button class="nav-item" data-nav="simulados"><span class="nav-icon">🎯</span><span>Simulados</span></button>
 
+      <div class="nav-section-title">Progresso</div>
+      <button class="nav-item" data-nav="estatisticas"><span class="nav-icon">📊</span><span>Estatísticas</span></button>
+
       <div class="nav-section-title">Sistema</div>
       <button class="nav-item" data-nav="configuracoes"><span class="nav-icon">⚙️</span><span>Configurações</span></button>
       <button class="nav-item" data-nav="sobre"><span class="nav-icon">ℹ️</span><span>Sobre</span></button>
@@ -424,7 +449,7 @@ Changelog v0.1:
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.8';
+  var APP_VERSION = '0.9';
   var SCHEMA_VERSION = 1;
   var STORAGE_KEY = 'adminDir.state';
 
@@ -591,18 +616,17 @@ Changelog v0.1:
   var importReport = null;
   var flashcardFilter = { area: 'todas', moduloId: 'todos' };
   var flashcardRunning = null;
-  // v0.8
   var simuladoConfig = {
-    modo: 'SIMULADO',          // SIMULADO | PROVA_CONCURSO
-    quantidade: 10,            // 10, 20, 40, ou custom
+    modo: 'SIMULADO',
+    quantidade: 10,
     customQty: '',
     area: 'todas',
     moduloId: 'todos',
     dificuldade: 'todas',
     tipo: 'TODAS'
   };
-  var simuladoRunning = null;  // { ids, index, respostas, startedAt, config }
-  var currentSimuladoId = null; // para a tela de resultado
+  var simuladoRunning = null;
+  var currentSimuladoId = null;
 
   function createDefaultState() {
     var now = new Date().toISOString();
@@ -679,7 +703,9 @@ Changelog v0.1:
     return null;
   }
 
-  /* ============================================================
+/* ===== CONTINUA NA PARTE 2 ===== */
+
+   /* ============================================================
      HELPERS
   ============================================================ */
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
@@ -860,18 +886,6 @@ Changelog v0.1:
     questionRunning = { ids: idsArr, index: 0, respostas: {}, revealed: {}, startedAt: new Date().toISOString(), modo: modo || 'livre' };
     navigate('questao-run');
   }
-  function answerQuestion(altId) {
-    if (!questionRunning) return;
-    var qid = questionRunning.ids[questionRunning.index];
-    if (Object.prototype.hasOwnProperty.call(questionRunning.respostas, qid)) return;
-    questionRunning.respostas[qid] = altId;
-    questionRunning.revealed[qid] = true;
-    var q = getQuestion(qid);
-    if (!q) return;
-    commitQuestionAnswer(qid, altId);
-    render();
-    renderNavBadges();
-  }
   function commitQuestionAnswer(qid, altId) {
     var q = getQuestion(qid);
     if (!q) return;
@@ -898,6 +912,16 @@ Changelog v0.1:
     st.ultimaAtividade = new Date().toISOString();
     saveState();
   }
+  function answerQuestion(altId) {
+    if (!questionRunning) return;
+    var qid = questionRunning.ids[questionRunning.index];
+    if (Object.prototype.hasOwnProperty.call(questionRunning.respostas, qid)) return;
+    questionRunning.respostas[qid] = altId;
+    questionRunning.revealed[qid] = true;
+    commitQuestionAnswer(qid, altId);
+    render();
+    renderNavBadges();
+  }
   function nextQuestion() { if (questionRunning && questionRunning.index < questionRunning.ids.length - 1) { questionRunning.index += 1; render(); var main = document.getElementById('main'); if (main) main.scrollTop = 0; } }
   function prevQuestion() { if (questionRunning && questionRunning.index > 0) { questionRunning.index -= 1; render(); var main = document.getElementById('main'); if (main) main.scrollTop = 0; } }
   function cancelQuestionSession() {
@@ -916,16 +940,6 @@ Changelog v0.1:
   /* ============================================================
      MOTOR DE FLASHCARDS
   ============================================================ */
-  function filterFlashcards() {
-    return FLASHCARDS.filter(function (f) {
-      if (flashcardFilter.area !== 'todas') {
-        var m = getModule(f.moduloId);
-        if (!m || m.area !== flashcardFilter.area) return false;
-      }
-      if (flashcardFilter.moduloId !== 'todos' && f.moduloId !== flashcardFilter.moduloId) return false;
-      return true;
-    });
-  }
   function startFlashcardSession(ids, modo) {
     if (!ids || ids.length === 0) { window.alert('Nenhum flashcard para estudar com esses filtros.'); return; }
     flashcardRunning = { ids: shuffleArray(ids), index: 0, respostas: {}, revelado: false, startedAt: new Date().toISOString(), modo: modo || 'livre' };
@@ -989,7 +1003,7 @@ Changelog v0.1:
   }
 
   /* ============================================================
-     MOTOR DE SIMULADOS (v0.8)
+     MOTOR DE SIMULADOS
   ============================================================ */
   function filterForSimulado() {
     var cfg = simuladoConfig;
@@ -1014,17 +1028,47 @@ Changelog v0.1:
     var pool;
     if (modo === 'PROVA_CONCURSO') {
       pool = filterForSimulado().filter(function (q) { return q.tipo === 'REAL'; });
+      if (pool.length === 0) {
+        var prosseguir = window.confirm(
+          'Não há questões REAIS no banco atual.\n\n' +
+          'Deseja rodar um Simulado personalizado (com todas as questões disponíveis) no lugar?'
+        );
+        if (prosseguir) {
+          simuladoConfig.modo = 'SIMULADO';
+          simuladoConfig.tipo = 'TODAS';
+          pool = filterForSimulado();
+        } else {
+          return;
+        }
+      }
     } else {
       pool = filterForSimulado();
+      if (pool.length === 0) {
+        var limpar = window.confirm(
+          'Nenhuma questão corresponde aos filtros atuais.\n\n' +
+          'Deseja limpar os filtros (área, módulo, dificuldade, tipo) e usar todas as questões?'
+        );
+        if (limpar) {
+          simuladoConfig.area = 'todas';
+          simuladoConfig.moduloId = 'todos';
+          simuladoConfig.dificuldade = 'todas';
+          simuladoConfig.tipo = 'TODAS';
+          pool = filterForSimulado();
+        } else {
+          return;
+        }
+      }
     }
     if (pool.length === 0) {
-      window.alert(modo === 'PROVA_CONCURSO'
-        ? 'Não há questões REAIS cadastradas. Use o Banco de Questões para importar questões com banca, órgão, ano, prova e fonte.'
-        : 'Nenhuma questão corresponde aos filtros escolhidos.');
+      window.alert('Ainda não há questões disponíveis. Importe questões no Banco de Questões.');
       return;
     }
     var qtd = quantidadeAlvo();
-    if (qtd === 0) { window.alert('Defina uma quantidade válida.'); return; }
+    if (qtd === 0) {
+      simuladoConfig.quantidade = 10;
+      simuladoConfig.customQty = '';
+      qtd = 10;
+    }
     var ids = shuffleArray(pool.map(function (q) { return q.id; })).slice(0, Math.min(qtd, pool.length));
     if (ids.length === 0) { window.alert('Não há questões suficientes.'); return; }
     simuladoRunning = {
@@ -1033,12 +1077,12 @@ Changelog v0.1:
       respostas: {},
       startedAt: new Date().toISOString(),
       config: {
-        modo: modo,
+        modo: (modo === 'PROVA_CONCURSO' && simuladoConfig.modo === 'PROVA_CONCURSO') ? 'PROVA_CONCURSO' : 'SIMULADO',
         quantidade: qtd,
         area: simuladoConfig.area,
         moduloId: simuladoConfig.moduloId,
         dificuldade: simuladoConfig.dificuldade,
-        tipo: modo === 'PROVA_CONCURSO' ? 'REAL' : simuladoConfig.tipo
+        tipo: simuladoConfig.tipo
       }
     };
     navigate('simulado-run');
@@ -1093,9 +1137,7 @@ Changelog v0.1:
       var resp = respostas[q.id];
       var correta = resp === q.gabarito;
       if (correta) acertos++;
-      // Commit answer if it was answered
       if (resp != null) commitQuestionAnswer(q.id, resp);
-      // Breakdown
       if (!porModulo[q.moduloId]) porModulo[q.moduloId] = { total: 0, acertos: 0, respondidas: 0 };
       porModulo[q.moduloId].total++; if (correta) porModulo[q.moduloId].acertos++; if (resp != null) porModulo[q.moduloId].respondidas++;
       var dl = difficultyLabel(q.dificuldade);
@@ -1160,7 +1202,7 @@ Changelog v0.1:
   /* ============================================================
      NAVEGACAO
   ============================================================ */
-  var VALID_SCREENS = ['dashboard','modulos','modulo-detalhe','licao','diagnostico','diag-resultado','questoes','questao-run','questao-result','banco-questoes','flashcards','flashcard-run','flashcard-result','revisao','erros','simulados','simulado-run','simulado-result','configuracoes','sobre'];
+  var VALID_SCREENS = ['dashboard','modulos','modulo-detalhe','licao','diagnostico','diag-resultado','questoes','questao-run','questao-result','banco-questoes','flashcards','flashcard-run','flashcard-result','revisao','erros','simulados','simulado-run','simulado-result','estatisticas','configuracoes','sobre'];
 
   function navigate(screen, opts) {
     opts = opts || {};
@@ -1238,6 +1280,7 @@ Changelog v0.1:
       case 'simulados': html = renderSimulados(); break;
       case 'simulado-run': html = renderSimuladoRun(); break;
       case 'simulado-result': html = renderSimuladoResult(); break;
+      case 'estatisticas': html = renderEstatisticas(); break;
       case 'configuracoes': html = renderSettings(); break;
       case 'sobre': html = renderAbout(); break;
       default: html = renderDashboard();
@@ -1260,7 +1303,7 @@ Changelog v0.1:
     var bestSim = null;
     for (var s = 0; s < AppState.simulados.length; s++) {
       var r = AppState.simulados[s].resultado;
-      if (!bestSim || (r.percentual > bestSim)) bestSim = r.percentual;
+      if (bestSim == null || (r.percentual > bestSim)) bestSim = r.percentual;
     }
 
     var sugestoes = [];
@@ -1291,6 +1334,10 @@ Changelog v0.1:
     html += statCard('Revisões pendentes', dueN, dueN === 0 ? 'Nada vencido agora' : 'Vencidas ou para hoje');
     html += '</div>';
 
+    html += '<div style="margin:6px 0 14px;display:flex;gap:8px;flex-wrap:wrap;">';
+    html += '<button class="btn btn-primary" data-nav="estatisticas">📊 Ver estatísticas</button>';
+    html += '</div>';
+
     html += '<h2 class="section-title">O que estudar hoje?</h2>';
     if (sugestoes.length === 0) html += '<div class="notice"><strong>Sem sugestões ainda.</strong></div>';
     else {
@@ -1316,11 +1363,9 @@ Changelog v0.1:
 
     html += '<h2 class="section-title">Aviso desta versão</h2>';
     html += '<div class="notice">' +
-      '<strong>Fase 8 — Simulados.</strong> ' +
-      'Você pode montar simulados de <strong>10, 20, 40 ou quantidade personalizada</strong> com filtros por área/módulo/dificuldade. ' +
-      'A modalidade <strong>Prova de Concurso</strong> usa apenas questões <em>reais</em> verificáveis — ' +
-      'atualmente há ' + qReal + ' cadastrada(s). ' +
-      'Importe questões reais pelo <strong>Banco de Questões</strong> para liberar essa modalidade.' +
+      '<strong>Fase 9 — Dashboard avançado.</strong> ' +
+      'Nova tela <strong>Estatísticas</strong> com evolução de 14 dias, desempenho por módulo/dificuldade/tipo, ' +
+      'ranking de erros, domínio estimado por módulo, assuntos fortes e fracos e tempo de estudo estimado.' +
       '</div>';
 
     html += footerHtml();
@@ -2351,9 +2396,6 @@ Changelog v0.1:
     return html;
   }
 
-  /* ============================================================
-     SIMULADOS - RENDER (v0.8)
-  ============================================================ */
   function renderSimulados() {
     var totalReal = qRealCount();
     var poolSimulado = filterForSimulado();
@@ -2361,7 +2403,6 @@ Changelog v0.1:
     var podeIniciar = poolSimulado.length > 0 && qtdAlvoVal > 0;
     var realPool = poolSimulado.filter(function (q) { return q.tipo === 'REAL'; });
 
-    // Áreas pills
     var areas = ['todas', 'ADM', 'AP', 'DA'];
     var areaPills = '';
     for (var i = 0; i < areas.length; i++) {
@@ -2370,7 +2411,6 @@ Changelog v0.1:
       var active = (simuladoConfig.area === a) ? ' active' : '';
       areaPills += '<button class="filter-pill' + active + '" data-sim-area="' + a + '">' + esc(label) + '</button>';
     }
-    // Módulos
     var moduleOptions = '<option value="todos">Todos os módulos</option>';
     for (var j = 0; j < MODULES.length; j++) {
       var mo = MODULES[j];
@@ -2379,21 +2419,18 @@ Changelog v0.1:
       var sel = simuladoConfig.moduloId === mo.id ? ' selected' : '';
       moduleOptions += '<option value="' + esc(mo.id) + '"' + sel + '>' + esc(mo.id + ' — ' + mo.titulo) + '</option>';
     }
-    // Dificuldade
     var diffOptions = '';
     var diffs = [['todas','Todas as dificuldades'], ['1','Fácil'], ['2','Médio'], ['3','Difícil']];
     for (var d = 0; d < diffs.length; d++) {
       var sel2 = simuladoConfig.dificuldade === diffs[d][0] ? ' selected' : '';
       diffOptions += '<option value="' + diffs[d][0] + '"' + sel2 + '>' + esc(diffs[d][1]) + '</option>';
     }
-    // Tipo
     var tipoOptions = '';
     var tipos = [['TODAS','Todas'], ['DIDATICA','Somente didáticas'], ['REAL','Somente reais']];
     for (var t = 0; t < tipos.length; t++) {
       var sel3 = simuladoConfig.tipo === tipos[t][0] ? ' selected' : '';
       tipoOptions += '<option value="' + tipos[t][0] + '"' + sel3 + '>' + esc(tipos[t][1]) + '</option>';
     }
-    // Quantidade pills
     var qtyPills = '';
     var qtyOpts = [['10','10 questões'], ['20','20 questões'], ['40','40 questões'], ['custom','Personalizado']];
     for (var q = 0; q < qtyOpts.length; q++) {
@@ -2407,7 +2444,17 @@ Changelog v0.1:
     html += '<h1 class="page-title">Simulados</h1>';
     html += '<p class="page-subtitle">Monte simulados personalizados ou uma prova de concurso com questões reais verificáveis.</p>';
 
-    // Resumo
+    html += '<div class="type-banner">';
+    if (simuladoConfig.modo === 'PROVA_CONCURSO') {
+      html += '<span class="badge-pill badge-real">PROVA DE CONCURSO</span>';
+      html += '<span>Modo atual: <strong>Prova de concurso</strong> — só usa questões reais. Há <strong>' + totalReal + '</strong> cadastrada(s). ';
+      html += 'Para usar todas as questões, mude para <strong>Simulado personalizado</strong>.</span>';
+    } else {
+      html += '<span class="badge-pill badge-sim">SIMULADO</span>';
+      html += '<span>Modo atual: <strong>Simulado personalizado</strong> — usa todas as questões (didáticas + reais).</span>';
+    }
+    html += '</div>';
+
     var simCount = AppState.simulados.length;
     var bestPct = null, lastPct = null;
     for (var s = 0; s < AppState.simulados.length; s++) {
@@ -2422,7 +2469,6 @@ Changelog v0.1:
     html += '<div class="db-stat"><div class="dbs-label">Questões reais no banco</div><div class="dbs-value">' + totalReal + '</div></div>';
     html += '</div>';
 
-    // Modo
     html += '<h2 class="section-title">Modalidade</h2>';
     html += '<div class="sim-mode-tabs">';
     html += '<button class="sim-mode-tab' + (simuladoConfig.modo === 'SIMULADO' ? ' active' : '') + '" data-sim-mode="SIMULADO">';
@@ -2435,7 +2481,6 @@ Changelog v0.1:
     html += '</button>';
     html += '</div>';
 
-    // Config SIMULADO
     if (simuladoConfig.modo === 'SIMULADO') {
       html += '<div class="sim-card">';
       html += '<h3>Quantidade de questões</h3>';
@@ -2459,7 +2504,6 @@ Changelog v0.1:
       html += '<label>Tipo</label><select id="simFilterTipo">' + tipoOptions + '</select>';
       html += '</div></div>';
 
-      // Preview
       var target = quantidadeAlvo();
       var cls = 'sim-preview';
       var msg = '';
@@ -2481,22 +2525,13 @@ Changelog v0.1:
       html += '<button class="btn btn-primary btn-lg" data-action="start-simulado"' + (!podeIniciar ? ' disabled' : '') + '>▶ Iniciar simulado</button>';
       html += '</div>';
     } else {
-      // PROVA CONCURSO
       html += '<div class="sim-card">';
       html += '<h3>Prova de concurso</h3>';
       html += '<p>Somente questões classificadas como <strong>REAL</strong>. O app <em>não inventa</em> banca, órgão, ano ou prova — é preciso importar questões com origem verificável.</p>';
       html += '<div class="filter-row">';
       html += '<label>Quantidade</label>';
-      var qtyRealPills = '';
-      var realQtyOpts = [['10','10'], ['20','20'], ['40','40'], ['custom','Personalizado']];
-      for (var qr = 0; qr < realQtyOpts.length; qr++) {
-        var v = realQtyOpts[qr][0];
-        var l = realQtyOpts[qr][1];
-        var ac = (String(simuladoConfig.quantidade) === v) ? ' active' : '';
-        qtyRealPills += '<button class="filter-pill' + ac + '" data-sim-qty="' + v + '">' + esc(l) + '</button>';
-      }
       html += '</div>';
-      html += '<div class="sim-qty-pills">' + qtyRealPills + '</div>';
+      html += '<div class="sim-qty-pills">' + qtyPills + '</div>';
       if (simuladoConfig.quantidade === 'custom') {
         html += '<div class="filter-row"><label>Quantidade</label>';
         html += '<input type="number" id="simCustomQty" min="1" max="200" value="' + esc(simuladoConfig.customQty || '') + '" placeholder="Ex.: 30">';
@@ -2522,10 +2557,12 @@ Changelog v0.1:
 
       html += '<div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;">';
       html += '<button class="btn btn-primary btn-lg" data-action="start-prova-concurso"' + (realPool.length === 0 ? ' disabled' : '') + '>🏛️ Iniciar prova de concurso</button>';
+      if (realPool.length === 0) {
+        html += '<button class="btn btn-lg" data-action="start-simulado">🎯 Rodar como Simulado personalizado</button>';
+      }
       html += '</div>';
     }
 
-    // Histórico
     html += '<h2 class="section-title">Histórico de simulados</h2>';
     if (AppState.simulados.length === 0) {
       html += '<div class="rev-empty">Nenhum simulado realizado ainda. Configure e clique em <strong>Iniciar simulado</strong>.</div>';
@@ -2603,7 +2640,6 @@ Changelog v0.1:
       html += '<div style="margin-top:10px;font-size:13px;color:var(--text-muted);">Sua marcação: <strong>' + esc(userAnswer) + '</strong>. Você pode alterar enquanto o simulado não for finalizado. <button class="btn btn-ghost" style="font-size:12px;padding:4px 8px;" data-action="sim-clear-answer">Limpar marcação</button></div>';
     }
 
-    // Navegação + quicknav
     html += '<div class="q-actions"><div>';
     if (idx > 0) html += '<button class="btn" data-action="sim-prev">← Anterior</button>';
     html += '</div><div>';
@@ -2664,7 +2700,6 @@ Changelog v0.1:
     html += resultStat('Aproveitamento', r.percentual + '%');
     html += '</div>';
 
-    // Interpretação
     html += '<h2 class="section-title">Leitura do resultado</h2>';
     var reading = '';
     if (r.percentual >= 80) reading = '<strong>Excelente.</strong> Aproveitamento de ' + r.percentual + '%. Mantenha a rotina de revisão espaçada.';
@@ -2707,6 +2742,306 @@ Changelog v0.1:
     return html;
   }
 
+  /* ============================================================
+     ESTATISTICAS — agregacoes (v0.9)
+  ============================================================ */
+  function getDailyActivity(days) {
+    var map = {};
+    var today = new Date(); today.setHours(0,0,0,0);
+    for (var i = days - 1; i >= 0; i--) {
+      var d = new Date(today); d.setDate(d.getDate() - i);
+      var key = d.toISOString().slice(0, 10);
+      map[key] = { date: key, label: d.getDate() + '/' + (d.getMonth() + 1), questions: 0, flashcards: 0, simulados: 0, total: 0 };
+    }
+    var qid, fid;
+    for (qid in AppState.questions) {
+      if (!AppState.questions.hasOwnProperty(qid)) continue;
+      var hq = AppState.questions[qid].historico || [];
+      for (var a = 0; a < hq.length; a++) {
+        var kq = (hq[a].data || '').slice(0, 10);
+        if (map[kq]) { map[kq].questions++; map[kq].total++; }
+      }
+    }
+    for (fid in AppState.flashcards) {
+      if (!AppState.flashcards.hasOwnProperty(fid)) continue;
+      var hf = AppState.flashcards[fid].historico || [];
+      for (var b = 0; b < hf.length; b++) {
+        var kf = (hf[b].data || '').slice(0, 10);
+        if (map[kf]) { map[kf].flashcards++; map[kf].total++; }
+      }
+    }
+    for (var s = 0; s < AppState.simulados.length; s++) {
+      var ks = (AppState.simulados[s].finalizadoEm || '').slice(0, 10);
+      if (map[ks]) { map[ks].simulados++; map[ks].total++; }
+    }
+    var arr = [];
+    for (var k in map) if (map.hasOwnProperty(k)) arr.push(map[k]);
+    arr.sort(function (x, y) { return x.date < y.date ? -1 : 1; });
+    return arr;
+  }
+  function getModulePerformance() {
+    var out = [];
+    for (var i = 0; i < MODULES.length; i++) {
+      var m = MODULES[i];
+      var tent = 0, ac = 0;
+      for (var j = 0; j < QUESTIONS.length; j++) {
+        if (QUESTIONS[j].moduloId !== m.id) continue;
+        var qs = AppState.questions[QUESTIONS[j].id];
+        if (!qs) continue;
+        tent += qs.tentativas || 0;
+        ac += qs.acertos || 0;
+      }
+      if (tent === 0) continue;
+      out.push({ modulo: m, tentativas: tent, acertos: ac, pct: Math.round((ac / tent) * 100) });
+    }
+    out.sort(function (a, b) { return b.pct - a.pct; });
+    return out;
+  }
+  function getDifficultyPerformance() {
+    var bucket = { 1: { t: 0, a: 0 }, 2: { t: 0, a: 0 }, 3: { t: 0, a: 0 } };
+    for (var i = 0; i < QUESTIONS.length; i++) {
+      var qs = AppState.questions[QUESTIONS[i].id];
+      if (!qs) continue;
+      var d = QUESTIONS[i].dificuldade || 2;
+      bucket[d].t += qs.tentativas || 0;
+      bucket[d].a += qs.acertos || 0;
+    }
+    var out = [];
+    var order = [1, 2, 3];
+    for (var k = 0; k < order.length; k++) {
+      var dk = order[k];
+      if (bucket[dk].t === 0) continue;
+      out.push({ label: DIFFICULTY_LABELS[dk], pct: Math.round((bucket[dk].a / bucket[dk].t) * 100), tentativas: bucket[dk].t });
+    }
+    return out;
+  }
+  function getTypePerformance() {
+    var bucket = { REAL: { t: 0, a: 0 }, DIDATICA: { t: 0, a: 0 } };
+    for (var i = 0; i < QUESTIONS.length; i++) {
+      var qs = AppState.questions[QUESTIONS[i].id];
+      if (!qs) continue;
+      var t = QUESTIONS[i].tipo;
+      if (!bucket[t]) continue;
+      bucket[t].t += qs.tentativas || 0;
+      bucket[t].a += qs.acertos || 0;
+    }
+    var out = [];
+    if (bucket.REAL.t > 0) out.push({ label: 'Reais', pct: Math.round((bucket.REAL.a / bucket.REAL.t) * 100), tentativas: bucket.REAL.t });
+    if (bucket.DIDATICA.t > 0) out.push({ label: 'Didáticas', pct: Math.round((bucket.DIDATICA.a / bucket.DIDATICA.t) * 100), tentativas: bucket.DIDATICA.t });
+    return out;
+  }
+  function getErrorRanking() {
+    var out = [];
+    for (var i = 0; i < QUESTIONS.length; i++) {
+      var qs = AppState.questions[QUESTIONS[i].id];
+      if (!qs || !qs.erros) continue;
+      out.push({ q: QUESTIONS[i], erros: qs.erros, tentativas: qs.tentativas, acertos: qs.acertos });
+    }
+    out.sort(function (a, b) { return b.erros - a.erros; });
+    return out;
+  }
+  function getMasteryByModule() {
+    var out = [];
+    for (var i = 0; i < MODULES.length; i++) {
+      var m = MODULES[i];
+      var st = AppState.modules[m.id];
+      if (!st) continue;
+      var dom = st.dominioEstimado || 0;
+      var tent = 0, ac = 0;
+      for (var j = 0; j < QUESTIONS.length; j++) {
+        if (QUESTIONS[j].moduloId !== m.id) continue;
+        var qs = AppState.questions[QUESTIONS[j].id];
+        if (!qs) continue;
+        tent += qs.tentativas || 0;
+        ac += qs.acertos || 0;
+      }
+      var pctQ = tent > 0 ? (ac / tent) : null;
+      var estimado = dom;
+      if (pctQ != null) estimado = (dom + pctQ) / 2;
+      out.push({ modulo: m, dominio: Math.round(estimado * 100), tentativas: tent, temDados: dom > 0 || tent > 0 });
+    }
+    out.sort(function (a, b) { return b.dominio - a.dominio; });
+    return out;
+  }
+  function estimateStudyMinutes() {
+    var q = AppState.stats.questoesRespondidas || 0;
+    var f = AppState.stats.flashcardsEstudados || 0;
+    return q * 1 + Math.round(f * 0.5);
+  }
+  function formatMinutes(min) {
+    if (!min) return '0 min';
+    if (min < 60) return min + ' min';
+    var h = Math.floor(min / 60);
+    var m = min % 60;
+    return h + 'h' + (m > 0 ? ' ' + m + 'min' : '');
+  }
+
+  function renderEstatisticas() {
+    var stats = AppState.stats;
+    var taxa = stats.questoesRespondidas > 0 ? Math.round((stats.acertos / stats.questoesRespondidas) * 100) : 0;
+    var daily = getDailyActivity(14);
+    var maxTotal = 0;
+    for (var d = 0; d < daily.length; d++) if (daily[d].total > maxTotal) maxTotal = daily[d].total;
+    var porModulo = getModulePerformance();
+    var porDif = getDifficultyPerformance();
+    var porTipo = getTypePerformance();
+    var ranking = getErrorRanking();
+    var dominios = getMasteryByModule();
+    var minutos = estimateStudyMinutes();
+
+    var hoje = new Date().toISOString().slice(0, 10);
+
+    var html = '';
+    html += '<h1 class="page-title">Estatísticas</h1>';
+    html += '<p class="page-subtitle">Dashboard avançado. Consolida o que você já fez nas fases anteriores.</p>';
+
+    html += '<div class="db-summary">';
+    html += '<div class="db-stat dbs-total"><div class="dbs-label">Questões respondidas</div><div class="dbs-value">' + stats.questoesRespondidas + '</div></div>';
+    html += '<div class="db-stat dbs-real"><div class="dbs-label">Taxa de acerto</div><div class="dbs-value">' + taxa + '%</div></div>';
+    html += '<div class="db-stat dbs-flash"><div class="dbs-label">Flashcards estudados</div><div class="dbs-value">' + (stats.flashcardsEstudados || 0) + '</div></div>';
+    html += '<div class="db-stat dbs-sim"><div class="dbs-label">Simulados</div><div class="dbs-value">' + AppState.simulados.length + '</div></div>';
+    html += '<div class="db-stat"><div class="dbs-label">Tempo de estudo (estimado)</div><div class="dbs-value">' + esc(formatMinutes(minutos)) + '</div></div>';
+    html += '</div>';
+
+    html += '<h2 class="section-title">Evolução — últimos 14 dias</h2>';
+    html += '<div class="stats-block">';
+    if (maxTotal === 0) {
+      html += '<div style="color:var(--text-muted);font-size:14px;">Sem atividade registrada nos últimos 14 dias.</div>';
+    } else {
+      html += '<div class="evolution-grid">';
+      for (var e = 0; e < daily.length; e++) {
+        var day = daily[e];
+        var hPct = maxTotal > 0 ? Math.round((day.total / maxTotal) * 100) : 0;
+        var cls = 'evolution-bar';
+        if (day.date === hoje) cls += ' today';
+        html += '<div class="evolution-day" title="' + esc(day.date) + ' — ' + day.total + ' atividades">';
+        html += '<div class="' + cls + '" style="height:' + Math.max(hPct, 3) + '%"></div>';
+        html += '<div class="evolution-label">' + esc(day.label) + '</div>';
+        html += '</div>';
+      }
+      html += '</div>';
+      html += '<div class="evolution-legend">';
+      html += '<span><span class="dot" style="background:var(--primary);"></span>Atividade por dia (questões + flashcards + simulados)</span>';
+      html += '<span><span class="dot" style="background:var(--purple);"></span>Hoje</span>';
+      html += '</div>';
+    }
+    html += '</div>';
+
+    html += '<div class="stats-grid-2" style="margin-top:18px;">';
+    html += '<div class="stats-block"><h3><span class="sb-icon">📚</span> Desempenho por módulo</h3>';
+    if (porModulo.length === 0) {
+      html += '<div style="color:var(--text-muted);font-size:14px;">Responda questões para gerar este painel.</div>';
+    } else {
+      for (var i = 0; i < porModulo.length; i++) {
+        var pm = porModulo[i];
+        var clsM = pm.pct >= 70 ? 'good' : (pm.pct >= 40 ? 'mid' : 'bad');
+        html += '<div class="stats-bar">';
+        html += '<div class="stats-bar-label" title="' + esc(pm.modulo.titulo) + '">' + esc(pm.modulo.id) + ' — ' + esc(pm.modulo.titulo) + '</div>';
+        html += '<div class="stats-bar-track"><div class="stats-bar-fill ' + clsM + '" style="width:' + pm.pct + '%"></div></div>';
+        html += '<div class="stats-bar-value">' + pm.pct + '%</div>';
+        html += '</div>';
+      }
+    }
+    html += '</div>';
+
+    html += '<div class="stats-block"><h3><span class="sb-icon">⚙️</span> Desempenho por dificuldade</h3>';
+    if (porDif.length === 0) {
+      html += '<div style="color:var(--text-muted);font-size:14px;">Sem dados.</div>';
+    } else {
+      for (var j = 0; j < porDif.length; j++) {
+        var pd = porDif[j];
+        var clsD = pd.pct >= 70 ? 'good' : (pd.pct >= 40 ? 'mid' : 'bad');
+        html += '<div class="stats-bar">';
+        html += '<div class="stats-bar-label">' + esc(pd.label) + '</div>';
+        html += '<div class="stats-bar-track"><div class="stats-bar-fill ' + clsD + '" style="width:' + pd.pct + '%"></div></div>';
+        html += '<div class="stats-bar-value">' + pd.pct + '%</div>';
+        html += '</div>';
+      }
+    }
+    html += '<h3 style="margin-top:16px;"><span class="sb-icon">🏷️</span> Desempenho por tipo</h3>';
+    if (porTipo.length === 0) {
+      html += '<div style="color:var(--text-muted);font-size:14px;">Sem dados.</div>';
+    } else {
+      for (var t = 0; t < porTipo.length; t++) {
+        var pt = porTipo[t];
+        var clsT = pt.pct >= 70 ? 'good' : (pt.pct >= 40 ? 'mid' : 'bad');
+        html += '<div class="stats-bar">';
+        html += '<div class="stats-bar-label">' + esc(pt.label) + '</div>';
+        html += '<div class="stats-bar-track"><div class="stats-bar-fill ' + clsT + '" style="width:' + pt.pct + '%"></div></div>';
+        html += '<div class="stats-bar-value">' + pt.pct + '%</div>';
+        html += '</div>';
+      }
+    }
+    html += '</div>';
+    html += '</div>';
+
+    html += '<h2 class="section-title">Ranking de erros</h2>';
+    if (ranking.length === 0) {
+      html += '<div class="rev-empty">Nenhum erro registrado. Continue praticando e revise o Caderno de Erros.</div>';
+    } else {
+      html += '<div class="rank-list">';
+      for (var r = 0; r < Math.min(ranking.length, 10); r++) {
+        var ri = ranking[r];
+        html += '<div class="rank-item">';
+        html += '<div class="rank-pos">' + (r + 1) + 'º</div>';
+        html += '<div class="rank-body">';
+        html += '<div class="rank-title">' + esc(ri.q.enunciado) + '</div>';
+        html += '<div class="rank-meta">' + esc(ri.q.id + ' · ' + ri.q.moduloId + ' · ' + ri.q.subtema) + ' · acertos: ' + ri.acertos + ' / tentativas: ' + ri.tentativas + '</div>';
+        html += '</div>';
+        html += '<div class="rank-value bad">' + ri.erros + ' erro' + (ri.erros > 1 ? 's' : '') + '</div>';
+        html += '<button class="btn btn-danger" style="padding:6px 10px;font-size:12.5px;" data-action="revisar-questao-unica" data-question-id="' + esc(ri.q.id) + '">Revisar</button>';
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+
+    html += '<div class="stats-grid-2" style="margin-top:18px;">';
+    html += '<div class="stats-block"><h3><span class="sb-icon">🧠</span> Domínio estimado por módulo</h3>';
+    var domComDados = [];
+    for (var k = 0; k < dominios.length; k++) if (dominios[k].temDados) domComDados.push(dominios[k]);
+    if (domComDados.length === 0) {
+      html += '<div style="color:var(--text-muted);font-size:14px;">Faça diagnósticos ou responda questões para estimar domínio.</div>';
+    } else {
+      for (var x = 0; x < domComDados.length; x++) {
+        var dm = domComDados[x];
+        var clsDom = dm.dominio >= 70 ? 'good' : (dm.dominio >= 40 ? 'mid' : 'bad');
+        html += '<div class="stats-bar">';
+        html += '<div class="stats-bar-label" title="' + esc(dm.modulo.titulo) + '">' + esc(dm.modulo.id) + ' — ' + esc(dm.modulo.titulo) + '</div>';
+        html += '<div class="stats-bar-track"><div class="stats-bar-fill ' + clsDom + '" style="width:' + dm.dominio + '%"></div></div>';
+        html += '<div class="stats-bar-value">' + dm.dominio + '%</div>';
+        html += '</div>';
+      }
+    }
+    html += '</div>';
+
+    html += '<div class="stats-block"><h3><span class="sb-icon">⭐</span> Assuntos fortes e fracos</h3>';
+    if (domComDados.length === 0) {
+      html += '<div style="color:var(--text-muted);font-size:14px;">Sem dados suficientes.</div>';
+    } else {
+      var fortes = domComDados.slice(0, 3);
+      var fracos = domComDados.slice(-3).reverse();
+      html += '<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--success);margin-bottom:6px;">Pontos fortes</div>';
+      html += '<div class="rank-list" style="margin-bottom:12px;">';
+      for (var fI = 0; fI < fortes.length; fI++) {
+        var ff = fortes[fI];
+        html += '<div class="rank-item"><div class="rank-pos">✓</div><div class="rank-body"><div class="rank-title">' + esc(ff.modulo.titulo) + '</div><div class="rank-meta">' + esc(ff.modulo.id) + '</div></div><div class="rank-value good">' + ff.dominio + '%</div></div>';
+      }
+      html += '</div>';
+      html += '<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--danger);margin-bottom:6px;">Pontos a reforçar</div>';
+      html += '<div class="rank-list">';
+      for (var fJ = 0; fJ < fracos.length; fJ++) {
+        var fw = fracos[fJ];
+        html += '<div class="rank-item"><div class="rank-pos">!</div><div class="rank-body"><div class="rank-title">' + esc(fw.modulo.titulo) + '</div><div class="rank-meta">' + esc(fw.modulo.id) + '</div></div><div class="rank-value bad">' + fw.dominio + '%</div></div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    html += '</div>';
+
+    html += footerHtml();
+    return html;
+  }
+
   function renderSettings() {
     var totalModulos = MODULES.length;
     var modulosComEstado = 0;
@@ -2744,7 +3079,7 @@ Changelog v0.1:
     html += infoRow('Aplicativo', 'Administração, Administração Pública e Direito Administrativo');
     html += infoRow('Público-alvo', 'Concursos de nível médio (Administrativo / Assistente / Técnico)');
     html += infoRow('Versão', 'ADMIN-DIR v' + APP_VERSION);
-    html += infoRow('Fase', '8 — Simulados e Prova de Concurso');
+    html += infoRow('Fase', '9 — Dashboard avançado');
     html += infoRow('Schema de dados', 'v' + SCHEMA_VERSION);
     html += infoRow('Aulas cadastradas', Object.keys(LESSONS).length + ' / ' + MODULES.length);
     html += infoRow('Diagnósticos cadastrados', Object.keys(DIAGNOSTICS).length + ' / ' + MODULES.length);
@@ -2754,6 +3089,7 @@ Changelog v0.1:
     html += infoRow('Modo', 'Offline — sem servidor ou IA externa');
     html += '</div>';
     html += '<h2 class="section-title">Changelog</h2><div class="info-list">';
+    html += infoRow('v0.9 — Fase 9', 'Dashboard avançado: evolução de 14 dias, desempenho por módulo/dificuldade/tipo, ranking de erros, domínio estimado, assuntos fortes e fracos, tempo de estudo estimado.');
     html += infoRow('v0.8 — Fase 8', 'Simulados personalizados (10/20/40/personalizado) + Prova de concurso (só reais). Resultado detalhado e histórico.');
     html += infoRow('v0.7 — Fase 7', 'Revisão espaçada por questão e flashcard; telas Revisão e Meus Erros.');
     html += infoRow('v0.6 — Fase 6', 'Sistema de flashcards: 24 cartões, autoavaliação, agendamento inicial.');
@@ -2764,14 +3100,14 @@ Changelog v0.1:
     html += infoRow('v0.1 — Fase 1', 'Estrutura base.');
     html += '</div>';
     html += '<h2 class="section-title">Próximas entregas</h2><div class="notice">';
-    html += 'Fase 9: dashboard avançado (estatísticas consolidadas, evolução, tempo de estudo) · Fase 10: auditoria final.';
+    html += 'Fase 10: auditoria final (verificação de sintaxe, IDs duplicados, referências cruzadas, persistência, exportação/importação) e consolidação da v1.0.';
     html += '</div>';
     html += footerHtml();
     return html;
   }
 
   function footerHtml() {
-    return '<div class="app-footer"><span>ADMIN-DIR v' + esc(APP_VERSION) + ' · Fase 8</span><span>Offline · dados salvos neste navegador</span></div>';
+    return '<div class="app-footer"><span>ADMIN-DIR v' + esc(APP_VERSION) + ' · Fase 9</span><span>Offline · dados salvos neste navegador</span></div>';
   }
 
   /* ============================================================
@@ -2868,7 +3204,6 @@ Changelog v0.1:
     if (!getFlashcard(fid)) return;
     startFlashcardSession([fid], 'revisao');
   }
-  // Simulados - ações de configuração
   function setSimuladoMode(m) {
     if (m !== 'SIMULADO' && m !== 'PROVA_CONCURSO') return;
     simuladoConfig.modo = m;
@@ -3064,7 +3399,6 @@ Changelog v0.1:
       case 'delete-simulado': deleteSimulado(actionEl.getAttribute('data-sim-id')); break;
       case 'simulado-by-module': simuladoByModule(actionEl.getAttribute('data-module-id')); break;
       case 'simulado-com-filtros':
-        // Leva à tela de simulados com os filtros de questão aplicados
         simuladoConfig.area = questionFilter.area;
         simuladoConfig.moduloId = questionFilter.moduloId;
         simuladoConfig.dificuldade = questionFilter.dificuldade;
@@ -3093,6 +3427,9 @@ Changelog v0.1:
     if (el.id === 'simCustomQty') setSimuladoCustomQty(el.value);
   });
 
+  /* ============================================================
+     INICIALIZACAO
+  ============================================================ */
   function init() {
     AppState = loadState();
     currentScreen = 'dashboard';
