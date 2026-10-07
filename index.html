@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <!--
 Aplicativo: Administracao e Direito Administrativo para Concursos
-Versao: 0.4
-Fase: 4
+Versao: 0.5
+Fase: 5
 Status: funcional
+Changelog v0.5:
+- Banco de questoes expandido de 12 para 35 questoes DIDATICAS
+- Cobertura de 18 modulos de alta prioridade
+- Nenhuma questao REAL (nao ha origem verificavel nesta fase)
+- Nova tela "Banco de Questoes" com contadores REAL/DIDATICA
+- Exportacao JSON de questoes e progresso
+- Importacao JSON com validador: questao REAL sem
+  banca/orgao/ano/prova/fonte e REJEITADA
+- Botao "Carregar exemplo" para orientar formato de importacao
+- Helpers qRealCount / qDidCount
 Changelog v0.4:
-- Motor de questoes completo: filtros, sessao, correcao, explicacao,
-  historico e desempenho
-- Novo objeto estatico QUESTIONS (12 questoes DIDATICAS)
-- Nenhuma questao REAL: nao ha origem verificavel nesta fase
-- Novas telas: "questoes", "questao-run", "questao-result"
-- Novo item "Questoes" no sidebar
-- Estado por questao em AppState.questions[id]
-- Estatisticas de questoes atualizadas em AppState.stats
-- Compatibilidade total com v0.3
+- Motor de questoes completo
 Changelog v0.3:
-- 4 diagnosticos (ADM-01, ADM-02, AP-02, DA-02), analise por subtopico
+- 4 diagnosticos com analise por subtopico
 Changelog v0.2:
 - 4 aulas de alta prioridade; modo professor programado
 Changelog v0.1:
@@ -25,7 +27,7 @@ Changelog v0.1:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ADMIN-DIR v0.4 — Administração e Direito Administrativo</title>
+<title>ADMIN-DIR v0.5 — Administração e Direito Administrativo</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -243,30 +245,15 @@ Changelog v0.1:
   .subtopic-result .recommendation { font-size: 14px; line-height: 1.5; color: var(--text); }
   .subtopic-result .recommendation strong { color: var(--text); }
 
-  /* ===== Questões (NOVO v0.4) ===== */
   .question-preview {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     padding: 14px 16px; margin-bottom: 8px;
   }
-  .question-preview .qp-header {
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;
-  }
-  .question-preview .qp-id {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 11px; font-weight: 700; color: var(--text-muted);
-  }
-  .question-preview .qp-text {
-    font-size: 14px; color: var(--text); line-height: 1.5;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .question-preview .qp-meta {
-    font-size: 12px; color: var(--text-muted); margin-top: 6px;
-  }
-  .question-preview .qp-status {
-    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
-    text-transform: uppercase; letter-spacing: .4px;
-  }
+  .question-preview .qp-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .question-preview .qp-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-weight: 700; color: var(--text-muted); }
+  .question-preview .qp-text { font-size: 14px; color: var(--text); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .question-preview .qp-meta { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+  .question-preview .qp-status { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: .4px; }
   .qp-status.qs-nova { background: var(--surface-alt); color: var(--text-muted); }
   .qp-status.qs-acerto { background: var(--success-soft); color: var(--success); }
   .qp-status.qs-erro { background: var(--danger-soft); color: var(--danger); }
@@ -274,21 +261,10 @@ Changelog v0.1:
   .run-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
   .run-toolbar .rt-info { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 13px; color: var(--text-muted); }
 
-  .q-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 22px 24px; margin-bottom: 12px;
-  }
-  .q-card .q-head {
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
-  }
-  .q-card .q-id {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 11px; font-weight: 700; color: var(--text-muted);
-  }
-  .q-card .q-statement {
-    font-size: 16px; line-height: 1.55; font-weight: 500; margin-bottom: 18px;
-    letter-spacing: -.1px;
-  }
+  .q-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; margin-bottom: 12px; }
+  .q-card .q-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .q-card .q-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-weight: 700; color: var(--text-muted); }
+  .q-card .q-statement { font-size: 16px; line-height: 1.55; font-weight: 500; margin-bottom: 18px; letter-spacing: -.1px; }
   .q-options { display: grid; gap: 8px; }
   .q-option {
     display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px;
@@ -299,38 +275,23 @@ Changelog v0.1:
   }
   .q-option:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-soft); }
   .q-option:disabled { cursor: default; }
-  .q-option .opt-letter {
-    font-weight: 700; min-width: 20px; color: var(--text-muted);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
+  .q-option .opt-letter { font-weight: 700; min-width: 20px; color: var(--text-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   .q-option.selected { border-color: var(--primary); background: var(--primary-soft); }
   .q-option.correct { border-color: var(--success); background: var(--success-soft); }
   .q-option.wrong { border-color: var(--danger); background: var(--danger-soft); }
 
-  .q-feedback {
-    margin-top: 16px; padding: 14px 16px; border-radius: 8px;
-    font-size: 14px; line-height: 1.5;
-  }
+  .q-feedback { margin-top: 16px; padding: 14px 16px; border-radius: 8px; font-size: 14px; line-height: 1.5; }
   .q-feedback.ok { background: var(--success-soft); border-left: 4px solid var(--success); }
   .q-feedback.no { background: var(--danger-soft); border-left: 4px solid var(--danger); }
   .q-feedback > strong { display: block; margin-bottom: 8px; font-size: 15px; }
 
   .explain-block { margin-top: 14px; padding: 14px 16px; background: var(--surface-alt); border-radius: 8px; border-left: 3px solid var(--primary); }
-  .explain-block h4 {
-    font-size: 12px; text-transform: uppercase; letter-spacing: .5px; font-weight: 700;
-    color: var(--primary); margin-bottom: 6px;
-  }
+  .explain-block h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
   .explain-block p { font-size: 14px; line-height: 1.55; margin-bottom: 8px; color: var(--text); }
   .explain-block p:last-child { margin-bottom: 0; }
-  .explain-block .distractor {
-    display: flex; gap: 10px; padding: 8px 0;
-    border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.5;
-  }
+  .explain-block .distractor { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.5; }
   .explain-block .distractor:last-child { border-bottom: none; }
-  .explain-block .distractor .d-letter {
-    font-weight: 700; color: var(--danger); min-width: 22px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
+  .explain-block .distractor .d-letter { font-weight: 700; color: var(--danger); min-width: 22px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 
   .q-actions { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
 
@@ -341,6 +302,34 @@ Changelog v0.1:
     color: var(--text-muted);
   }
   .type-banner strong { color: var(--text); }
+
+  /* ===== Banco de questões (v0.5) ===== */
+  .db-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .db-stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .db-stat .dbs-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+  .db-stat .dbs-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+  .db-stat.dbs-real { border-left: 4px solid #1e40af; }
+  .db-stat.dbs-did { border-left: 4px solid var(--warning); }
+  .db-stat.dbs-total { border-left: 4px solid var(--primary); }
+
+  .io-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px; }
+  .io-box h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .io-box p { font-size: 14px; line-height: 1.5; margin-bottom: 10px; color: var(--text); }
+  .io-box textarea {
+    width: 100%; min-height: 140px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12.5px; line-height: 1.5; resize: vertical;
+    background: var(--surface-alt); color: var(--text);
+  }
+  .io-box .io-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+  .import-report { margin-top: 12px; padding: 12px 14px; border-radius: 8px; font-size: 13.5px; line-height: 1.5; }
+  .import-report.ok { background: var(--success-soft); border-left: 4px solid var(--success); }
+  .import-report.warn { background: var(--warning-soft); border-left: 4px solid var(--warning); }
+  .import-report.err { background: var(--danger-soft); border-left: 4px solid var(--danger); }
+  .import-report ul { margin: 6px 0 0 18px; padding: 0; }
+  .import-report li { margin-bottom: 3px; }
 
   .app-footer {
     margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border);
@@ -376,7 +365,7 @@ Changelog v0.1:
         <span class="brand-sub">Administração &amp; Direito Administrativo</span>
       </div>
       <div class="header-spacer"></div>
-      <span class="version-badge" id="appVersionBadge">v0.4</span>
+      <span class="version-badge" id="appVersionBadge">v0.5</span>
     </header>
 
     <aside class="sidebar" id="sidebar">
@@ -389,6 +378,9 @@ Changelog v0.1:
       </button>
       <button class="nav-item" data-nav="questoes">
         <span class="nav-icon">📝</span><span>Questões</span>
+      </button>
+      <button class="nav-item" data-nav="banco-questoes">
+        <span class="nav-icon">🗄️</span><span>Banco de Questões</span>
       </button>
 
       <div class="nav-section-title">Sistema</div>
@@ -407,10 +399,7 @@ Changelog v0.1:
 (function () {
   'use strict';
 
-  /* ============================================================
-     CONSTANTES
-  ============================================================ */
-  var APP_VERSION = '0.4';                       // <-- alterado
+  var APP_VERSION = '0.5';
   var SCHEMA_VERSION = 1;
   var STORAGE_KEY = 'adminDir.state';
 
@@ -418,87 +407,52 @@ Changelog v0.1:
   var PRIORITY_LABELS = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
   var STATUS_LABELS = { 'conhecido': 'Conhecido', 'duvida': 'Em dúvida', 'desconhecido': 'Desconhecido' };
   var DIAG_TYPE_LABELS = {
-    'multipla_escolha': 'Múltipla escolha',
-    'verdadeiro_falso': 'Verdadeiro ou falso',
-    'situacao': 'Situação prática',
-    'autoavaliacao': 'Autoavaliação'
+    'multipla_escolha': 'Múltipla escolha', 'verdadeiro_falso': 'Verdadeiro ou falso',
+    'situacao': 'Situação prática', 'autoavaliacao': 'Autoavaliação'
   };
   var DIFFICULTY_LABELS = { 1: 'Fácil', 2: 'Médio', 3: 'Difícil' };
   var DIFFICULTY_CLASS = { 1: 'badge-facil', 2: 'badge-medio', 3: 'badge-dificil' };
 
   /* ============================================================
-     MÓDULOS — inalterado
+     MODULOS
   ============================================================ */
   var MODULES = [
-    { id: 'ADM-01', area: 'ADM', titulo: 'Fundamentos da Administração', prioridade: 'alta',
-      subtopicos: ['Conceito de Administração','Eficiência, eficácia e efetividade','Recursos organizacionais','Organizações','Níveis organizacionais','Funções administrativas'] },
-    { id: 'ADM-02', area: 'ADM', titulo: 'Processo Administrativo — PODC', prioridade: 'alta',
-      subtopicos: ['Planejamento','Organização','Direção','Controle','Integração das funções'] },
-    { id: 'ADM-03', area: 'ADM', titulo: 'Planejamento', prioridade: 'alta',
-      subtopicos: ['Conceito','Níveis','Estratégico','Tático','Operacional','Objetivos e metas','Planos','Análise ambiental'] },
-    { id: 'ADM-04', area: 'ADM', titulo: 'Organização', prioridade: 'alta',
-      subtopicos: ['Estrutura organizacional','Divisão do trabalho','Especialização','Hierarquia','Autoridade','Responsabilidade','Amplitude administrativa','Centralização e descentralização','Departamentalização'] },
-    { id: 'ADM-05', area: 'ADM', titulo: 'Direção', prioridade: 'media',
-      subtopicos: ['Liderança','Motivação','Comunicação','Coordenação','Comportamento organizacional'] },
-    { id: 'ADM-06', area: 'ADM', titulo: 'Controle', prioridade: 'media',
-      subtopicos: ['Conceito','Etapas','Padrões','Indicadores','Avaliação','Correção de desvios'] },
-    { id: 'ADM-07', area: 'ADM', titulo: 'Gestão de Pessoas', prioridade: 'alta',
-      subtopicos: ['Conceitos','Recrutamento','Seleção','Treinamento','Desenvolvimento','Avaliação','Desempenho','Gestão por competências'] },
-    { id: 'ADM-08', area: 'ADM', titulo: 'Liderança e Motivação', prioridade: 'media',
-      subtopicos: ['Teorias da motivação','Liderança','Estilos de liderança','Comportamento','Equipes'] },
-    { id: 'ADM-09', area: 'ADM', titulo: 'Comunicação Organizacional', prioridade: 'media',
-      subtopicos: ['Processo de comunicação','Emissor','Receptor','Mensagem','Canal','Ruído','Feedback','Barreiras'] },
-    { id: 'ADM-10', area: 'ADM', titulo: 'Gestão da Qualidade', prioridade: 'media',
-      subtopicos: ['Qualidade','Melhoria contínua','PDCA','Ferramentas da qualidade','Foco no cliente','Gestão por processos'] },
-    { id: 'ADM-11', area: 'ADM', titulo: 'Administração de Materiais e Patrimônio', prioridade: 'alta',
-      subtopicos: ['Materiais','Estoques','Compras','Armazenagem','Distribuição','Patrimônio','Inventário'] },
-    { id: 'ADM-12', area: 'ADM', titulo: 'Gestão por Processos', prioridade: 'media',
-      subtopicos: ['Processos','Atividades','Tarefas','Entradas','Saídas','Clientes','Indicadores','Melhoria de processos'] },
-    { id: 'ADM-13', area: 'ADM', titulo: 'Atendimento ao Público', prioridade: 'media',
-      subtopicos: ['Atendimento','Qualidade','Ética','Comunicação','Relacionamento com usuário','Postura profissional'] },
-    { id: 'AP-01', area: 'AP', titulo: 'Conceitos de Administração Pública', prioridade: 'alta',
-      subtopicos: ['Conceito','Campo de atuação','Regime jurídico'] },
-    { id: 'AP-02', area: 'AP', titulo: 'Evolução dos Modelos Administrativos', prioridade: 'alta',
-      subtopicos: ['Patrimonialismo','Burocracia','Administração gerencial'] },
-    { id: 'AP-03', area: 'AP', titulo: 'Princípios da Administração Pública', prioridade: 'alta',
-      subtopicos: ['Legalidade','Impessoalidade','Moralidade','Publicidade','Eficiência'] },
-    { id: 'AP-04', area: 'AP', titulo: 'Administração Direta e Indireta', prioridade: 'alta',
-      subtopicos: ['Administração Direta','Administração Indireta','Autarquias','Fundações','Empresas públicas','Sociedades de economia mista'] },
-    { id: 'AP-05', area: 'AP', titulo: 'Órgãos e Entidades Públicas', prioridade: 'alta',
-      subtopicos: ['Órgãos públicos','Entidades públicas','Classificação','Capacidade'] },
-    { id: 'DA-01', area: 'DA', titulo: 'Introdução ao Direito Administrativo', prioridade: 'alta',
-      subtopicos: ['Conceito','Objeto','Fontes','Regime jurídico'] },
-    { id: 'DA-02', area: 'DA', titulo: 'Princípios da Administração Pública', prioridade: 'alta',
-      subtopicos: ['Princípios expressos','Princípios implícitos'] },
-    { id: 'DA-03', area: 'DA', titulo: 'Organização Administrativa', prioridade: 'alta',
-      subtopicos: ['Administração Direta','Administração Indireta','Entidades administrativas'] },
-    { id: 'DA-04', area: 'DA', titulo: 'Agentes Públicos', prioridade: 'alta',
-      subtopicos: ['Conceito','Classificação','Cargo','Emprego','Função','Regime disciplinar'] },
-    { id: 'DA-05', area: 'DA', titulo: 'Poderes Administrativos', prioridade: 'alta',
-      subtopicos: ['Hierárquico','Disciplinar','Regulamentar','Polícia','Vinculado','Discricionário'] },
-    { id: 'DA-06', area: 'DA', titulo: 'Atos Administrativos', prioridade: 'alta',
-      subtopicos: ['Conceito','Atributos','Elementos','Classificação','Extinção','Anulação','Revogação'] },
-    { id: 'DA-07', area: 'DA', titulo: 'Serviços Públicos', prioridade: 'media',
-      subtopicos: ['Conceito','Princípios','Formas','Concessão','Permissão','Autorização'] },
-    { id: 'DA-08', area: 'DA', titulo: 'Licitações e Contratos — Lei 14.133/2021', prioridade: 'alta',
-      subtopicos: ['Lei 14.133/2021','Princípios','Modalidades','Contratação direta','Dispensa','Inexigibilidade','Contratos','Fiscalização','Sanções'] },
-    { id: 'DA-09', area: 'DA', titulo: 'Responsabilidade Civil do Estado', prioridade: 'media',
-      subtopicos: ['Responsabilidade objetiva','Excludentes','Ação regressiva'] },
-    { id: 'DA-10', area: 'DA', titulo: 'Controle da Administração Pública', prioridade: 'alta',
-      subtopicos: ['Controle interno','Controle externo','Controle judicial','Controle legislativo','Tribunais de Contas'] },
-    { id: 'DA-11', area: 'DA', titulo: 'Improbidade Administrativa', prioridade: 'media',
-      subtopicos: ['Lei 8.429/1992','Atos de improbidade','Sanções'] },
-    { id: 'DA-12', area: 'DA', titulo: 'Processo Administrativo', prioridade: 'media',
-      subtopicos: ['Processo administrativo','Lei 9.784/1999','Fases','Recursos'] },
-    { id: 'DA-13', area: 'DA', titulo: 'Bens Públicos', prioridade: 'baixa',
-      subtopicos: ['Conceito','Classificação','Regime jurídico','Uso de bens públicos'] },
-    { id: 'DA-14', area: 'DA', titulo: 'Intervenção do Estado na Propriedade', prioridade: 'baixa',
-      subtopicos: ['Desapropriação','Limitação administrativa','Servidão','Tombamento','Requisição'] }
+    { id: 'ADM-01', area: 'ADM', titulo: 'Fundamentos da Administração', prioridade: 'alta', subtopicos: ['Conceito de Administração','Eficiência, eficácia e efetividade','Recursos organizacionais','Organizações','Níveis organizacionais','Funções administrativas'] },
+    { id: 'ADM-02', area: 'ADM', titulo: 'Processo Administrativo — PODC', prioridade: 'alta', subtopicos: ['Planejamento','Organização','Direção','Controle','Integração das funções'] },
+    { id: 'ADM-03', area: 'ADM', titulo: 'Planejamento', prioridade: 'alta', subtopicos: ['Conceito','Níveis','Estratégico','Tático','Operacional','Objetivos e metas','Planos','Análise ambiental'] },
+    { id: 'ADM-04', area: 'ADM', titulo: 'Organização', prioridade: 'alta', subtopicos: ['Estrutura organizacional','Divisão do trabalho','Especialização','Hierarquia','Autoridade','Responsabilidade','Amplitude administrativa','Centralização e descentralização','Departamentalização'] },
+    { id: 'ADM-05', area: 'ADM', titulo: 'Direção', prioridade: 'media', subtopicos: ['Liderança','Motivação','Comunicação','Coordenação','Comportamento organizacional'] },
+    { id: 'ADM-06', area: 'ADM', titulo: 'Controle', prioridade: 'media', subtopicos: ['Conceito','Etapas','Padrões','Indicadores','Avaliação','Correção de desvios'] },
+    { id: 'ADM-07', area: 'ADM', titulo: 'Gestão de Pessoas', prioridade: 'alta', subtopicos: ['Conceitos','Recrutamento','Seleção','Treinamento','Desenvolvimento','Avaliação','Desempenho','Gestão por competências'] },
+    { id: 'ADM-08', area: 'ADM', titulo: 'Liderança e Motivação', prioridade: 'media', subtopicos: ['Teorias da motivação','Liderança','Estilos de liderança','Comportamento','Equipes'] },
+    { id: 'ADM-09', area: 'ADM', titulo: 'Comunicação Organizacional', prioridade: 'media', subtopicos: ['Processo de comunicação','Emissor','Receptor','Mensagem','Canal','Ruído','Feedback','Barreiras'] },
+    { id: 'ADM-10', area: 'ADM', titulo: 'Gestão da Qualidade', prioridade: 'media', subtopicos: ['Qualidade','Melhoria contínua','PDCA','Ferramentas da qualidade','Foco no cliente','Gestão por processos'] },
+    { id: 'ADM-11', area: 'ADM', titulo: 'Administração de Materiais e Patrimônio', prioridade: 'alta', subtopicos: ['Materiais','Estoques','Compras','Armazenagem','Distribuição','Patrimônio','Inventário'] },
+    { id: 'ADM-12', area: 'ADM', titulo: 'Gestão por Processos', prioridade: 'media', subtopicos: ['Processos','Atividades','Tarefas','Entradas','Saídas','Clientes','Indicadores','Melhoria de processos'] },
+    { id: 'ADM-13', area: 'ADM', titulo: 'Atendimento ao Público', prioridade: 'media', subtopicos: ['Atendimento','Qualidade','Ética','Comunicação','Relacionamento com usuário','Postura profissional'] },
+    { id: 'AP-01', area: 'AP', titulo: 'Conceitos de Administração Pública', prioridade: 'alta', subtopicos: ['Conceito','Campo de atuação','Regime jurídico'] },
+    { id: 'AP-02', area: 'AP', titulo: 'Evolução dos Modelos Administrativos', prioridade: 'alta', subtopicos: ['Patrimonialismo','Burocracia','Administração gerencial'] },
+    { id: 'AP-03', area: 'AP', titulo: 'Princípios da Administração Pública', prioridade: 'alta', subtopicos: ['Legalidade','Impessoalidade','Moralidade','Publicidade','Eficiência'] },
+    { id: 'AP-04', area: 'AP', titulo: 'Administração Direta e Indireta', prioridade: 'alta', subtopicos: ['Administração Direta','Administração Indireta','Autarquias','Fundações','Empresas públicas','Sociedades de economia mista'] },
+    { id: 'AP-05', area: 'AP', titulo: 'Órgãos e Entidades Públicas', prioridade: 'alta', subtopicos: ['Órgãos públicos','Entidades públicas','Classificação','Capacidade'] },
+    { id: 'DA-01', area: 'DA', titulo: 'Introdução ao Direito Administrativo', prioridade: 'alta', subtopicos: ['Conceito','Objeto','Fontes','Regime jurídico'] },
+    { id: 'DA-02', area: 'DA', titulo: 'Princípios da Administração Pública', prioridade: 'alta', subtopicos: ['Princípios expressos','Princípios implícitos'] },
+    { id: 'DA-03', area: 'DA', titulo: 'Organização Administrativa', prioridade: 'alta', subtopicos: ['Administração Direta','Administração Indireta','Entidades administrativas'] },
+    { id: 'DA-04', area: 'DA', titulo: 'Agentes Públicos', prioridade: 'alta', subtopicos: ['Conceito','Classificação','Cargo','Emprego','Função','Regime disciplinar'] },
+    { id: 'DA-05', area: 'DA', titulo: 'Poderes Administrativos', prioridade: 'alta', subtopicos: ['Hierárquico','Disciplinar','Regulamentar','Polícia','Vinculado','Discricionário'] },
+    { id: 'DA-06', area: 'DA', titulo: 'Atos Administrativos', prioridade: 'alta', subtopicos: ['Conceito','Atributos','Elementos','Classificação','Extinção','Anulação','Revogação'] },
+    { id: 'DA-07', area: 'DA', titulo: 'Serviços Públicos', prioridade: 'media', subtopicos: ['Conceito','Princípios','Formas','Concessão','Permissão','Autorização'] },
+    { id: 'DA-08', area: 'DA', titulo: 'Licitações e Contratos — Lei 14.133/2021', prioridade: 'alta', subtopicos: ['Lei 14.133/2021','Princípios','Modalidades','Contratação direta','Dispensa','Inexigibilidade','Contratos','Fiscalização','Sanções'] },
+    { id: 'DA-09', area: 'DA', titulo: 'Responsabilidade Civil do Estado', prioridade: 'media', subtopicos: ['Responsabilidade objetiva','Excludentes','Ação regressiva'] },
+    { id: 'DA-10', area: 'DA', titulo: 'Controle da Administração Pública', prioridade: 'alta', subtopicos: ['Controle interno','Controle externo','Controle judicial','Controle legislativo','Tribunais de Contas'] },
+    { id: 'DA-11', area: 'DA', titulo: 'Improbidade Administrativa', prioridade: 'media', subtopicos: ['Lei 8.429/1992','Atos de improbidade','Sanções'] },
+    { id: 'DA-12', area: 'DA', titulo: 'Processo Administrativo', prioridade: 'media', subtopicos: ['Processo administrativo','Lei 9.784/1999','Fases','Recursos'] },
+    { id: 'DA-13', area: 'DA', titulo: 'Bens Públicos', prioridade: 'baixa', subtopicos: ['Conceito','Classificação','Regime jurídico','Uso de bens públicos'] },
+    { id: 'DA-14', area: 'DA', titulo: 'Intervenção do Estado na Propriedade', prioridade: 'baixa', subtopicos: ['Desapropriação','Limitação administrativa','Servidão','Tombamento','Requisição'] }
   ];
 
   /* ============================================================
-     AULAS — inalterado desde v0.2
-     (Mantidas integralmente. Conteúdo idêntico ao v0.3.)
+     AULAS (v0.2) — inalteradas
   ============================================================ */
   var LESSONS = {
     'ADM-01': {
@@ -508,45 +462,23 @@ Changelog v0.1:
       introducao: 'Administrar é o ato de planejar, organizar, dirigir e controlar recursos para alcançar objetivos. Está presente em uma empresa, em um órgão público e até na sua rotina pessoal. Todo concurso de nível médio na área administrativa cobra, em algum grau, esse vocabulário básico.',
       explicacaoSimples: 'Pense em uma escola pública. O diretor precisa decidir metas (planejar), distribuir turmas e professores (organizar), orientar a equipe (dirigir) e verificar se os resultados saíram como o esperado (controlar). Isso é Administração. Ela existe sempre que há recursos limitados, objetivos a atingir e pessoas envolvidas.',
       explicacaoTecnica: 'Administração é o processo de tomar decisões sobre recursos (humanos, materiais, financeiros, informacionais e tecnológicos) para alcançar objetivos organizacionais de forma eficiente, eficaz e efetiva. As funções administrativas clássicas, segundo Fayol, são: planejar, organizar, dirigir e controlar (PODC). Os níveis organizacionais dividem-se em estratégico (institucional), tático (intermediário) e operacional.',
-      exemplos: [
-        'Uma prefeitura que define um plano de metas para reduzir filas de atendimento está planejando.',
-        'Um setor de RH que divide tarefas entre analistas e assistentes está organizando.',
-        'Um coordenador que motiva a equipe para cumprir prazos está dirigindo.',
-        'Uma secretaria que compara indicadores mensais com as metas está controlando.'
-      ],
+      exemplos: ['Uma prefeitura que define um plano de metas para reduzir filas de atendimento está planejando.','Um setor de RH que divide tarefas entre analistas e assistentes está organizando.','Um coordenador que motiva a equipe para cumprir prazos está dirigindo.','Uma secretaria que compara indicadores mensais com as metas está controlando.'],
       comparacoes: [
-        { termoA: 'Eficiência', termoB: 'Eficácia',
-          diferenca: 'Eficiência é fazer certo, com o mínimo de recursos e desperdício. Eficácia é atingir o resultado/objetivo proposto. Você pode ser eficaz e ineficiente (atingiu a meta gastando muito) ou eficiente e ineficaz (gastou pouco, mas não atingiu a meta).' },
-        { termoA: 'Eficácia', termoB: 'Efetividade',
-          diferenca: 'Eficácia é atingir o objetivo. Efetividade é o impacto real e duradouro desse resultado sobre a realidade — é o efeito transformador. Uma campanha que vacina 100% do público-alvo é eficaz; se ela de fato reduz a doença na população, é efetiva.' },
-        { termoA: 'Nível estratégico', termoB: 'Nível operacional',
-          diferenca: 'O estratégico é o topo: define missão, visão e objetivos de longo prazo. O operacional é a base: executa tarefas do dia a dia. O nível tático (gerencial) faz a ponte entre eles.' }
+        { termoA: 'Eficiência', termoB: 'Eficácia', diferenca: 'Eficiência é fazer certo, com o mínimo de recursos e desperdício. Eficácia é atingir o resultado/objetivo proposto. Você pode ser eficaz e ineficiente (atingiu a meta gastando muito) ou eficiente e ineficaz (gastou pouco, mas não atingiu a meta).' },
+        { termoA: 'Eficácia', termoB: 'Efetividade', diferenca: 'Eficácia é atingir o objetivo. Efetividade é o impacto real e duradouro desse resultado sobre a realidade — é o efeito transformador.' },
+        { termoA: 'Nível estratégico', termoB: 'Nível operacional', diferenca: 'O estratégico é o topo: define missão, visão e objetivos de longo prazo. O operacional é a base: executa tarefas do dia a dia. O nível tático (gerencial) faz a ponte.' }
       ],
-      aplicacaoAdministracaoPublica: 'Na Administração Pública, os princípios constitucionais trazem a eficiência como dever expresso (art. 37, caput, CF/88, após EC 19/1998). Isso significa que o gestor público não pode apenas cumprir a lei: precisa buscar o melhor resultado com os recursos disponíveis. O planejamento público, o orçamento, a estrutura de órgãos e o controle pelos Tribunais de Contas são manifestações concretas das funções administrativas no Estado.',
-      pegadinhas: [
-        'Trocar eficiência por eficácia: bancas costumam dizer "fazer bem feito" (eficiência) e "alcançar o objetivo" (eficácia). Leia com atenção qual é cobrada.',
-        'Confundir eficácia com efetividade: eficácia = meta atingida; efetividade = impacto real positivo.',
-        'Dizer que "eficiência" é princípio implícito da Administração Pública. Desde a EC 19/1998, é princípio EXPRESSO (LIMPE).'
-      ],
-      errosComuns: [
-        'Achar que eficiência e eficácia são sinônimos.',
-        'Esquecer que a eficiência entrou no caput do art. 37 da CF pela EC 19/1998 (Reforma Gerencial).',
-        'Reduzir Administração a "administrar empresa privada" — a Administração Pública tem regime jurídico próprio.'
-      ],
-      resumo: [
-        'Administração = tomar decisões sobre recursos para alcançar objetivos.',
-        'Funções administrativas: Planejar, Organizar, Dirigir e Controlar (PODC).',
-        'Eficiência = fazer bem, com menos desperdício. Eficácia = atingir o objetivo. Efetividade = impacto real.',
-        'Níveis: estratégico, tático e operacional.',
-        'Recursos organizacionais: humanos, materiais, financeiros, informacionais, tecnológicos.'
-      ],
+      aplicacaoAdministracaoPublica: 'Na Administração Pública, os princípios constitucionais trazem a eficiência como dever expresso (art. 37, caput, CF/88, após EC 19/1998). Isso significa que o gestor público não pode apenas cumprir a lei: precisa buscar o melhor resultado com os recursos disponíveis.',
+      pegadinhas: ['Trocar eficiência por eficácia: bancas costumam dizer "fazer bem feito" (eficiência) e "alcançar o objetivo" (eficácia).','Confundir eficácia com efetividade.','Dizer que "eficiência" é princípio implícito. Desde a EC 19/1998, é EXPRESSO (LIMPE).'],
+      errosComuns: ['Achar que eficiência e eficácia são sinônimos.','Esquecer que a eficiência entrou no caput do art. 37 da CF pela EC 19/1998.','Reduzir Administração a "administrar empresa privada".'],
+      resumo: ['Administração = tomar decisões sobre recursos para alcançar objetivos.','Funções administrativas: Planejar, Organizar, Dirigir e Controlar (PODC).','Eficiência = fazer bem, com menos desperdício. Eficácia = atingir o objetivo. Efetividade = impacto real.','Níveis: estratégico, tático e operacional.','Recursos organizacionais: humanos, materiais, financeiros, informacionais, tecnológicos.'],
       modoProfessor: {
-        explicarMaisSimples: 'Administrar é como organizar uma viagem: você decide onde quer chegar (objetivo), vê quanto dinheiro tem (recursos), monta o roteiro (planejamento), divide tarefas com quem vai junto (organização), motiva o grupo (direção) e confere no caminho se está tudo certo (controle).',
-        outroExemplo: 'Um hospital público: o secretário de saúde define a meta de reduzir em 20% o tempo de espera (planejamento estratégico); o diretor do hospital distribui leitos e equipes (organização); os chefes de plantão orientam os setores (direção); a ouvidoria monitora as reclamações e os indicadores (controle).',
-        compararConceitos: 'Eficiência olha para o COMO (método, recursos, desperdício). Eficácia olha para o QUÊ (meta, resultado). Efetividade olha para o PARA QUÊ (impacto, transformação social). O concurseiro deve identificar no enunciado qual dos três está sendo cobrado.',
-        mostrarPegadinha: 'Cuidado com a clássica: "A eficiência foi inserida no rol de princípios da Administração Pública pela EC 19/1998". Está CORRETA. Se a banca disser "pela EC 45/2004" ou "pela CF/1988 original", está errada.',
-        comoApareceEmConcurso: 'Costuma aparecer em questões de múltipla escolha pedindo a diferença entre eficiência e eficácia em contextos administrativos, ou em questões sobre princípios (LIMPE) cobrando se eficiência é expressa ou implícita.',
-        fazerPergunta: { pergunta: 'Uma equipe entrega todas as metas do mês, mas gastou o dobro do orçamento previsto. Ela foi eficiente, eficaz ou efetiva?', resposta: 'Foi EFICAZ (atingiu as metas), mas NÃO foi eficiente (gastou muito mais recursos do que o necessário). A efetividade depende do impacto real do resultado.' }
+        explicarMaisSimples: 'Administrar é como organizar uma viagem: você decide onde quer chegar (objetivo), vê quanto dinheiro tem (recursos), monta o roteiro (planejamento), divide tarefas (organização), motiva o grupo (direção) e confere (controle).',
+        outroExemplo: 'Um hospital público: o secretário define a meta de reduzir em 20% o tempo de espera (planejamento); o diretor distribui leitos e equipes (organização); chefes de plantão orientam setores (direção); a ouvidoria monitora indicadores (controle).',
+        compararConceitos: 'Eficiência olha para o COMO. Eficácia olha para o QUÊ. Efetividade olha para o PARA QUÊ. Identifique no enunciado qual está sendo cobrado.',
+        mostrarPegadinha: 'Cuidado: "A eficiência foi inserida no rol de princípios pela EC 19/1998" — CORRETA. Se a banca disser "EC 45/2004" ou "CF/1988 original", está errada.',
+        comoApareceEmConcurso: 'Aparece pedindo diferença entre eficiência e eficácia em contextos administrativos, ou cobrando se eficiência é expressa ou implícita (LIMPE).',
+        fazerPergunta: { pergunta: 'Uma equipe entrega todas as metas do mês, mas gastou o dobro do orçamento. Foi eficiente, eficaz ou efetiva?', resposta: 'Foi EFICAZ (atingiu metas), mas NÃO foi eficiente (gastou muito mais). A efetividade depende do impacto real.' }
       }
     },
     'ADM-02': {
@@ -554,97 +486,51 @@ Changelog v0.1:
       objetivo: 'Dominar o ciclo PODC — Planejamento, Organização, Direção e Controle — identificando cada função, sua finalidade e como elas se integram no processo administrativo.',
       prerequisitos: ['ADM-01'],
       introducao: 'PODC é a espinha dorsal da Administração. Todo concurso cobra esse ciclo, seja de forma direta (qual a função que define objetivos?) ou aplicada (que função está sendo exercida nesta situação?). Saber distinguir com segurança cada etapa é decisivo.',
-      explicacaoSimples: 'Imagine que você vai montar uma festa. Primeiro decide tema, data, convidados (planejamento). Depois organiza quem traz o quê, aluga o espaço (organização). No dia, coordena as pessoas, resolve imprevistos (direção). No fim, vê se deu certo, o que faltou (controle). As quatro etapas se repetem em qualquer organização.',
+      explicacaoSimples: 'Imagine que você vai montar uma festa. Primeiro decide tema, data, convidados (planejamento). Depois organiza quem traz o quê, aluga o espaço (organização). No dia, coordena as pessoas, resolve imprevistos (direção). No fim, vê se deu certo (controle). As quatro etapas se repetem em qualquer organização.',
       explicacaoTecnica: 'O ciclo administrativo é composto por quatro funções: (1) Planejamento — define objetivos e meios; (2) Organização — estrutura recursos, autoridade, responsabilidade e departamentalização; (3) Direção — lidera, motiva e comunica pessoas; (4) Controle — estabelece padrões, monitora desempenho e corrige desvios. As funções são interdependentes e cíclicas: o controle alimenta novo planejamento.',
-      exemplos: [
-        'Planejar: a Secretaria de Educação define reduzir evasão escolar em 15% no ano.',
-        'Organizar: divide a meta entre as escolas e cria uma comissão de acompanhamento.',
-        'Dirigir: o secretário reúne os diretores, motiva e delega responsabilidades.',
-        'Controlar: bimestralmente compara os números e ajusta as ações.'
-      ],
+      exemplos: ['Planejar: a Secretaria de Educação define reduzir evasão escolar em 15% no ano.','Organizar: divide a meta entre as escolas e cria uma comissão de acompanhamento.','Dirigir: o secretário reúne os diretores, motiva e delega responsabilidades.','Controlar: bimestralmente compara os números e ajusta as ações.'],
       comparacoes: [
-        { termoA: 'Planejamento', termoB: 'Controle',
-          diferenca: 'Planejamento define o que se quer alcançar e como. Controle verifica se o que foi planejado está sendo cumprido e corrige desvios. O controle sempre compara com um padrão oriundo do planejamento.' },
-        { termoA: 'Organização', termoB: 'Direção',
-          diferenca: 'Organização é estrutural — define órgãos, cargos, hierarquia, autoridade. Direção é comportamental — lida com pessoas, motivação, liderança e comunicação.' },
-        { termoA: 'PODC (Fayol)', termoB: 'Ciclo PDCA (Deming)',
-          diferenca: 'PODC é o ciclo administrativo geral. PDCA (Plan, Do, Check, Act) é a ferramenta da qualidade para melhoria contínua. São próximos, mas não sinônimos — PDCA costuma aparecer em Gestão da Qualidade (ADM-10).' }
+        { termoA: 'Planejamento', termoB: 'Controle', diferenca: 'Planejamento define o que se quer alcançar e como. Controle verifica se o que foi planejado está sendo cumprido e corrige desvios. O controle sempre compara com um padrão oriundo do planejamento.' },
+        { termoA: 'Organização', termoB: 'Direção', diferenca: 'Organização é estrutural — define órgãos, cargos, hierarquia, autoridade. Direção é comportamental — lida com pessoas, motivação, liderança e comunicação.' },
+        { termoA: 'PODC (Fayol)', termoB: 'Ciclo PDCA (Deming)', diferenca: 'PODC é o ciclo administrativo geral. PDCA (Plan, Do, Check, Act) é a ferramenta da qualidade para melhoria contínua. São próximos, mas não sinônimos — PDCA costuma aparecer em Gestão da Qualidade (ADM-10).' }
       ],
       aplicacaoAdministracaoPublica: 'O ciclo PODC está presente no dia a dia do Estado: o PPA é instrumento de planejamento estratégico; a LDO e a LOA traduzem o planejamento em metas e recursos; a estrutura de ministérios e secretarias reflete a organização; a atuação dos gestores junto às equipes é direção; e o controle é exercido internamente (controladorias) e externamente (Tribunais de Contas, MP, Congresso).',
-      pegadinhas: [
-        'Bancas trocam "direção" por "coordenação" ou "execução". Na formulação clássica de Fayol, a terceira função é DIREÇÃO.',
-        'Confundir PODC com PDCA. PDCA tem 4 letras parecidas, mas pertence à qualidade (ADM-10).',
-        'Ordem: o ciclo começa pelo PLANEJAMENTO, não pela organização. Se a questão inverter, está errada.',
-        'Controle NÃO é etapa final isolada — é contínuo e alimenta novo planejamento.'
-      ],
-      errosComuns: [
-        'Achar que direção é o mesmo que controle.',
-        'Pensar que a organização precede o planejamento.',
-        'Ignorar que PODC é cíclico — o controle retroalimenta o planejamento.'
-      ],
-      resumo: [
-        'PODC = Planejamento + Organização + Direção + Controle.',
-        'Planejamento define objetivos e meios (estratégico, tático, operacional).',
-        'Organização estrutura recursos, autoridade e responsabilidade.',
-        'Direção lida com pessoas: liderança, motivação, comunicação.',
-        'Controle compara com padrões e corrige desvios.',
-        'O ciclo é contínuo e interdependente.'
-      ],
+      pegadinhas: ['Bancas trocam "direção" por "coordenação" ou "execução". Na formulação clássica de Fayol, a terceira função é DIREÇÃO.','Confundir PODC com PDCA.','Ordem: o ciclo começa pelo PLANEJAMENTO.','Controle NÃO é etapa final isolada — é contínuo e alimenta novo planejamento.'],
+      errosComuns: ['Achar que direção é o mesmo que controle.','Pensar que a organização precede o planejamento.','Ignorar que PODC é cíclico.'],
+      resumo: ['PODC = Planejamento + Organização + Direção + Controle.','Planejamento define objetivos e meios (estratégico, tático, operacional).','Organização estrutura recursos, autoridade e responsabilidade.','Direção lida com pessoas: liderança, motivação, comunicação.','Controle compara com padrões e corrige desvios.','O ciclo é contínuo e interdependente.'],
       modoProfessor: {
-        explicarMaisSimples: 'PODC é o passo a passo de qualquer tarefa organizada: primeiro a gente pensa no que quer (planejamento), depois arruma o jeito de fazer (organização), depois põe gente pra fazer e dá apoio (direção), e por último confere se deu certo (controle). Aí o ciclo começa de novo.',
-        outroExemplo: 'Em uma licitação pública: o órgão planeja a contratação (estudo técnico preliminar); organiza o processo (comissão, edital); conduz a sessão, comunica e orienta os licitantes (direção); fiscaliza o contrato e avalia a entrega (controle).',
-        compararConceitos: 'Planejar = decidir o futuro. Organizar = estruturar. Dirigir = conduzir pessoas. Controlar = verificar e corrigir. São quatro perguntas diferentes: O QUÊ? COM O QUÊ? COM QUEM? DEU CERTO?',
-        mostrarPegadinha: 'Pegadinha clássica: "A função de controle é a primeira do processo administrativo". ERRADO. A primeira é planejamento. Outra: "A direção é responsável por definir a estrutura organizacional". ERRADO — isso é organização.',
-        comoApareceEmConcurso: 'Cai muito em questão de correspondência: é dado um exemplo e a banca pergunta a qual função pertence. Também aparece pedindo a ordem correta do ciclo e o autor (Fayol).',
-        fazerPergunta: { pergunta: 'A prefeitura definiu padrões de atendimento e passou a medir mensalmente o tempo de espera nas repartições. Qual função administrativa está sendo exercida?', resposta: 'CONTROLE — pois há padrão definido e comparação sistemática de desempenho.' }
+        explicarMaisSimples: 'PODC é o passo a passo de qualquer tarefa organizada: primeiro a gente pensa no que quer (planejamento), depois arruma o jeito de fazer (organização), depois põe gente pra fazer e dá apoio (direção), e por último confere se deu certo (controle).',
+        outroExemplo: 'Em uma licitação pública: o órgão planeja a contratação (estudo técnico preliminar); organiza o processo (comissão, edital); conduz a sessão (direção); fiscaliza o contrato (controle).',
+        compararConceitos: 'Planejar = decidir o futuro. Organizar = estruturar. Dirigir = conduzir pessoas. Controlar = verificar e corrigir.',
+        mostrarPegadinha: 'Pegadinha clássica: "A função de controle é a primeira do processo administrativo". ERRADO. A primeira é planejamento.',
+        comoApareceEmConcurso: 'Cai muito em questão de correspondência: dado um exemplo, pede-se a função. Também pede a ordem e o autor (Fayol).',
+        fazerPergunta: { pergunta: 'A prefeitura definiu padrões de atendimento e mede mensalmente o tempo de espera. Qual função administrativa está sendo exercida?', resposta: 'CONTROLE — há padrão definido e comparação sistemática de desempenho.' }
       }
     },
     'AP-02': {
       id: 'L-AP-02', moduloId: 'AP-02',
       objetivo: 'Diferenciar os três modelos históricos de Administração Pública — patrimonialista, burocrático e gerencial — identificando características, contexto histórico e marcas de cada um.',
       prerequisitos: ['AP-01'],
-      introducao: 'A Administração Pública brasileira passou por três modelos predominantes. Saber distinguir cada um é obrigatório em qualquer prova de AP ou DA. A banca costuma cobrar características específicas, contexto histórico e nomes de autores.',
-      explicacaoSimples: 'No começo, o Estado era tratado como propriedade do rei ou do governante — isso é patrimonialismo. Depois, para combater a corrupção e o nepotismo, o Estado adotou regras rígidas, concursos, hierarquia e impessoalidade — é a burocracia. Mais recentemente, buscou-se um Estado mais eficiente, com metas, resultados e foco no cidadão — é a administração gerencial.',
-      explicacaoTecnica: 'Modelos: (1) Patrimonialismo — confusão entre público e privado; cargos como propriedade; nepotismo; típico do Brasil colonial e imperial. (2) Burocrático — baseado em Weber; impessoalidade, formalismo, hierarquia, meritocracia, regras escritas; introduzido no Brasil com a Reforma de 1936 e consolidado com o DASP em 1938, no Estado Novo de Getúlio Vargas. (3) Gerencial — princípios da Nova Gestão Pública; foco em resultados, eficiência, controle por desempenho, descentralização, accountability; no Brasil, marco principal foi o Plano Diretor da Reforma do Aparelho do Estado (1995), sob Bresser-Pereira, no governo FHC.',
-      exemplos: [
-        'Nomear parentes para cargos públicos sem concurso é prática patrimonialista.',
-        'Exigir concurso público, documentar tudo e seguir rito formal é marca burocrática.',
-        'Estabelecer contrato de gestão com metas e indicadores em uma autarquia é marca gerencial.'
-      ],
+      introducao: 'A Administração Pública brasileira passou por três modelos predominantes. Saber distinguir cada um é obrigatório em qualquer prova de AP ou DA.',
+      explicacaoSimples: 'No começo, o Estado era tratado como propriedade do rei — patrimonialismo. Depois, para combater corrupção e nepotismo, o Estado adotou regras rígidas, concursos, hierarquia e impessoalidade — burocracia. Mais recentemente, buscou-se um Estado mais eficiente, com metas e foco no cidadão — gerencial.',
+      explicacaoTecnica: 'Modelos: (1) Patrimonialismo — confusão público/privado; cargos como propriedade; nepotismo. (2) Burocrático — Weber; impessoalidade, formalismo, hierarquia, meritocracia, regras escritas; Brasil: 1936 e DASP em 1938 (Vargas). (3) Gerencial — Nova Gestão Pública; foco em resultados, eficiência, controle por desempenho, descentralização; Brasil: Plano Diretor de 1995 (Bresser-Pereira, governo FHC).',
+      exemplos: ['Nomear parentes sem concurso é prática patrimonialista.','Exigir concurso e seguir rito formal é marca burocrática.','Contrato de gestão com metas é marca gerencial.'],
       comparacoes: [
-        { termoA: 'Patrimonialismo', termoB: 'Burocracia',
-          diferenca: 'Patrimonialismo: confusão entre público e privado, pessoalidade, nepotismo. Burocracia: separação clara entre público e privado, impessoalidade, meritocracia, formalismo.' },
-        { termoA: 'Burocracia', termoB: 'Gerencial',
-          diferenca: 'Burocracia: foco em processos, controle rígido por normas, autorreferência. Gerencial: foco em resultados, controle por desempenho, foco no cidadão-cliente, descentralização.' },
-        { termoA: 'Gerencial', termoB: 'Nova Gestão Pública (NGP)',
-          diferenca: 'A NGP (New Public Management) é a corrente teórica internacional; a administração gerencial é sua aplicação prática no Brasil, a partir dos anos 1990.' }
+        { termoA: 'Patrimonialismo', termoB: 'Burocracia', diferenca: 'Patrimonialismo: confusão público/privado, pessoalidade, nepotismo. Burocracia: separação clara, impessoalidade, meritocracia, formalismo.' },
+        { termoA: 'Burocracia', termoB: 'Gerencial', diferenca: 'Burocracia: foco em processos, controle por normas. Gerencial: foco em resultados, controle por desempenho, foco no cidadão-cliente.' },
+        { termoA: 'Gerencial', termoB: 'Nova Gestão Pública (NGP)', diferenca: 'NGP é a corrente internacional; gerencial é a aplicação prática no Brasil, a partir dos anos 1990.' }
       ],
-      aplicacaoAdministracaoPublica: 'O Brasil atual convive com traços dos três modelos. A EC 19/1998 (Reforma Gerencial) introduziu princípios como eficiência e figuras como contrato de gestão e agências executivas. Persistem, porém, práticas burocráticas (formalismo, controles processuais) e, infelizmente, resquícios patrimonialistas.',
-      pegadinhas: [
-        'Afirmar que "a burocracia é sinônimo de Administração Pública" — errado; é apenas um dos modelos.',
-        'Trocar o autor: Weber é o teórico da burocracia; Bresser-Pereira é o nome central da reforma gerencial brasileira (1995).',
-        'Dizer que a reforma gerencial brasileira foi iniciada no governo Vargas — errado; foi em 1995 (FHC). Vargas iniciou a reforma BUROCRÁTICA (1936–1938).',
-        'A EC 19/1998 é chamada "Reforma Gerencial". A Reforma do Estado de 1967 (Decreto-Lei 200/1967) foi desenvolvimentista, não gerencial.'
-      ],
-      errosComuns: [
-        'Chamar a EC 19/1998 de "Reforma Burocrática".',
-        'Confundir Nova Gestão Pública (corrente internacional) com Plano Diretor de 1995 (aplicação brasileira).',
-        'Achar que o gerencialismo substituiu completamente a burocracia — na prática, coexistem.'
-      ],
-      resumo: [
-        'Três modelos históricos: patrimonialista, burocrático e gerencial.',
-        'Patrimonialista: confusão público/privado, nepotismo, pessoalidade.',
-        'Burocrático: Weber, impessoalidade, hierarquia, meritocracia, formalismo. No Brasil: 1936–1938 (Vargas/DASP).',
-        'Gerencial: foco em resultados, eficiência, cidadão-cliente. No Brasil: 1995 (Bresser-Pereira/FHC).',
-        'Marcos legais: EC 19/1998 (Reforma Gerencial); Decreto-Lei 200/1967 (desenvolvimentista).'
-      ],
+      aplicacaoAdministracaoPublica: 'O Brasil atual convive com traços dos três modelos. A EC 19/1998 introduziu princípios como eficiência e instrumentos como contrato de gestão. Persistem práticas burocráticas e resquícios patrimonialistas.',
+      pegadinhas: ['"Burocracia é sinônimo de Administração Pública" — errado.','Trocar autores: Weber → burocracia; Bresser-Pereira → gerencial 1995.','"Reforma gerencial iniciada no governo Vargas" — errado; foi 1995 (FHC). Vargas iniciou a BUROCRÁTICA (1936-1938).'],
+      errosComuns: ['Chamar a EC 19/1998 de "Reforma Burocrática".','Confundir NGP com Plano Diretor de 1995.','Achar que gerencialismo substituiu a burocracia.'],
+      resumo: ['Três modelos: patrimonialista, burocrático, gerencial.','Patrimonialista: confusão público/privado.','Burocrático: Weber, impessoalidade, formalismo. Brasil: 1936-1938 (Vargas/DASP).','Gerencial: resultados, cidadão-cliente. Brasil: 1995 (Bresser-Pereira/FHC).','Marcos: EC 19/1998 (Gerencial); DL 200/1967 (desenvolvimentista).'],
       modoProfessor: {
-        explicarMaisSimples: 'É como a evolução de uma casa. No começo (patrimonialismo), tudo se misturava — o público era tratado como se fosse do dono. Depois (burocracia), construíram muros e regras. Por último (gerencial), passaram a se preocupar com a eficiência da casa.',
-        outroExemplo: 'Uma licitação é um retrato dessa evolução: a obrigatoriedade (burocracia) veio para acabar com o favoritismo (patrimonialismo); os novos parâmetros da Lei 14.133/2021 refletem a lógica gerencial.',
-        compararConceitos: 'Patrimonialista → não separa. Burocrático → separa com regras rígidas. Gerencial → separa com foco em resultado. A palavra-chave: quem o Estado serve?',
-        mostrarPegadinha: 'Cuidado: "A Reforma Gerencial brasileira ocorreu em 1936 com Vargas". ERRADO. Vargas + 1936 = reforma BUROCRÁTICA. Bresser-Pereira + 1995 = reforma GERENCIAL.',
-        comoApareceEmConcurso: 'Bancas cobram: (a) características de cada modelo; (b) autores e períodos; (c) aplicação da EC 19/1998; (d) identificar modelo em situação hipotética.',
-        fazerPergunta: { pergunta: 'Estabelecer contrato de gestão com um hospital público, com metas e bônus por desempenho, é característica de qual modelo?', resposta: 'ADMINISTRAÇÃO GERENCIAL — usa contrato de gestão, metas e incentivo por desempenho.' }
+        explicarMaisSimples: 'É como a evolução de uma casa. No começo (patrimonialismo), tudo se misturava. Depois (burocracia), construíram muros e regras. Por último (gerencial), passaram a se preocupar com a eficiência da casa.',
+        outroExemplo: 'Uma licitação: a obrigatoriedade (burocracia) veio para acabar com o favoritismo (patrimonialismo); os parâmetros da Lei 14.133/2021 refletem a lógica gerencial.',
+        compararConceitos: 'Patrimonialista → não separa. Burocrático → separa com regras rígidas. Gerencial → separa com foco em resultado. Quem o Estado serve?',
+        mostrarPegadinha: 'Cuidado: "A Reforma Gerencial brasileira ocorreu em 1936 com Vargas e teve como autor Bresser-Pereira". ERRADO. Vargas + 1936 = BUROCRÁTICA. Bresser-Pereira + 1995 = GERENCIAL.',
+        comoApareceEmConcurso: 'Bancas cobram características, autores, períodos, aplicação da EC 19/1998 e identificação de modelo em situação prática.',
+        fazerPergunta: { pergunta: 'Contrato de gestão com hospital público, com metas e bônus por desempenho, é característica de qual modelo?', resposta: 'ADMINISTRAÇÃO GERENCIAL — usa contrato de gestão, metas e incentivo por desempenho.' }
       }
     },
     'DA-02': {
@@ -653,56 +539,30 @@ Changelog v0.1:
       prerequisitos: ['DA-01'],
       introducao: 'Os princípios são a base de todo o Direito Administrativo. Sem eles, é impossível entender atos, poderes, licitações, improbidade.',
       explicacaoSimples: 'Cinco princípios ficam expressos na Constituição, resumidos na sigla LIMPE. São os valores que toda Administração Pública deve seguir: obediência à lei, ausência de favoritismo, conduta ética, transparência e boa gestão. Além desses, existem outros implícitos.',
-      explicacaoTecnica: 'LIMPE (art. 37, caput, CF/88): (1) Legalidade — o administrador só pode agir conforme a lei; (2) Impessoalidade — vedação a favoritismos e proibição de promoção pessoal; (3) Moralidade — ética administrativa; (4) Publicidade — dever de transparência, com exceções; (5) Eficiência — inserido pela EC 19/1998. Princípios implícitos: supremacia do interesse público, indisponibilidade do interesse público, autotutela (Súmulas 346 e 473/STF), razoabilidade, proporcionalidade, motivação, ampla defesa, contraditório, segurança jurídica, continuidade do serviço público.',
-      exemplos: [
-        'Legalidade: gestor só contrata após licitação ou hipótese legal de dispensa.',
-        'Impessoalidade: o ato é do órgão, não do agente.',
-        'Moralidade: ato formalmente legal, mas com desvio de finalidade, é imoral e nulo.',
-        'Publicidade: diários oficiais, portais de transparência.',
-        'Eficiência: exigência de resultado útil ao serviço público.'
-      ],
+      explicacaoTecnica: 'LIMPE (art. 37, caput, CF/88): (1) Legalidade — o administrador só pode agir conforme a lei; (2) Impessoalidade — vedação a favoritismos e proibição de promoção pessoal; (3) Moralidade — ética administrativa; (4) Publicidade — transparência, com exceções; (5) Eficiência — EC 19/1998. Implícitos: supremacia do interesse público, indisponibilidade do interesse público, autotutela (Súmulas 346 e 473/STF), razoabilidade, proporcionalidade, motivação, ampla defesa, contraditório, segurança jurídica, continuidade.',
+      exemplos: ['Legalidade: gestor só contrata após licitação ou hipótese legal de dispensa.','Impessoalidade: ato é do órgão, não do agente.','Moralidade: ato legal mas com desvio de finalidade é imoral.','Publicidade: diários oficiais, portais de transparência.','Eficiência: resultado útil ao serviço público.'],
       comparacoes: [
-        { termoA: 'Legalidade administrativa', termoB: 'Legalidade para o particular',
-          diferenca: 'Para o particular, é lícito fazer tudo que a lei NÃO proíbe. Para a Administração, só é lícito fazer o que a lei AUTORIZA ou determina.' },
-        { termoA: 'Moralidade', termoB: 'Legalidade',
-          diferenca: 'Um ato pode ser legal e imoral ao mesmo tempo. Ex.: nomear amigo para cargo em comissão com claro favorecimento.' },
-        { termoA: 'Princípios expressos', termoB: 'Princípios implícitos',
-          diferenca: 'Expressos: os 5 do LIMPE. Implícitos: supremacia do interesse público, indisponibilidade, autotutela, razoabilidade, proporcionalidade, motivação.' }
+        { termoA: 'Legalidade administrativa', termoB: 'Legalidade para o particular', diferenca: 'Para o particular, é lícito fazer tudo que a lei NÃO proíbe. Para a Administração, só é lícito fazer o que a lei AUTORIZA ou determina (legalidade estrita).' },
+        { termoA: 'Moralidade', termoB: 'Legalidade', diferenca: 'Um ato pode ser legal e imoral ao mesmo tempo. Ex.: nomear amigo para cargo em comissão com claro favorecimento.' },
+        { termoA: 'Princípios expressos', termoB: 'Princípios implícitos', diferenca: 'Expressos: LIMPE. Implícitos: supremacia, indisponibilidade, autotutela, razoabilidade, proporcionalidade, motivação.' }
       ],
-      aplicacaoAdministracaoPublica: 'Os princípios estão em todo o serviço público: editais de licitação (publicidade + impessoalidade), controle pelos Tribunais de Contas (legalidade + eficiência), responsabilização por improbidade (moralidade), autotutela (Súmula 473/STF).',
-      pegadinhas: [
-        'Confundir legalidade administrativa com legalidade do particular.',
-        'Esquecer que eficiência é princípio EXPRESSO desde a EC 19/1998.',
-        'Achar que publicidade é absoluta — tem exceções.',
-        'Pensar que "supremacia do interesse público" está expresso — é IMPLÍCITO.'
-      ],
-      errosComuns: [
-        'Trocar "impessoalidade" por "imparcialidade" — são coisas diferentes.',
-        'Confundir moralidade com legalidade.',
-        'Achar que razoabilidade e proporcionalidade são expressos — são implícitos.'
-      ],
-      resumo: [
-        'LIMPE: Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência.',
-        'Eficiência: incluída pela EC 19/1998.',
-        'Legalidade administrativa = legalidade estrita.',
-        'Impessoalidade: tratamento igualitário + proibição de promoção pessoal.',
-        'Moralidade: ética administrativa.',
-        'Publicidade: regra é transparência; exceções constitucionais.',
-        'Implícitos: supremacia, indisponibilidade, autotutela, razoabilidade, proporcionalidade, motivação.'
-      ],
+      aplicacaoAdministracaoPublica: 'A aplicação está em todo o serviço público: editais (publicidade + impessoalidade), controle pelos TCs (legalidade + eficiência), improbidade (moralidade), autotutela (Súmula 473/STF), motivação (Lei 9.784/1999).',
+      pegadinhas: ['Confundir legalidade administrativa com a do particular.','Esquecer que eficiência é EXPRESSA desde a EC 19/1998.','Achar que publicidade é absoluta.','Pensar que supremacia do interesse público está expressa — é IMPLÍCITA.'],
+      errosComuns: ['Trocar impessoalidade por imparcialidade.','Confundir moralidade com legalidade.','Achar que razoabilidade e proporcionalidade são expressos.'],
+      resumo: ['LIMPE: Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência.','Eficiência: EC 19/1998.','Legalidade administrativa = estrita.','Impessoalidade: tratamento igualitário + proibição de promoção pessoal.','Moralidade: ética administrativa.','Publicidade: regra é transparência; exceções constitucionais.','Implícitos: supremacia, indisponibilidade, autotutela, razoabilidade, proporcionalidade, motivação.'],
       modoProfessor: {
-        explicarMaisSimples: 'Imagine cinco placas na porta de toda repartição: "Só faço o que a lei manda", "Trato todos igual", "Sou honesto e ético", "Trabalho com portas abertas", "Trabalho bem e com resultado".',
+        explicarMaisSimples: 'Imagine cinco placas: "Só faço o que a lei manda", "Trato todos igual", "Sou honesto e ético", "Trabalho com portas abertas", "Trabalho bem e com resultado".',
         outroExemplo: 'Um edital de concurso reúne vários princípios: publicidade, impessoalidade, legalidade, moralidade, eficiência.',
         compararConceitos: 'Legalidade = base. Impessoalidade = tratamento. Moralidade = ética. Publicidade = transparência. Eficiência = resultado.',
-        mostrarPegadinha: '"O princípio da eficiência foi inserido pela EC 45/2004". ERRADO. Foi pela EC 19/1998. A EC 45/2004 tratou da Reforma do Judiciário.',
-        comoApareceEmConcurso: 'Praticamente toda prova de DA cobra LIMPE. Testam: (a) enumeração; (b) exceções à publicidade; (c) diferença de legalidade; (d) princípios implícitos.',
-        fazerPergunta: { pergunta: 'Um prefeito publica outdoor com sua foto em obra pública paga com verba pública. Fere qual princípio?', resposta: 'Fere a IMPESSOALIDADE (art. 37, §1º, CF). Também viola a MORALIDADE.' }
+        mostrarPegadinha: '"O princípio da eficiência foi inserido pela EC 45/2004". ERRADO. Foi pela EC 19/1998.',
+        comoApareceEmConcurso: 'Praticamente toda prova de DA cobra LIMPE.',
+        fazerPergunta: { pergunta: 'Prefeito publica outdoor com sua foto em obra pública. Fere qual princípio?', resposta: 'Fere a IMPESSOALIDADE (art. 37, §1º, CF). Também viola a MORALIDADE.' }
       }
     }
   };
 
   /* ============================================================
-     DIAGNÓSTICOS — inalterado desde v0.3
+     DIAGNOSTICOS (v0.3) — inalterados
   ============================================================ */
   var DIAGNOSTICS = {
     'ADM-01': {
@@ -710,12 +570,8 @@ Changelog v0.1:
       itens: [
         { id: 'D-ADM-01-01', tipo: 'multipla_escolha', subtopico: 'Eficiência, eficácia e efetividade',
           pergunta: 'Um setor público cumpriu integralmente todas as metas pactuadas no ano, mas gastou o dobro do orçamento previsto. Em relação a esse resultado, é correto afirmar que o setor foi:',
-          alternativas: [
-            { id: 'A', texto: 'Eficiente, porque cumpriu as metas.' },
-            { id: 'B', texto: 'Eficaz, mas não eficiente.' },
-            { id: 'C', texto: 'Efetivo, porque houve impacto social.' },
-            { id: 'D', texto: 'Ineficaz e ineficiente, porque gastou mais que o previsto.' }
-          ], gabarito: 'B',
+          alternativas: [{ id: 'A', texto: 'Eficiente, porque cumpriu as metas.' }, { id: 'B', texto: 'Eficaz, mas não eficiente.' }, { id: 'C', texto: 'Efetivo, porque houve impacto social.' }, { id: 'D', texto: 'Ineficaz e ineficiente, porque gastou mais que o previsto.' }],
+          gabarito: 'B',
           explicacao: 'Eficácia é atingir o objetivo/meta. Eficiência é fazer bem, com o mínimo de recursos. Quem atinge a meta gastando o dobro é EFICAZ mas INEFICIENTE. A letra A troca os conceitos; a C fala de efetividade (impacto real, não mencionado); a D inverte tudo.'
         },
         { id: 'D-ADM-01-02', tipo: 'verdadeiro_falso', subtopico: 'Conceito de Administração',
@@ -726,24 +582,18 @@ Changelog v0.1:
         },
         { id: 'D-ADM-01-03', tipo: 'situacao', subtopico: 'Funções administrativas',
           pergunta: 'A Secretaria de Saúde definiu que reduzirá em 20% o tempo médio de espera por consultas e, para isso, alocou equipes, equipamentos e orçamento. Nesse momento, qual função administrativa está sendo exercida de forma predominante?',
-          alternativas: [
-            { id: 'A', texto: 'Controle.' }, { id: 'B', texto: 'Direção.' },
-            { id: 'C', texto: 'Planejamento.' }, { id: 'D', texto: 'Organização.' }
-          ], gabarito: 'C',
+          alternativas: [{ id: 'A', texto: 'Controle.' }, { id: 'B', texto: 'Direção.' }, { id: 'C', texto: 'Planejamento.' }, { id: 'D', texto: 'Organização.' }],
+          gabarito: 'C',
           explicacao: 'Definir objetivos e alocar recursos é PLANEJAMENTO. Controle viria depois; direção lidaria com pessoas; organização estruturaria cargos e setores.'
         },
         { id: 'D-ADM-01-04', tipo: 'autoavaliacao', subtopico: 'Níveis organizacionais',
           pergunta: 'Você sabe diferenciar os níveis estratégico, tático e operacional na Administração?',
-          resposta: 'Estratégico: nível institucional, longo prazo. Tático: nível gerencial, traduz o estratégico em planos por área. Operacional: execução, tarefas do dia a dia.'
+          resposta: 'Estratégico: nível institucional, longo prazo. Tático: nível gerencial. Operacional: execução, tarefas do dia a dia.'
         },
         { id: 'D-ADM-01-05', tipo: 'multipla_escolha', subtopico: 'Recursos organizacionais',
           pergunta: 'Sobre os recursos organizacionais, assinale a alternativa que NÃO corresponde a uma categoria tradicionalmente reconhecida:',
-          alternativas: [
-            { id: 'A', texto: 'Recursos humanos.' },
-            { id: 'B', texto: 'Recursos materiais e financeiros.' },
-            { id: 'C', texto: 'Recursos informacionais e tecnológicos.' },
-            { id: 'D', texto: 'Recursos sobrenaturais.' }
-          ], gabarito: 'D',
+          alternativas: [{ id: 'A', texto: 'Recursos humanos.' }, { id: 'B', texto: 'Recursos materiais e financeiros.' }, { id: 'C', texto: 'Recursos informacionais e tecnológicos.' }, { id: 'D', texto: 'Recursos sobrenaturais.' }],
+          gabarito: 'D',
           explicacao: 'Categorias clássicas: humanos, materiais, financeiros, informacionais e tecnológicos. "Recursos sobrenaturais" não existe.'
         }
       ]
@@ -753,12 +603,8 @@ Changelog v0.1:
       itens: [
         { id: 'D-ADM-02-01', tipo: 'multipla_escolha', subtopico: 'Integração das funções',
           pergunta: 'Segundo a formulação clássica de Fayol, a ordem do ciclo administrativo é:',
-          alternativas: [
-            { id: 'A', texto: 'Organização → Planejamento → Controle → Direção.' },
-            { id: 'B', texto: 'Controle → Planejamento → Organização → Direção.' },
-            { id: 'C', texto: 'Planejamento → Organização → Direção → Controle.' },
-            { id: 'D', texto: 'Direção → Planejamento → Organização → Controle.' }
-          ], gabarito: 'C',
+          alternativas: [{ id: 'A', texto: 'Organização → Planejamento → Controle → Direção.' }, { id: 'B', texto: 'Controle → Planejamento → Organização → Direção.' }, { id: 'C', texto: 'Planejamento → Organização → Direção → Controle.' }, { id: 'D', texto: 'Direção → Planejamento → Organização → Controle.' }],
+          gabarito: 'C',
           explicacao: 'O ciclo PODC é: Planejamento, Organização, Direção e Controle. Começar pelo controle é impossível (não há padrão sem planejamento).'
         },
         { id: 'D-ADM-02-02', tipo: 'verdadeiro_falso', subtopico: 'Controle',
@@ -769,11 +615,9 @@ Changelog v0.1:
         },
         { id: 'D-ADM-02-03', tipo: 'situacao', subtopico: 'Direção',
           pergunta: 'O gerente reúne a equipe semanalmente, delega responsabilidades, orienta servidores e mantém o grupo motivado. Qual função administrativa está sendo exercida?',
-          alternativas: [
-            { id: 'A', texto: 'Planejamento.' }, { id: 'B', texto: 'Organização.' },
-            { id: 'C', texto: 'Direção.' }, { id: 'D', texto: 'Controle.' }
-          ], gabarito: 'C',
-          explicacao: 'Liderar, motivar, comunicar e orientar pessoas é DIREÇÃO. Organização é estrutural; planejamento define objetivos; controle compara com padrões.'
+          alternativas: [{ id: 'A', texto: 'Planejamento.' }, { id: 'B', texto: 'Organização.' }, { id: 'C', texto: 'Direção.' }, { id: 'D', texto: 'Controle.' }],
+          gabarito: 'C',
+          explicacao: 'Liderar, motivar, comunicar e orientar pessoas é DIREÇÃO.'
         },
         { id: 'D-ADM-02-04', tipo: 'autoavaliacao', subtopico: 'Integração das funções',
           pergunta: 'Você sabe diferenciar PODC (ciclo administrativo) de PDCA (ciclo da qualidade)?',
@@ -781,12 +625,8 @@ Changelog v0.1:
         },
         { id: 'D-ADM-02-05', tipo: 'multipla_escolha', subtopico: 'Organização',
           pergunta: 'Sobre a função administrativa de organização, é correto afirmar que:',
-          alternativas: [
-            { id: 'A', texto: 'Ela define os objetivos de longo prazo da instituição.' },
-            { id: 'B', texto: 'Ela estrutura recursos, define autoridade, responsabilidade e agrupamentos (departamentalização).' },
-            { id: 'C', texto: 'Ela mede o desempenho e corrige desvios em relação ao padrão.' },
-            { id: 'D', texto: 'Ela lida exclusivamente com a motivação da equipe.' }
-          ], gabarito: 'B',
+          alternativas: [{ id: 'A', texto: 'Ela define os objetivos de longo prazo da instituição.' }, { id: 'B', texto: 'Ela estrutura recursos, define autoridade, responsabilidade e agrupamentos (departamentalização).' }, { id: 'C', texto: 'Ela mede o desempenho e corrige desvios em relação ao padrão.' }, { id: 'D', texto: 'Ela lida exclusivamente com a motivação da equipe.' }],
+          gabarito: 'B',
           explicacao: 'Organização é estrutural: define órgãos, cargos, hierarquia, autoridade, responsabilidade. A: planejamento. C: controle. D: direção.'
         }
       ]
@@ -796,39 +636,31 @@ Changelog v0.1:
       itens: [
         { id: 'D-AP-02-01', tipo: 'multipla_escolha', subtopico: 'Patrimonialismo',
           pergunta: 'A confusão entre o patrimônio público e o privado, o nepotismo e a pessoalidade no tratamento da coisa pública são características típicas do modelo:',
-          alternativas: [
-            { id: 'A', texto: 'Burocrático.' }, { id: 'B', texto: 'Gerencial.' },
-            { id: 'C', texto: 'Patrimonialista.' }, { id: 'D', texto: 'Nova Gestão Pública.' }
-          ], gabarito: 'C',
+          alternativas: [{ id: 'A', texto: 'Burocrático.' }, { id: 'B', texto: 'Gerencial.' }, { id: 'C', texto: 'Patrimonialista.' }, { id: 'D', texto: 'Nova Gestão Pública.' }],
+          gabarito: 'C',
           explicacao: 'Patrimonialismo: sem distinção clara entre público e privado. O burocrático surge para combater esse cenário.'
         },
         { id: 'D-AP-02-02', tipo: 'verdadeiro_falso', subtopico: 'Administração gerencial',
           pergunta: 'A Reforma Gerencial brasileira foi consolidada pela EC 19/1998, tendo como um dos nomes centrais Bresser-Pereira e como marco o Plano Diretor da Reforma do Aparelho do Estado (1995).',
           alternativas: [{ id: 'V', texto: 'Verdadeiro' }, { id: 'F', texto: 'Falso' }],
           gabarito: 'V',
-          explicacao: 'Verdadeiro. EC 19/1998 inseriu a eficiência como princípio expresso. Plano Diretor de 1995 foi o documento orientador.'
+          explicacao: 'Verdadeiro. EC 19/1998 inseriu a eficiência como princípio expresso.'
         },
         { id: 'D-AP-02-03', tipo: 'situacao', subtopico: 'Administração gerencial',
           pergunta: 'Um hospital público firma contrato de gestão com o Estado, com metas quantitativas de atendimento e bônus por desempenho. Essa prática é característica do modelo:',
-          alternativas: [
-            { id: 'A', texto: 'Patrimonialista.' }, { id: 'B', texto: 'Burocrático.' },
-            { id: 'C', texto: 'Gerencial.' }, { id: 'D', texto: 'Pré-burocrático.' }
-          ], gabarito: 'C',
-          explicacao: 'Contrato de gestão, metas e incentivo por resultado são da administração gerencial (EC 19/1998).'
+          alternativas: [{ id: 'A', texto: 'Patrimonialista.' }, { id: 'B', texto: 'Burocrático.' }, { id: 'C', texto: 'Gerencial.' }, { id: 'D', texto: 'Pré-burocrático.' }],
+          gabarito: 'C',
+          explicacao: 'Contrato de gestão, metas e incentivo por resultado são da administração gerencial.'
         },
         { id: 'D-AP-02-04', tipo: 'autoavaliacao', subtopico: 'Burocracia',
           pergunta: 'Você sabe identificar as principais características do modelo burocrático weberiano?',
-          resposta: 'Impessoalidade, formalismo, hierarquia, meritocracia, regras escritas, divisão racional do trabalho, competência técnica. Weber é o autor. No Brasil: 1936–1938 (Vargas, DASP).'
+          resposta: 'Impessoalidade, formalismo, hierarquia, meritocracia, regras escritas, divisão racional do trabalho, competência técnica. Weber é o autor. No Brasil: 1936-1938 (Vargas, DASP).'
         },
         { id: 'D-AP-02-05', tipo: 'multipla_escolha', subtopico: 'Burocracia',
           pergunta: 'Sobre o modelo burocrático de Administração Pública, assinale a alternativa INCORRETA:',
-          alternativas: [
-            { id: 'A', texto: 'Tem em Max Weber um de seus principais teóricos.' },
-            { id: 'B', texto: 'No Brasil, consolidou-se a partir da Reforma de 1936 e da criação do DASP em 1938.' },
-            { id: 'C', texto: 'Tem como marca a impessoalidade e a meritocracia no provimento de cargos.' },
-            { id: 'D', texto: 'Foi introduzido no Brasil pela Reforma Gerencial de 1995.' }
-          ], gabarito: 'D',
-          explicacao: 'A reforma de 1995 foi GERENCIAL. A reforma BUROCRÁTICA foi 1936–1938 (Vargas).'
+          alternativas: [{ id: 'A', texto: 'Tem em Max Weber um de seus principais teóricos.' }, { id: 'B', texto: 'No Brasil, consolidou-se a partir da Reforma de 1936 e da criação do DASP em 1938.' }, { id: 'C', texto: 'Tem como marca a impessoalidade e a meritocracia no provimento de cargos.' }, { id: 'D', texto: 'Foi introduzido no Brasil pela Reforma Gerencial de 1995.' }],
+          gabarito: 'D',
+          explicacao: 'A reforma de 1995 foi GERENCIAL. A reforma BUROCRÁTICA foi 1936-1938 (Vargas).'
         }
       ]
     },
@@ -837,417 +669,250 @@ Changelog v0.1:
       itens: [
         { id: 'D-DA-02-01', tipo: 'multipla_escolha', subtopico: 'Princípios expressos',
           pergunta: 'São princípios expressos da Administração Pública no caput do art. 37 da CF/88:',
-          alternativas: [
-            { id: 'A', texto: 'Legalidade, impessoalidade, moralidade, publicidade e eficiência.' },
-            { id: 'B', texto: 'Legalidade, imparcialidade, moralidade, publicidade e eficiência.' },
-            { id: 'C', texto: 'Legalidade, impessoalidade, moralidade, transparência e economicidade.' },
-            { id: 'D', texto: 'Razoabilidade, proporcionalidade, moralidade, publicidade e eficiência.' }
-          ], gabarito: 'A',
-          explicacao: 'LIMPE = Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência. B: "imparcialidade" não é princípio. C: economicidade não está no art. 37. D: razoabilidade e proporcionalidade são implícitos.'
+          alternativas: [{ id: 'A', texto: 'Legalidade, impessoalidade, moralidade, publicidade e eficiência.' }, { id: 'B', texto: 'Legalidade, imparcialidade, moralidade, publicidade e eficiência.' }, { id: 'C', texto: 'Legalidade, impessoalidade, moralidade, transparência e economicidade.' }, { id: 'D', texto: 'Razoabilidade, proporcionalidade, moralidade, publicidade e eficiência.' }],
+          gabarito: 'A',
+          explicacao: 'LIMPE. B: "imparcialidade" não é princípio. C: economicidade não está no art. 37. D: razoabilidade e proporcionalidade são implícitos.'
         },
         { id: 'D-DA-02-02', tipo: 'verdadeiro_falso', subtopico: 'Princípios expressos',
           pergunta: 'O princípio da eficiência foi inserido no caput do art. 37 da Constituição Federal pela EC 19/1998.',
           alternativas: [{ id: 'V', texto: 'Verdadeiro' }, { id: 'F', texto: 'Falso' }],
           gabarito: 'V',
-          explicacao: 'Verdadeiro. EC 19/1998 (Reforma Gerencial). EC 45/2004 (Reforma do Judiciário) não tem relação.'
+          explicacao: 'Verdadeiro. EC 19/1998 (Reforma Gerencial).'
         },
         { id: 'D-DA-02-03', tipo: 'situacao', subtopico: 'Princípios expressos',
           pergunta: 'Um prefeito manda afixar, em outdoors pagos com verba pública, sua foto e nome ao lado de obras municipais. Essa conduta viola frontalmente o princípio da:',
-          alternativas: [
-            { id: 'A', texto: 'Legalidade.' }, { id: 'B', texto: 'Impessoalidade.' },
-            { id: 'C', texto: 'Publicidade.' }, { id: 'D', texto: 'Continuidade do serviço público.' }
-          ], gabarito: 'B',
-          explicacao: 'Art. 37, §1º, CF — veda promoção pessoal. Violação direta da IMPESSOALIDADE. Também viola moralidade.'
+          alternativas: [{ id: 'A', texto: 'Legalidade.' }, { id: 'B', texto: 'Impessoalidade.' }, { id: 'C', texto: 'Publicidade.' }, { id: 'D', texto: 'Continuidade do serviço público.' }],
+          gabarito: 'B',
+          explicacao: 'Art. 37, §1º, CF — veda promoção pessoal. Violação direta da IMPESSOALIDADE.'
         },
         { id: 'D-DA-02-04', tipo: 'autoavaliacao', subtopico: 'Princípios expressos',
           pergunta: 'Você sabe explicar por que a legalidade administrativa é diferente da legalidade aplicada ao particular?',
-          resposta: 'Para o particular: pode fazer tudo que a lei NÃO PROÍBE. Para a Administração: só pode fazer o que a lei AUTORIZA ou DETERMINA. Isso é legalidade estrita.'
+          resposta: 'Para o particular: pode fazer tudo que a lei NÃO PROÍBE. Para a Administração: só pode fazer o que a lei AUTORIZA ou DETERMINA.'
         },
         { id: 'D-DA-02-05', tipo: 'multipla_escolha', subtopico: 'Princípios implícitos',
           pergunta: 'São exemplos de princípios IMPLÍCITOS da Administração Pública:',
-          alternativas: [
-            { id: 'A', texto: 'Legalidade e impessoalidade.' },
-            { id: 'B', texto: 'Supremacia do interesse público, indisponibilidade do interesse público e autotutela.' },
-            { id: 'C', texto: 'Moralidade e publicidade.' },
-            { id: 'D', texto: 'Eficiência e publicidade.' }
-          ], gabarito: 'B',
-          explicacao: 'Supremacia, indisponibilidade e autotutela (Súmulas 346 e 473/STF) são implícitos. As demais opções listam expressos.'
+          alternativas: [{ id: 'A', texto: 'Legalidade e impessoalidade.' }, { id: 'B', texto: 'Supremacia do interesse público, indisponibilidade do interesse público e autotutela.' }, { id: 'C', texto: 'Moralidade e publicidade.' }, { id: 'D', texto: 'Eficiência e publicidade.' }],
+          gabarito: 'B',
+          explicacao: 'Supremacia, indisponibilidade e autotutela (Súmulas 346 e 473/STF) são implícitos.'
         }
       ]
     }
   };
 
   /* ============================================================
-     BANCO DE QUESTÕES — NOVO NA v0.4
+     BANCO DE QUESTOES (v0.5) — 35 questoes DIDATICAS
      ------------------------------------------------------------
-     REGRA CRÍTICA: nesta fase existem APENAS questões DIDÁTICAS.
-     Nenhuma questão foi marcada como REAL porque não há origem
-     verificável. Quando a Fase 5 inserir questões reais, elas
-     terão tipo: 'REAL' e trarão banca/órgão/ano/prova/fonte.
-     ------------------------------------------------------------
-     IDs permanentes no padrão Q-DID-<AREA>-NNNN.
+     REGRA CRITICA: nesta fase existem APENAS questoes DIDATICAS.
+     Nenhuma questao foi marcada como REAL porque nao ha origem
+     verificavel disponivel. Questões REAIS podem ser adicionadas
+     pela tela "Banco de Questoes" mediante importacao JSON com
+     banca, orgao, ano, prova e fonte obrigatorios.
      ============================================================ */
   var QUESTIONS = [
-    {
-      id: 'Q-DID-ADM-0001',
-      tipo: 'DIDATICA',
-      area: 'ADM',
-      moduloId: 'ADM-01',
-      topicoId: 'ADM-01',
-      subtema: 'Eficiência, eficácia e efetividade',
-      dificuldade: 1,
-      prioridade: 'alta',
+    { id: 'Q-DID-ADM-0001', tipo: 'DIDATICA', area: 'ADM', moduloId: 'ADM-01', subtema: 'Eficiência, eficácia e efetividade', dificuldade: 1, prioridade: 'alta',
       enunciado: 'Um setor público cumpriu integralmente todas as metas pactuadas no ano, mas gastou o dobro do orçamento previsto. Em relação a esse resultado, é correto afirmar que o setor foi:',
-      alternativas: [
-        { id: 'A', texto: 'Eficiente, porque cumpriu as metas.' },
-        { id: 'B', texto: 'Eficaz, mas não eficiente.' },
-        { id: 'C', texto: 'Efetivo, porque houve impacto social.' },
-        { id: 'D', texto: 'Ineficaz e ineficiente, porque gastou mais que o previsto.' }
-      ],
+      alternativas: [{ id: 'A', texto: 'Eficiente, porque cumpriu as metas.' }, { id: 'B', texto: 'Eficaz, mas não eficiente.' }, { id: 'C', texto: 'Efetivo, porque houve impacto social.' }, { id: 'D', texto: 'Ineficaz e ineficiente, porque gastou mais que o previsto.' }],
       gabarito: 'B',
-      explicacao: {
-        correta: 'Eficácia é atingir o objetivo/meta. Eficiência é fazer bem, com o mínimo de recursos e sem desperdício. Quem atinge a meta gastando o dobro é EFICAZ (cumpriu) mas INEFICIENTE (desperdiçou recursos).',
-        incorretas: {
-          A: 'Erra ao confundir eficiência com eficácia. Cumprir metas é eficácia, não eficiência.',
-          C: 'Efetividade exige impacto real e duradouro, não mencionado no enunciado.',
-          D: 'Inverte os conceitos. O setor foi eficaz (cumpriu metas), apenas ineficiente.'
-        },
-        conceitoCobrado: 'Distinção entre eficiência, eficácia e efetividade.',
-        pegadinha: 'Trocar "eficiência" (fazer bem, com poucos recursos) por "eficácia" (atingir o objetivo).',
-        comoApareceEmConcurso: 'Muito comum em provas de ADM: banca apresenta situação prática e pede a classificação. Leia sempre com atenção o que é cobrado no enunciado.'
-      },
-      tags: ['eficiência', 'eficácia', 'fundamentos']
-    },
-    {
-      id: 'Q-DID-ADM-0002',
-      tipo: 'DIDATICA',
-      area: 'ADM',
-      moduloId: 'ADM-01',
-      topicoId: 'ADM-01',
-      subtema: 'Funções administrativas',
-      dificuldade: 2,
-      prioridade: 'alta',
-      enunciado: 'A Secretaria de Saúde de um município definiu que reduzirá em 20% o tempo médio de espera por consultas e, para isso, alocou equipes, equipamentos e orçamento. Nesse momento, qual função administrativa está sendo exercida de forma predominante?',
-      alternativas: [
-        { id: 'A', texto: 'Controle.' },
-        { id: 'B', texto: 'Direção.' },
-        { id: 'C', texto: 'Planejamento.' },
-        { id: 'D', texto: 'Organização.' }
-      ],
+      explicacao: { correta: 'Eficácia é atingir o objetivo/meta. Eficiência é fazer bem, com o mínimo de recursos. Quem atinge a meta gastando o dobro é EFICAZ mas INEFICIENTE.', incorretas: { A: 'Confunde eficiência com eficácia.', C: 'Efetividade exige impacto real, não mencionado.', D: 'Inverte os conceitos.' }, conceitoCobrado: 'Distinção entre eficiência, eficácia e efetividade.', pegadinha: 'Trocar "eficiência" por "eficácia".', comoApareceEmConcurso: 'Muito comum em provas de ADM: situação prática pedindo classificação.' },
+      tags: ['eficiência', 'eficácia'] },
+    { id: 'Q-DID-ADM-0002', tipo: 'DIDATICA', area: 'ADM', moduloId: 'ADM-01', subtema: 'Funções administrativas', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'A Secretaria de Saúde definiu que reduzirá em 20% o tempo médio de espera por consultas e, para isso, alocou equipes, equipamentos e orçamento. Nesse momento, qual função administrativa está sendo exercida de forma predominante?',
+      alternativas: [{ id: 'A', texto: 'Controle.' }, { id: 'B', texto: 'Direção.' }, { id: 'C', texto: 'Planejamento.' }, { id: 'D', texto: 'Organização.' }],
       gabarito: 'C',
-      explicacao: {
-        correta: 'Definir objetivos (reduzir 20% do tempo) e alocar recursos para alcançá-los é PLANEJAMENTO. A função estabelece o que se quer e como.',
-        incorretas: {
-          A: 'Controle viria depois, para medir se a meta está sendo cumprida.',
-          B: 'Direção lidaria com pessoas (motivar, liderar, comunicar).',
-          D: 'Organização estruturaria cargos, hierarquia e departamentos — não é o caso do enunciado.'
-        },
-        conceitoCobrado: 'Identificação da função administrativa em situação prática.',
-        pegadinha: 'Alocar recursos pode parecer "organização", mas a alocação aqui é decisão de planejamento (o quê e com o quê), não estruturação.',
-        comoApareceEmConcurso: 'Correspondência entre exemplo e função do PODC. Exige leitura atenta da situação.'
-      },
-      tags: ['PODC', 'planejamento', 'funções administrativas']
-    },
-    {
-      id: 'Q-DID-ADM-0003',
-      tipo: 'DIDATICA',
-      area: 'ADM',
-      moduloId: 'ADM-02',
-      topicoId: 'ADM-02',
-      subtema: 'Integração das funções',
-      dificuldade: 1,
-      prioridade: 'alta',
+      explicacao: { correta: 'Definir objetivos e alocar recursos é PLANEJAMENTO.', incorretas: { A: 'Controle viria depois.', B: 'Direção lidaria com pessoas.', D: 'Organização estruturaria cargos e setores.' }, conceitoCobrado: 'Identificação da função administrativa.', pegadinha: 'Alocar recursos pode parecer organização, mas aqui é decisão de planejamento.', comoApareceEmConcurso: 'Correspondência entre exemplo e função do PODC.' },
+      tags: ['PODC', 'planejamento'] },
+    { id: 'Q-DID-ADM-0003', tipo: 'DIDATICA', area: 'ADM', moduloId: 'ADM-02', subtema: 'Integração das funções', dificuldade: 1, prioridade: 'alta',
       enunciado: 'Segundo a formulação clássica de Fayol, a ordem do ciclo administrativo é:',
-      alternativas: [
-        { id: 'A', texto: 'Organização → Planejamento → Controle → Direção.' },
-        { id: 'B', texto: 'Controle → Planejamento → Organização → Direção.' },
-        { id: 'C', texto: 'Planejamento → Organização → Direção → Controle.' },
-        { id: 'D', texto: 'Direção → Planejamento → Organização → Controle.' }
-      ],
+      alternativas: [{ id: 'A', texto: 'Organização → Planejamento → Controle → Direção.' }, { id: 'B', texto: 'Controle → Planejamento → Organização → Direção.' }, { id: 'C', texto: 'Planejamento → Organização → Direção → Controle.' }, { id: 'D', texto: 'Direção → Planejamento → Organização → Controle.' }],
       gabarito: 'C',
-      explicacao: {
-        correta: 'O ciclo PODC segue a ordem Planejamento (o quê e como) → Organização (estruturar recursos) → Direção (conduzir pessoas) → Controle (verificar e corrigir).',
-        incorretas: {
-          A: 'Inverte planejamento e organização.',
-          B: 'Começa pelo controle, o que é impossível — não há padrão sem planejamento prévio.',
-          D: 'Começa pela direção, sem qualquer plano anterior.'
-        },
-        conceitoCobrado: 'Ordem e interdependência das funções administrativas.',
-        pegadinha: 'Bancas invertem a ordem para confundir. Planejamento é SEMPRE o primeiro.',
-        comoApareceEmConcurso: 'Questão de memória aplicada. Alta frequência em nível médio.'
-      },
-      tags: ['PODC', 'Fayol', 'ciclo administrativo']
-    },
-    {
-      id: 'Q-DID-ADM-0004',
-      tipo: 'DIDATICA',
-      area: 'ADM',
-      moduloId: 'ADM-02',
-      topicoId: 'ADM-02',
-      subtema: 'Direção',
-      dificuldade: 2,
-      prioridade: 'alta',
-      enunciado: 'O gerente de um setor reúne a equipe semanalmente, delega responsabilidades, orienta individualmente os servidores e procura manter o grupo motivado. Qual função administrativa está sendo exercida de forma predominante?',
-      alternativas: [
-        { id: 'A', texto: 'Planejamento.' },
-        { id: 'B', texto: 'Organização.' },
-        { id: 'C', texto: 'Direção.' },
-        { id: 'D', texto: 'Controle.' }
-      ],
+      explicacao: { correta: 'O ciclo PODC segue Planejamento → Organização → Direção → Controle.', incorretas: { A: 'Inverte planejamento e organização.', B: 'Começa pelo controle, impossível.', D: 'Começa pela direção sem plano prévio.' }, conceitoCobrado: 'Ordem e interdependência das funções.', pegadinha: 'Bancas invertem a ordem.', comoApareceEmConcurso: 'Questão de memória aplicada.' },
+      tags: ['PODC', 'Fayol'] },
+    { id: 'Q-DID-ADM-0004', tipo: 'DIDATICA', area: 'ADM', moduloId: 'ADM-02', subtema: 'Direção', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'O gerente reúne a equipe semanalmente, delega responsabilidades, orienta servidores e procura manter o grupo motivado. Qual função administrativa está sendo exercida de forma predominante?',
+      alternativas: [{ id: 'A', texto: 'Planejamento.' }, { id: 'B', texto: 'Organização.' }, { id: 'C', texto: 'Direção.' }, { id: 'D', texto: 'Controle.' }],
       gabarito: 'C',
-      explicacao: {
-        correta: 'Liderar, motivar, comunicar e orientar pessoas é DIREÇÃO — a função administrativa ligada ao comportamento humano na organização.',
-        incorretas: {
-          A: 'Planejamento define objetivos e meios — não é o foco do enunciado.',
-          B: 'Organização é estrutural: define cargos, hierarquia, departamentos.',
-          D: 'Controle compara desempenho com padrões.'
-        },
-        conceitoCobrado: 'Identificação da função de direção em situações práticas.',
-        pegadinha: 'Delegar responsabilidades pode parecer "organização", mas delegar é ato de condução de pessoas → direção.',
-        comoApareceEmConcurso: 'Correspondência entre situação e função. Cobrado com frequência.'
-      },
-      tags: ['PODC', 'direção', 'liderança']
-    },
-    {
-      id: 'Q-DID-ADM-0005',
-      tipo: 'DIDATICA',
-      area: 'ADM',
-      moduloId: 'ADM-02',
-      topicoId: 'ADM-02',
-      subtema: 'Controle',
-      dificuldade: 3,
-      prioridade: 'alta',
+      explicacao: { correta: 'Liderar, motivar, comunicar e orientar pessoas é DIREÇÃO.', incorretas: { A: 'Planejamento define objetivos.', B: 'Organização é estrutural.', D: 'Controle compara desempenho com padrões.' }, conceitoCobrado: 'Função de direção.', pegadinha: 'Delegar responsabilidades pode parecer organização.', comoApareceEmConcurso: 'Correspondência entre situação e função.' },
+      tags: ['PODC', 'direção'] },
+    { id: 'Q-DID-ADM-0005', tipo: 'DIDATICA', area: 'ADM', moduloId: 'ADM-02', subtema: 'Controle', dificuldade: 3, prioridade: 'alta',
       enunciado: 'Sobre a função administrativa de controle, assinale a alternativa correta:',
-      alternativas: [
-        { id: 'A', texto: 'É etapa estanque, aplicada apenas ao final do processo, sem retorno às fases anteriores.' },
-        { id: 'B', texto: 'Dispensa a existência de padrões previamente definidos.' },
-        { id: 'C', texto: 'É contínuo e retroalimenta o planejamento, gerando ajustes no ciclo administrativo.' },
-        { id: 'D', texto: 'Substitui o planejamento quando este é insuficiente.' }
-      ],
+      alternativas: [{ id: 'A', texto: 'É etapa estanque, aplicada apenas ao final do processo, sem retorno às fases anteriores.' }, { id: 'B', texto: 'Dispensa a existência de padrões previamente definidos.' }, { id: 'C', texto: 'É contínuo e retroalimenta o planejamento, gerando ajustes no ciclo administrativo.' }, { id: 'D', texto: 'Substitui o planejamento quando este é insuficiente.' }],
       gabarito: 'C',
-      explicacao: {
-        correta: 'O controle é contínuo: mede, compara com padrões e corrige desvios. Ao detectar problemas, fornece insumos para o planejamento, fechando o ciclo PODC.',
-        incorretas: {
-          A: 'Erra ao dizer que é estanque e só no final. O controle é contínuo e cíclico.',
-          B: 'Não existe controle sem padrão. O padrão vem do planejamento.',
-          D: 'Controle não substitui planejamento — retroalimenta.'
-        },
-        conceitoCobrado: 'Caráter contínuo e cíclico do controle.',
-        pegadinha: 'Achar que o controle é "só no final". Bancas adoram cobrar essa confusão.',
-        comoApareceEmConcurso: 'Cobrado em questões conceituais e em situações sobre melhoria contínua.'
-      },
-      tags: ['PODC', 'controle', 'retroalimentação']
-    },
-    {
-      id: 'Q-DID-AP-0001',
-      tipo: 'DIDATICA',
-      area: 'AP',
-      moduloId: 'AP-02',
-      topicoId: 'AP-02',
-      subtema: 'Patrimonialismo',
-      dificuldade: 1,
-      prioridade: 'alta',
+      explicacao: { correta: 'O controle é contínuo: mede, compara com padrões e corrige desvios, retroalimentando o planejamento.', incorretas: { A: 'Controle é contínuo.', B: 'Não existe controle sem padrão.', D: 'Retroalimenta, não substitui.' }, conceitoCobrado: 'Caráter contínuo do controle.', pegadinha: 'Achar que controle é só no final.', comoApareceEmConcurso: 'Questões conceituais e sobre melhoria contínua.' },
+      tags: ['PODC', 'controle'] },
+    { id: 'Q-DID-ADM-0006', tipo: 'DIDATICA', area: 'ADM', moduloId: 'ADM-03', subtema: 'Níveis de planejamento', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'O planejamento que define a missão, a visão e os objetivos de longo prazo da organização, envolvendo toda a sua estrutura, é classificado como:',
+      alternativas: [{ id: 'A', texto: 'Operacional.' }, { id: 'B', texto: 'Tático.' }, { id: 'C', texto: 'Estratégico.' }, { id: 'D', texto: 'Funcional.' }],
+      gabarito: 'C',
+      explicacao: { correta: 'O planejamento ESTRATÉGICO é o nível institucional (topo). Define missão, visão, objetivos de longo prazo e envolve toda a organização.', incorretas: { A: 'Operacional é a execução do dia a dia.', B: 'Tático é o nível intermediário.', D: 'Funcional não é um nível clássico.' }, conceitoCobrado: 'Níveis do planejamento.', pegadinha: 'Bancas invertem tático e estratégico.', comoApareceEmConcurso: 'Cobrado em provas de ADM e AP.' },
+      tags: ['planejamento', 'estratégico'] },
+    { id: 'Q-DID-ADM-0007', tipo: 'DIDATICA', area: 'ADM', moduloId: 'ADM-03', subtema: 'Planejamento estratégico', dificuldade: 3, prioridade: 'alta',
+      enunciado: 'Sobre o planejamento estratégico, é correto afirmar que:',
+      alternativas: [{ id: 'A', texto: 'Tem foco no curto prazo e nas tarefas do dia a dia.' }, { id: 'B', texto: 'É elaborado pela média gerência, com horizonte temporal anual.' }, { id: 'C', texto: 'Envolve toda a organização, tem horizonte de longo prazo e é conduzido pela alta direção.' }, { id: 'D', texto: 'Substitui o planejamento tático e operacional.' }],
+      gabarito: 'C',
+      explicacao: { correta: 'O planejamento estratégico envolve toda a organização, tem horizonte de longo prazo e é conduzido pela alta direção.', incorretas: { A: 'Curto prazo é característica do operacional.', B: 'Média gerência elabora o planejamento tático.', D: 'Os três níveis coexistem.' }, conceitoCobrado: 'Características do planejamento estratégico.', pegadinha: 'Confundir horizonte temporal e nível hierárquico.', comoApareceEmConcurso: 'Muito comum em provas de ADM.' },
+      tags: ['planejamento', 'estratégico'] },
+    { id: 'Q-DID-ADM-0008', tipo: 'DIDATICA', area: 'ADM', moduloId: 'ADM-04', subtema: 'Departamentalização', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'Uma prefeitura organiza suas secretarias por áreas como Saúde, Educação e Obras. Esse critério de agrupamento é exemplo de departamentalização:',
+      alternativas: [{ id: 'A', texto: 'Por clientes.' }, { id: 'B', texto: 'Funcional.' }, { id: 'C', texto: 'Geográfica.' }, { id: 'D', texto: 'Por produtos.' }],
+      gabarito: 'B',
+      explicacao: { correta: 'Agrupar por áreas de especialidade (Saúde, Educação, Obras) é departamentalização FUNCIONAL.', incorretas: { A: 'Por clientes agrupa conforme o público-alvo.', C: 'Geográfica agrupa por região.', D: 'Por produtos agrupa conforme o bem/serviço.' }, conceitoCobrado: 'Tipos de departamentalização.', pegadinha: 'Confundir funcional com por produtos.', comoApareceEmConcurso: 'Cobrado em ADM e AP.' },
+      tags: ['departamentalização'] },
+    { id: 'Q-DID-ADM-0009', tipo: 'DIDATICA', area: 'ADM', moduloId: 'ADM-04', subtema: 'Centralização e descentralização', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'Sobre a descentralização administrativa nas organizações, é correto afirmar que:',
+      alternativas: [{ id: 'A', texto: 'Concentra a autoridade decisória no topo da hierarquia.' }, { id: 'B', texto: 'Transfere a tomada de decisão para níveis mais próximos da execução, aumentando a autonomia local.' }, { id: 'C', texto: 'Elimina a necessidade de hierarquia.' }, { id: 'D', texto: 'É sinônimo de desconcentração.' }],
+      gabarito: 'B',
+      explicacao: { correta: 'Descentralização distribui a autoridade decisória para níveis inferiores, dando autonomia a quem está mais perto do problema.', incorretas: { A: 'Concentrar autoridade é centralização.', C: 'Não elimina hierarquia.', D: 'Desconcentração é transferência dentro da mesma pessoa jurídica.' }, conceitoCobrado: 'Centralização, descentralização e desconcentração.', pegadinha: 'Trocar descentralização por desconcentração.', comoApareceEmConcurso: 'Alta frequência em ADM e DA.' },
+      tags: ['centralização', 'descentralização'] },
+    { id: 'Q-DID-ADM-0010', tipo: 'DIDATICA', area: 'ADM', moduloId: 'ADM-07', subtema: 'Recrutamento e seleção', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'Sobre recrutamento e seleção em gestão de pessoas, assinale a alternativa correta:',
+      alternativas: [{ id: 'A', texto: 'Recrutamento é o processo de escolha entre os candidatos; seleção é a divulgação da vaga.' }, { id: 'B', texto: 'Recrutamento atrai candidatos; seleção escolhe o mais adequado ao cargo.' }, { id: 'C', texto: 'São sinônimos e podem ser usados como equivalentes.' }, { id: 'D', texto: 'Ambos ocorrem somente após o treinamento.' }],
+      gabarito: 'B',
+      explicacao: { correta: 'Recrutamento é a fase de atração/divulgação; seleção é a fase de escolha, comparando perfil dos candidatos com o exigido pelo cargo.', incorretas: { A: 'Inverte as definições.', C: 'Não são sinônimos.', D: 'Treinamento é posterior.' }, conceitoCobrado: 'Etapas do processo de provisão de pessoas.', pegadinha: 'Trocar as definições de recrutamento e seleção.', comoApareceEmConcurso: 'Muito cobrado em ADM.' },
+      tags: ['RH', 'recrutamento'] },
+    { id: 'Q-DID-ADM-0011', tipo: 'DIDATICA', area: 'ADM', moduloId: 'ADM-07', subtema: 'Avaliação de desempenho', dificuldade: 3, prioridade: 'alta',
+      enunciado: 'Sobre a avaliação de desempenho nas organizações, é correto afirmar que:',
+      alternativas: [{ id: 'A', texto: 'Serve apenas para punir servidores com baixo desempenho.' }, { id: 'B', texto: 'É um processo sistemático de acompanhamento e mensuração da atuação do servidor, com fins de desenvolvimento e melhoria.' }, { id: 'C', texto: 'Deve ser feita apenas pelo próprio avaliado.' }, { id: 'D', texto: 'É incompatível com a gestão por competências.' }],
+      gabarito: 'B',
+      explicacao: { correta: 'A avaliação de desempenho é processo sistemático de acompanhamento e mensuração, orientado ao desenvolvimento e à melhoria contínua.', incorretas: { A: 'Reduz a avaliação a instrumento punitivo.', C: 'Autoavaliação é um dos métodos, não o único.', D: 'Gestão por competências e avaliação são complementares.' }, conceitoCobrado: 'Finalidade e métodos de avaliação de desempenho.', pegadinha: 'Achar que avaliação é sinônimo de punição.', comoApareceEmConcurso: 'Cobrado em ADM e RH.' },
+      tags: ['RH', 'avaliação'] },
+    { id: 'Q-DID-ADM-0012', tipo: 'DIDATICA', area: 'ADM', moduloId: 'ADM-11', subtema: 'Gestão de estoques', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'O estoque mínimo que deve ser mantido para cobrir eventuais atrasos de fornecedores ou aumentos inesperados de demanda é chamado de:',
+      alternativas: [{ id: 'A', texto: 'Estoque máximo.' }, { id: 'B', texto: 'Estoque de segurança.' }, { id: 'C', texto: 'Ponto de pedido.' }, { id: 'D', texto: 'Estoque em trânsito.' }],
+      gabarito: 'B',
+      explicacao: { correta: 'O estoque de SEGURANÇA é a quantidade adicional mantida para cobrir variações imprevistas.', incorretas: { A: 'Estoque máximo é o limite superior.', C: 'Ponto de pedido é o nível que dispara nova compra.', D: 'Estoque em trânsito refere-se a mercadorias entre fornecedor e recebedor.' }, conceitoCobrado: 'Tipos de estoque.', pegadinha: 'Confundir estoque de segurança com ponto de pedido.', comoApareceEmConcurso: 'Cobrado em provas administrativas.' },
+      tags: ['materiais', 'estoques'] },
+    { id: 'Q-DID-AP-0001', tipo: 'DIDATICA', area: 'AP', moduloId: 'AP-02', subtema: 'Patrimonialismo', dificuldade: 1, prioridade: 'alta',
       enunciado: 'A confusão entre o patrimônio público e o privado, o nepotismo e a pessoalidade no tratamento da coisa pública são características típicas do modelo:',
-      alternativas: [
-        { id: 'A', texto: 'Burocrático.' },
-        { id: 'B', texto: 'Gerencial.' },
-        { id: 'C', texto: 'Patrimonialista.' },
-        { id: 'D', texto: 'Nova Gestão Pública.' }
-      ],
+      alternativas: [{ id: 'A', texto: 'Burocrático.' }, { id: 'B', texto: 'Gerencial.' }, { id: 'C', texto: 'Patrimonialista.' }, { id: 'D', texto: 'Nova Gestão Pública.' }],
       gabarito: 'C',
-      explicacao: {
-        correta: 'Patrimonialismo: não há distinção clara entre público e privado. O governante trata o Estado como extensão de seu patrimônio pessoal.',
-        incorretas: {
-          A: 'Burocracia surge justamente para combater esse cenário (impessoalidade, meritocracia).',
-          B: 'Gerencial foca em resultado, não em confusão público/privado.',
-          D: 'NGP é a corrente internacional da administração gerencial.'
-        },
-        conceitoCobrado: 'Características do modelo patrimonialista.',
-        pegadinha: 'Confundir patrimonialismo (confusão) com burocracia (rigidez, mas com separação).',
-        comoApareceEmConcurso: 'Questão de reconhecimento. Alta frequência em AP e DA.'
-      },
-      tags: ['patrimonialismo', 'modelos']
-    },
-    {
-      id: 'Q-DID-AP-0002',
-      tipo: 'DIDATICA',
-      area: 'AP',
-      moduloId: 'AP-02',
-      topicoId: 'AP-02',
-      subtema: 'Administração gerencial',
-      dificuldade: 2,
-      prioridade: 'alta',
+      explicacao: { correta: 'Patrimonialismo: sem distinção clara entre público e privado.', incorretas: { A: 'Burocracia combate isso.', B: 'Gerencial foca em resultado.', D: 'NGP é a corrente internacional.' }, conceitoCobrado: 'Características do patrimonialismo.', pegadinha: 'Confundir patrimonialismo com burocracia.', comoApareceEmConcurso: 'Alta frequência em AP e DA.' },
+      tags: ['patrimonialismo'] },
+    { id: 'Q-DID-AP-0002', tipo: 'DIDATICA', area: 'AP', moduloId: 'AP-02', subtema: 'Administração gerencial', dificuldade: 2, prioridade: 'alta',
       enunciado: 'Um hospital público firma contrato de gestão com o Estado, no qual se compromete a cumprir metas quantitativas de atendimento, com avaliação periódica de desempenho e possibilidade de bônus. Essa prática é característica predominante do modelo:',
-      alternativas: [
-        { id: 'A', texto: 'Patrimonialista.' },
-        { id: 'B', texto: 'Burocrático.' },
-        { id: 'C', texto: 'Gerencial.' },
-        { id: 'D', texto: 'Pré-burocrático.' }
-      ],
+      alternativas: [{ id: 'A', texto: 'Patrimonialista.' }, { id: 'B', texto: 'Burocrático.' }, { id: 'C', texto: 'Gerencial.' }, { id: 'D', texto: 'Pré-burocrático.' }],
       gabarito: 'C',
-      explicacao: {
-        correta: 'Contrato de gestão, metas, avaliação de desempenho e incentivo por resultado são instrumentos típicos da administração GERENCIAL, introduzidos no Brasil pela Reforma de 1995/EC 19/1998.',
-        incorretas: {
-          A: 'Patrimonialismo não separa público/privado.',
-          B: 'Burocracia foca em processo e norma, não em resultado.',
-          D: 'Pré-burocrático não existe como categoria clássica.'
-        },
-        conceitoCobrado: 'Instrumentos da administração gerencial.',
-        pegadinha: 'Achar que contratos de gestão são burocráticos por serem formais. Não — são instrumentos gerenciais.',
-        comoApareceEmConcurso: 'Cobrado com frequência ligando instrumentos (contrato de gestão, agências executivas, OS) ao modelo gerencial.'
-      },
-      tags: ['gerencial', 'contrato de gestão', 'EC 19/1998']
-    },
-    {
-      id: 'Q-DID-AP-0003',
-      tipo: 'DIDATICA',
-      area: 'AP',
-      moduloId: 'AP-02',
-      topicoId: 'AP-02',
-      subtema: 'Autores e períodos',
-      dificuldade: 3,
-      prioridade: 'alta',
+      explicacao: { correta: 'Contrato de gestão, metas e bônus são instrumentos da administração GERENCIAL.', incorretas: { A: 'Patrimonialismo não separa público/privado.', B: 'Burocracia foca em processo, não resultado.', D: 'Categoria inexistente.' }, conceitoCobrado: 'Instrumentos da administração gerencial.', pegadinha: 'Achar que contrato de gestão é burocrático.', comoApareceEmConcurso: 'Cobrado ligando instrumentos ao modelo.' },
+      tags: ['gerencial', 'contrato de gestão'] },
+    { id: 'Q-DID-AP-0003', tipo: 'DIDATICA', area: 'AP', moduloId: 'AP-02', subtema: 'Autores e períodos', dificuldade: 3, prioridade: 'alta',
       enunciado: 'Sobre a evolução dos modelos de Administração Pública no Brasil, assinale a alternativa INCORRETA:',
-      alternativas: [
-        { id: 'A', texto: 'A reforma burocrática brasileira foi consolidada a partir de 1936, com a criação do DASP em 1938.' },
-        { id: 'B', texto: 'A Reforma Gerencial brasileira teve na EC 19/1998 seu principal marco legal.' },
-        { id: 'C', texto: 'Max Weber é referência teórica central do modelo burocrático.' },
-        { id: 'D', texto: 'A Reforma Gerencial brasileira foi iniciada no governo Vargas, em 1936, sob coordenação de Bresser-Pereira.' }
-      ],
+      alternativas: [{ id: 'A', texto: 'A reforma burocrática brasileira foi consolidada a partir de 1936, com a criação do DASP em 1938.' }, { id: 'B', texto: 'A Reforma Gerencial brasileira teve na EC 19/1998 seu principal marco legal.' }, { id: 'C', texto: 'Max Weber é referência teórica central do modelo burocrático.' }, { id: 'D', texto: 'A Reforma Gerencial brasileira foi iniciada no governo Vargas, em 1936, sob coordenação de Bresser-Pereira.' }],
       gabarito: 'D',
-      explicacao: {
-        correta: 'A alternativa D está INCORRETA: a reforma de 1936 (Vargas) foi BUROCRÁTICA, não gerencial. A Reforma Gerencial foi em 1995 (FHC), sob coordenação de Bresser-Pereira.',
-        incorretas: {
-          A: 'Correta. Reforma burocrática: 1936 + DASP em 1938.',
-          B: 'Correta. EC 19/1998 é o marco legal da Reforma Gerencial.',
-          C: 'Correta. Weber é o teórico central da burocracia.'
-        },
-        conceitoCobrado: 'Associação de datas, autores e modelos.',
-        pegadinha: 'Trocar os períodos: associar Vargas/Bresser-Pereira. Isso é muito cobrado.',
-        comoApareceEmConcurso: 'Questão clássica: misturar atores e datas para gerar confusão.'
-      },
-      tags: ['autores', 'EC 19/1998', 'Vargas', 'Bresser-Pereira']
-    },
-    {
-      id: 'Q-DID-DA-0001',
-      tipo: 'DIDATICA',
-      area: 'DA',
-      moduloId: 'DA-02',
-      topicoId: 'DA-02',
-      subtema: 'Princípios expressos',
-      dificuldade: 1,
-      prioridade: 'alta',
-      enunciado: 'São princípios expressos da Administração Pública no caput do art. 37 da Constituição Federal de 1988:',
-      alternativas: [
-        { id: 'A', texto: 'Legalidade, impessoalidade, moralidade, publicidade e eficiência.' },
-        { id: 'B', texto: 'Legalidade, imparcialidade, moralidade, publicidade e eficiência.' },
-        { id: 'C', texto: 'Legalidade, impessoalidade, moralidade, transparência e economicidade.' },
-        { id: 'D', texto: 'Razoabilidade, proporcionalidade, moralidade, publicidade e eficiência.' }
-      ],
+      explicacao: { correta: 'A alternativa D está INCORRETA: a reforma de 1936 (Vargas) foi BUROCRÁTICA; a Gerencial foi em 1995 (FHC), com Bresser-Pereira.', incorretas: { A: 'Correta.', B: 'Correta.', C: 'Correta.' }, conceitoCobrado: 'Associação de datas, autores e modelos.', pegadinha: 'Trocar Vargas/Bresser-Pereira de época.', comoApareceEmConcurso: 'Questão clássica de confusão de atores.' },
+      tags: ['autores', 'EC 19/1998'] },
+    { id: 'Q-DID-AP-0004', tipo: 'DIDATICA', area: 'AP', moduloId: 'AP-01', subtema: 'Conceito de Administração Pública', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'Em sentido amplo, a Administração Pública compreende:',
+      alternativas: [{ id: 'A', texto: 'Somente os órgãos e entidades do Poder Executivo.' }, { id: 'B', texto: 'Apenas a função administrativa exercida pelo Estado.' }, { id: 'C', texto: 'O conjunto de órgãos e entidades de todos os Poderes, no desempenho de funções administrativas, além da própria atividade administrativa.' }, { id: 'D', texto: 'Exclusivamente o Legislativo e o Judiciário.' }],
+      gabarito: 'C',
+      explicacao: { correta: 'Em sentido AMPLO, a Administração Pública abrange todos os órgãos e entidades dos três Poderes, no exercício de função administrativa.', incorretas: { A: 'Exclui os demais Poderes.', B: 'Refere-se ao sentido estrito/material.', D: 'Reduz indevidamente.' }, conceitoCobrado: 'Sentidos amplo e estrito de Administração Pública.', pegadinha: 'Confundir sentido amplo (órgãos) com sentido estrito (função).', comoApareceEmConcurso: 'Cobrado em AP e DA.' },
+      tags: ['conceito', 'AP'] },
+    { id: 'Q-DID-AP-0005', tipo: 'DIDATICA', area: 'AP', moduloId: 'AP-03', subtema: 'Princípios expressos', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'Assinale a alternativa que apresenta corretamente os princípios expressos da Administração Pública no caput do art. 37 da CF/88:',
+      alternativas: [{ id: 'A', texto: 'Legalidade, impessoalidade, moralidade, publicidade e eficiência.' }, { id: 'B', texto: 'Legalidade, imparcialidade, moralidade, transparência e eficiência.' }, { id: 'C', texto: 'Razoabilidade, proporcionalidade, moralidade, publicidade e eficiência.' }, { id: 'D', texto: 'Legalidade, impessoalidade, motivação, publicidade e economicidade.' }],
       gabarito: 'A',
-      explicacao: {
-        correta: 'LIMPE: Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência (art. 37, caput, CF/88).',
-        incorretas: {
-          B: 'Troca "impessoalidade" por "imparcialidade". Imparcialidade é dever do agente, não princípio constitucional expresso.',
-          C: 'Troca publicidade por "transparência" e inclui "economicidade" (princípio da licitação, não do art. 37).',
-          D: 'Inclui razoabilidade e proporcionalidade, que são IMPLÍCITOS.'
-        },
-        conceitoCobrado: 'Enumeração dos princípios expressos (LIMPE).',
-        pegadinha: 'Trocar impessoalidade por imparcialidade e incluir princípios implícitos.',
-        comoApareceEmConcurso: 'Praticamente toda prova de DA tem pelo menos uma questão sobre LIMPE.'
-      },
-      tags: ['LIMPE', 'princípios expressos', 'art. 37']
-    },
-    {
-      id: 'Q-DID-DA-0002',
-      tipo: 'DIDATICA',
-      area: 'DA',
-      moduloId: 'DA-02',
-      topicoId: 'DA-02',
-      subtema: 'Legalidade',
-      dificuldade: 2,
-      prioridade: 'alta',
+      explicacao: { correta: 'LIMPE (art. 37, caput): Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência.', incorretas: { B: '"Imparcialidade" não é princípio expresso; "transparência" não está no texto.', C: 'Razoabilidade e proporcionalidade são IMPLÍCITOS.', D: 'Motivação é implícita; economicidade está na licitação.' }, conceitoCobrado: 'Princípios expressos (LIMPE).', pegadinha: 'Trocar por "imparcialidade" ou incluir implícitos.', comoApareceEmConcurso: 'Praticamente toda prova cobra LIMPE.' },
+      tags: ['LIMPE', 'princípios'] },
+    { id: 'Q-DID-AP-0006', tipo: 'DIDATICA', area: 'AP', moduloId: 'AP-03', subtema: 'Eficiência', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'O princípio da eficiência foi inserido expressamente no caput do art. 37 da Constituição Federal pela:',
+      alternativas: [{ id: 'A', texto: 'Emenda Constitucional 45/2004 (Reforma do Judiciário).' }, { id: 'B', texto: 'Emenda Constitucional 19/1998 (Reforma Gerencial).' }, { id: 'C', texto: 'Emenda Constitucional 1/1992.' }, { id: 'D', texto: 'Constituição Federal de 1988, em sua redação original.' }],
+      gabarito: 'B',
+      explicacao: { correta: 'A EC 19/1998 inseriu a eficiência no caput do art. 37, formando o LIMPE.', incorretas: { A: 'A EC 45/2004 tratou da Reforma do Judiciário.', C: 'EC 1/1992 tratou de outras matérias.', D: 'A CF/88 original listava apenas legalidade, impessoalidade, moralidade e publicidade.' }, conceitoCobrado: 'Marco legal da eficiência como princípio expresso.', pegadinha: 'Confundir EC 19/1998 com EC 45/2004.', comoApareceEmConcurso: 'Pegadinha clássica em DA e AP.' },
+      tags: ['eficiência', 'EC 19/1998'] },
+    { id: 'Q-DID-AP-0007', tipo: 'DIDATICA', area: 'AP', moduloId: 'AP-04', subtema: 'Administração Indireta', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'Sobre a administração indireta, é correto afirmar que:',
+      alternativas: [{ id: 'A', texto: 'É composta por órgãos subordinados à Presidência da República.' }, { id: 'B', texto: 'É integrada por autarquias, fundações públicas, empresas públicas e sociedades de economia mista, todas com personalidade jurídica própria.' }, { id: 'C', texto: 'Elimina a necessidade de controle pelos Tribunais de Contas.' }, { id: 'D', texto: 'Aplica-se apenas ao Poder Executivo federal.' }],
+      gabarito: 'B',
+      explicacao: { correta: 'A administração INDIRETA é composta por entidades com personalidade jurídica própria: autarquias, fundações, empresas públicas e sociedades de economia mista.', incorretas: { A: 'Órgãos sem personalidade integram a administração DIRETA.', C: 'Sujeitas a controle pelos TCs.', D: 'Aplica-se aos três níveis.' }, conceitoCobrado: 'Composição da administração indireta.', pegadinha: 'Confundir órgãos (direta) com entidades (indireta).', comoApareceEmConcurso: 'Altíssima frequência em AP e DA.' },
+      tags: ['administração indireta'] },
+    { id: 'Q-DID-AP-0008', tipo: 'DIDATICA', area: 'AP', moduloId: 'AP-04', subtema: 'Descentralização administrativa', dificuldade: 3, prioridade: 'alta',
+      enunciado: 'A criação de uma autarquia municipal para gerir o serviço de transporte público é exemplo de:',
+      alternativas: [{ id: 'A', texto: 'Desconcentração administrativa.' }, { id: 'B', texto: 'Descentralização administrativa por outorga.' }, { id: 'C', texto: 'Descentralização por delegação a particular.' }, { id: 'D', texto: 'Centralização administrativa.' }],
+      gabarito: 'B',
+      explicacao: { correta: 'Criar uma autarquia = descentralização administrativa por OUTORGA.', incorretas: { A: 'Desconcentração é distribuição interna dentro da mesma pessoa jurídica.', C: 'Delegação a particular seria por concessão/permissão.', D: 'Centralização é o oposto.' }, conceitoCobrado: 'Desconcentração x descentralização (outorga x delegação).', pegadinha: 'Trocar outorga por delegação.', comoApareceEmConcurso: 'Cobrado em DA e AP.' },
+      tags: ['descentralização', 'outorga'] },
+    { id: 'Q-DID-DA-0001', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-02', subtema: 'Princípios expressos', dificuldade: 1, prioridade: 'alta',
+      enunciado: 'São princípios expressos da Administração Pública no caput do art. 37 da Constituição Federal de 1988:',
+      alternativas: [{ id: 'A', texto: 'Legalidade, impessoalidade, moralidade, publicidade e eficiência.' }, { id: 'B', texto: 'Legalidade, imparcialidade, moralidade, publicidade e eficiência.' }, { id: 'C', texto: 'Legalidade, impessoalidade, moralidade, transparência e economicidade.' }, { id: 'D', texto: 'Razoabilidade, proporcionalidade, moralidade, publicidade e eficiência.' }],
+      gabarito: 'A',
+      explicacao: { correta: 'LIMPE: Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência.', incorretas: { B: 'Troca impessoalidade por imparcialidade.', C: 'Transparência e economicidade não estão no art. 37.', D: 'Razoabilidade e proporcionalidade são implícitos.' }, conceitoCobrado: 'Enumeração dos princípios expressos.', pegadinha: 'Trocar impessoalidade por imparcialidade.', comoApareceEmConcurso: 'Alta frequência em DA.' },
+      tags: ['LIMPE', 'princípios'] },
+    { id: 'Q-DID-DA-0002', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-02', subtema: 'Legalidade', dificuldade: 2, prioridade: 'alta',
       enunciado: 'Sobre o princípio da legalidade na Administração Pública, é correto afirmar que:',
-      alternativas: [
-        { id: 'A', texto: 'O administrador público pode fazer tudo aquilo que a lei não proíbe, tal como o particular.' },
-        { id: 'B', texto: 'A Administração só pode atuar conforme autorização ou determinação legal, tratando-se de legalidade estrita.' },
-        { id: 'C', texto: 'O princípio da legalidade veda a prática de atos discricionários.' },
-        { id: 'D', texto: 'A legalidade administrativa é idêntica à autonomia da vontade privada.' }
-      ],
+      alternativas: [{ id: 'A', texto: 'O administrador público pode fazer tudo aquilo que a lei não proíbe, tal como o particular.' }, { id: 'B', texto: 'A Administração só pode atuar conforme autorização ou determinação legal, tratando-se de legalidade estrita.' }, { id: 'C', texto: 'O princípio da legalidade veda a prática de atos discricionários.' }, { id: 'D', texto: 'A legalidade administrativa é idêntica à autonomia da vontade privada.' }],
       gabarito: 'B',
-      explicacao: {
-        correta: 'A Administração Pública se submete à legalidade ESTRITA: só pode fazer o que a lei autoriza ou determina. O particular, ao contrário, pode fazer tudo que a lei não proíbe.',
-        incorretas: {
-          A: 'Descreve a legalidade aplicada ao PARTICULAR, não à Administração.',
-          C: 'Legalidade não veda discricionariedade. O ato discricionário é legalmente previsto com margem de escolha.',
-          D: 'Legalidade administrativa é o oposto da autonomia privada.'
-        },
-        conceitoCobrado: 'Distinção entre legalidade administrativa e legalidade do particular.',
-        pegadinha: 'Bancas adoram dizer "Administração pode fazer o que a lei não proíbe". Isso é ERRADO.',
-        comoApareceEmConcurso: 'Cobrado com altíssima frequência em provas de DA.'
-      },
-      tags: ['legalidade', 'legalidade estrita']
-    },
-    {
-      id: 'Q-DID-DA-0003',
-      tipo: 'DIDATICA',
-      area: 'DA',
-      moduloId: 'DA-02',
-      topicoId: 'DA-02',
-      subtema: 'Impessoalidade',
-      dificuldade: 2,
-      prioridade: 'alta',
+      explicacao: { correta: 'Legalidade estrita: a Administração só faz o que a lei autoriza ou determina.', incorretas: { A: 'Descreve a legalidade aplicada ao PARTICULAR.', C: 'Legalidade não veda discricionariedade.', D: 'É o oposto da autonomia privada.' }, conceitoCobrado: 'Distinção entre legalidade administrativa e do particular.', pegadinha: '"Fazer o que a lei não proíbe" é ERRADO para a Administração.', comoApareceEmConcurso: 'Alta frequência em DA.' },
+      tags: ['legalidade'] },
+    { id: 'Q-DID-DA-0003', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-02', subtema: 'Impessoalidade', dificuldade: 2, prioridade: 'alta',
       enunciado: 'Um prefeito manda afixar, em outdoors pagos com verba pública, sua foto e seu nome ao lado de obras municipais recém-concluídas. Essa conduta viola frontalmente o princípio da:',
-      alternativas: [
-        { id: 'A', texto: 'Legalidade.' },
-        { id: 'B', texto: 'Impessoalidade.' },
-        { id: 'C', texto: 'Publicidade.' },
-        { id: 'D', texto: 'Continuidade do serviço público.' }
-      ],
+      alternativas: [{ id: 'A', texto: 'Legalidade.' }, { id: 'B', texto: 'Impessoalidade.' }, { id: 'C', texto: 'Publicidade.' }, { id: 'D', texto: 'Continuidade do serviço público.' }],
       gabarito: 'B',
-      explicacao: {
-        correta: 'O art. 37, §1º, CF veda promoção pessoal de autoridades em obras, serviços e campanhas públicas. A violação é direta ao princípio da IMPESSOALIDADE.',
-        incorretas: {
-          A: 'Embora haja uso irregular de verba, o núcleo da violação é a impessoalidade (promoção pessoal).',
-          C: 'Publicidade obriga a divulgar atos, mas não para promover o agente.',
-          D: 'Continuidade não é o foco.'
-        },
-        conceitoCobrado: 'Impessoalidade e vedação à promoção pessoal.',
-        pegadinha: 'Trocar impessoalidade por publicidade, porque ambos tratam de "divulgação".',
-        comoApareceEmConcurso: 'Muito cobrado com situações práticas envolvendo outdoors, campanhas e obras.'
-      },
-      tags: ['impessoalidade', 'promoção pessoal', 'art. 37 §1º']
-    },
-    {
-      id: 'Q-DID-DA-0004',
-      tipo: 'DIDATICA',
-      area: 'DA',
-      moduloId: 'DA-02',
-      topicoId: 'DA-02',
-      subtema: 'Princípios implícitos',
-      dificuldade: 3,
-      prioridade: 'alta',
+      explicacao: { correta: 'Art. 37, §1º, CF veda promoção pessoal. Violação direta da IMPESSOALIDADE.', incorretas: { A: 'Embora haja irregularidade na verba, o núcleo é impessoalidade.', C: 'Publicidade não promove o agente.', D: 'Continuidade não é o foco.' }, conceitoCobrado: 'Impessoalidade e vedação à promoção pessoal.', pegadinha: 'Trocar impessoalidade por publicidade.', comoApareceEmConcurso: 'Situações práticas com outdoors, campanhas.' },
+      tags: ['impessoalidade'] },
+    { id: 'Q-DID-DA-0004', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-02', subtema: 'Princípios implícitos', dificuldade: 3, prioridade: 'alta',
       enunciado: 'São exemplos de princípios IMPLÍCITOS da Administração Pública:',
-      alternativas: [
-        { id: 'A', texto: 'Legalidade e impessoalidade.' },
-        { id: 'B', texto: 'Supremacia do interesse público, indisponibilidade do interesse público e autotutela.' },
-        { id: 'C', texto: 'Moralidade e publicidade.' },
-        { id: 'D', texto: 'Eficiência e publicidade.' }
-      ],
+      alternativas: [{ id: 'A', texto: 'Legalidade e impessoalidade.' }, { id: 'B', texto: 'Supremacia do interesse público, indisponibilidade do interesse público e autotutela.' }, { id: 'C', texto: 'Moralidade e publicidade.' }, { id: 'D', texto: 'Eficiência e publicidade.' }],
       gabarito: 'B',
-      explicacao: {
-        correta: 'Supremacia do interesse público, indisponibilidade do interesse público e autotutela (Súmulas 346 e 473/STF) são princípios IMPLÍCITOS, decorrentes do sistema constitucional.',
-        incorretas: {
-          A: 'Legalidade e impessoalidade são EXPRESSOS (LIMPE).',
-          C: 'Moralidade e publicidade são EXPRESSOS.',
-          D: 'Eficiência e publicidade são EXPRESSOS.'
-        },
-        conceitoCobrado: 'Reconhecimento de princípios implícitos.',
-        pegadinha: 'Confundir expressos com implícitos. Supremacia e indisponibilidade são os mais cobrados como implícitos.',
-        comoApareceEmConcurso: 'Cobrado com frequência: banca pergunta "NÃO é princípio expresso" ou "são implícitos".'
-      },
-      tags: ['princípios implícitos', 'supremacia', 'autotutela']
-    }
+      explicacao: { correta: 'Supremacia, indisponibilidade e autotutela (Súmulas 346 e 473/STF) são princípios IMPLÍCITOS.', incorretas: { A: 'Expressos.', C: 'Expressos.', D: 'Expressos.' }, conceitoCobrado: 'Reconhecimento de princípios implícitos.', pegadinha: 'Confundir expressos com implícitos.', comoApareceEmConcurso: 'Cobrado com frequência.' },
+      tags: ['implícitos', 'supremacia'] },
+    { id: 'Q-DID-DA-0005', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-01', subtema: 'Fontes do Direito Administrativo', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'São fontes do Direito Administrativo:',
+      alternativas: [{ id: 'A', texto: 'Lei, doutrina, jurisprudência e princípios gerais do direito.' }, { id: 'B', texto: 'Apenas a lei em sentido estrito.' }, { id: 'C', texto: 'Costumes internacionais exclusivamente.' }, { id: 'D', texto: 'Somente decisões judiciais.' }],
+      gabarito: 'A',
+      explicacao: { correta: 'As fontes incluem a lei (primária), doutrina, jurisprudência e princípios gerais do direito.', incorretas: { B: 'Restringe indevidamente à lei.', C: 'Costume é fonte secundária e não exclusiva.', D: 'Jurisprudência é fonte, não exclusiva.' }, conceitoCobrado: 'Fontes do Direito Administrativo.', pegadinha: 'Achar que só a lei é fonte.', comoApareceEmConcurso: 'Cobrado em DA.' },
+      tags: ['fontes'] },
+    { id: 'Q-DID-DA-0006', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-03', subtema: 'Desconcentração x descentralização', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'A criação de uma delegacia regional de um órgão público federal, subordinada hierarquicamente ao órgão central, é exemplo de:',
+      alternativas: [{ id: 'A', texto: 'Descentralização administrativa por outorga.' }, { id: 'B', texto: 'Descentralização por delegação.' }, { id: 'C', texto: 'Desconcentração administrativa.' }, { id: 'D', texto: 'Criação de entidade da administração indireta.' }],
+      gabarito: 'C',
+      explicacao: { correta: 'Delegacia regional é órgão dentro da MESMA pessoa jurídica. É DESCONCENTRAÇÃO.', incorretas: { A: 'Descentralização por outorga cria nova pessoa jurídica.', B: 'Delegação a particular envolve concessão/permissão.', D: 'Não há criação de entidade.' }, conceitoCobrado: 'Desconcentração x descentralização.', pegadinha: 'Confundir órgão (desconcentração) com entidade (descentralização).', comoApareceEmConcurso: 'Clássica em DA.' },
+      tags: ['desconcentração'] },
+    { id: 'Q-DID-DA-0007', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-04', subtema: 'Cargo, emprego e função', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'Sobre cargo, emprego e função pública, é correto afirmar que:',
+      alternativas: [{ id: 'A', texto: 'Cargo público é a unidade de atribuições criada por lei, ocupada por servidor estatutário.' }, { id: 'B', texto: 'Emprego público é ocupado por servidor estatutário.' }, { id: 'C', texto: 'Função pública é sinônimo de cargo em comissão.' }, { id: 'D', texto: 'Cargo em comissão exige aprovação prévia em concurso público.' }],
+      gabarito: 'A',
+      explicacao: { correta: 'Cargo público é criado por lei, com denominação própria e vencimento, ocupado por servidor estatutário (regime legal).', incorretas: { B: 'Emprego público é ocupado por empregado público, sob regime celetista.', C: 'Função pública é gênero.', D: 'Cargo em comissão é de livre nomeação e exoneração, não exige concurso.' }, conceitoCobrado: 'Distinção entre cargo, emprego e função.', pegadinha: 'Confundir regime estatutário com celetista.', comoApareceEmConcurso: 'Muito cobrado em DA.' },
+      tags: ['agentes públicos', 'cargo'] },
+    { id: 'Q-DID-DA-0008', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-05', subtema: 'Poder de polícia', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'O poder de polícia administrativa caracteriza-se por:',
+      alternativas: [{ id: 'A', texto: 'Ser exercido apenas pela Polícia Federal.' }, { id: 'B', texto: 'Permitir ao Estado condicionar e limitar o exercício de direitos e liberdades individuais em favor do interesse público.' }, { id: 'C', texto: 'Ser sinônimo de poder disciplinar.' }, { id: 'D', texto: 'Ser incompatível com a aplicação de sanções administrativas.' }],
+      gabarito: 'B',
+      explicacao: { correta: 'Poder de polícia é a faculdade de condicionar e limitar o exercício de direitos e liberdades em favor do interesse público (CTN art. 78 e doutrina).', incorretas: { A: 'É exercido por diversos órgãos.', C: 'Disciplinar apura infrações internas de servidores.', D: 'Pode gerar sanções administrativas.' }, conceitoCobrado: 'Conceito e extensão do poder de polícia.', pegadinha: 'Achar que poder de polícia é exclusivo de corporações policiais.', comoApareceEmConcurso: 'Altíssima frequência em DA.' },
+      tags: ['poder de polícia'] },
+    { id: 'Q-DID-DA-0009', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-05', subtema: 'Poder hierárquico', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'A prerrogativa do superior de distribuir tarefas, delegar atribuições e fiscalizar a atuação dos subordinados decorre do poder:',
+      alternativas: [{ id: 'A', texto: 'Disciplinar.' }, { id: 'B', texto: 'Hierárquico.' }, { id: 'C', texto: 'Regulamentar.' }, { id: 'D', texto: 'De polícia.' }],
+      gabarito: 'B',
+      explicacao: { correta: 'O poder HIERÁRQUICO organiza a relação superior-subordinado, permitindo ordenar, fiscalizar, delegar e avocar.', incorretas: { A: 'Disciplinar apura infrações funcionais.', C: 'Regulamentar é editar decretos para fiel execução de leis.', D: 'De polícia atinge particulares em geral.' }, conceitoCobrado: 'Distinção entre poder hierárquico e demais poderes.', pegadinha: 'Confundir hierárquico (organização) com disciplinar (punição).', comoApareceEmConcurso: 'Correspondência entre situação e poder.' },
+      tags: ['poder hierárquico'] },
+    { id: 'Q-DID-DA-0010', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-06', subtema: 'Atributos do ato', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'São atributos do ato administrativo:',
+      alternativas: [{ id: 'A', texto: 'Presunção de legitimidade, autoexecutoriedade e imperatividade.' }, { id: 'B', texto: 'Legalidade, moralidade e impessoalidade.' }, { id: 'C', texto: 'Anulação, revogação e convalidação.' }, { id: 'D', texto: 'Competência, finalidade e forma.' }],
+      gabarito: 'A',
+      explicacao: { correta: 'Atributos do ato administrativo: presunção de legitimidade, autoexecutoriedade e imperatividade (PATI).', incorretas: { B: 'São princípios da Administração Pública.', C: 'São formas de extinção/retificação do ato.', D: 'São elementos do ato.' }, conceitoCobrado: 'Atributos x elementos do ato administrativo.', pegadinha: 'Confundir atributos com elementos.', comoApareceEmConcurso: 'Cobrado com muita frequência em DA.' },
+      tags: ['atributos', 'atos administrativos'] },
+    { id: 'Q-DID-DA-0011', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-06', subtema: 'Anulação x revogação', dificuldade: 3, prioridade: 'alta',
+      enunciado: 'Sobre anulação e revogação do ato administrativo, é correto afirmar que:',
+      alternativas: [{ id: 'A', texto: 'A anulação é feita por conveniência e oportunidade; a revogação, por ilegalidade.' }, { id: 'B', texto: 'A anulação decorre de ilegalidade e produz efeitos retroativos; a revogação decorre de conveniência e oportunidade e não retroage.' }, { id: 'C', texto: 'Ambas só podem ser feitas pelo Poder Judiciário.' }, { id: 'D', texto: 'A revogação é possível para atos vinculados e discricionários.' }],
+      gabarito: 'B',
+      explicacao: { correta: 'Anulação (ilegalidade) — efeitos EX TUNC, retroage. Revogação (mérito) — efeitos EX NUNC, não retroage.', incorretas: { A: 'Inverte os conceitos.', C: 'A Administração pode anular e revogar seus próprios atos (Súmula 473/STF).', D: 'Atos VINCULADOS não podem ser revogados.' }, conceitoCobrado: 'Anulação x revogação (autotutela).', pegadinha: 'Inverter efeitos ex tunc e ex nunc.', comoApareceEmConcurso: 'Altíssima frequência em DA.' },
+      tags: ['anulação', 'revogação'] },
+    { id: 'Q-DID-DA-0012', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-08', subtema: 'Modalidades Lei 14.133/2021', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'São modalidades de licitação previstas na Lei nº 14.133/2021:',
+      alternativas: [{ id: 'A', texto: 'Concorrência, tomada de preços, convite, concurso e leilão.' }, { id: 'B', texto: 'Pregão, concorrência, concurso, leilão e diálogo competitivo.' }, { id: 'C', texto: 'Convite, tomada de preços e pregão.' }, { id: 'D', texto: 'Leilão, convite e concorrência.' }],
+      gabarito: 'B',
+      explicacao: { correta: 'A Lei 14.133/2021 prevê: pregão, concorrência, concurso, leilão e diálogo competitivo.', incorretas: { A: 'Tomada de preços e convite são da Lei 8.666/1993 (revogada).', C: 'Tomada de preços e convite não existem mais.', D: 'Convite foi extinto.' }, conceitoCobrado: 'Modalidades da nova Lei de Licitações.', pegadinha: 'Misturar modalidades da lei antiga com a nova.', comoApareceEmConcurso: 'Alta frequência pós-2021.' },
+      tags: ['licitação', 'Lei 14.133'] },
+    { id: 'Q-DID-DA-0013', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-08', subtema: 'Dispensa x inexigibilidade', dificuldade: 3, prioridade: 'alta',
+      enunciado: 'Sobre contratação direta, é correto afirmar que:',
+      alternativas: [{ id: 'A', texto: 'A dispensa de licitação decorre da impossibilidade de competição; a inexigibilidade, da conveniência da Administração.' }, { id: 'B', texto: 'A inexigibilidade decorre da impossibilidade de competição; a dispensa é hipótese legalmente prevista, ainda que haja possibilidade de competição.' }, { id: 'C', texto: 'Ambas são sinônimos.' }, { id: 'D', texto: 'A dispensa é vedada pela Lei 14.133/2021.' }],
+      gabarito: 'B',
+      explicacao: { correta: 'INEXIGIBILIDADE: impossibilidade de competição. DISPENSA: hipóteses legais em que a competição é possível, mas a lei autoriza não licitar.', incorretas: { A: 'Inverte os conceitos.', C: 'Não são sinônimos.', D: 'A Lei 14.133/2021 prevê expressamente hipóteses de dispensa.' }, conceitoCobrado: 'Dispensa x inexigibilidade.', pegadinha: 'Trocar os conceitos.', comoApareceEmConcurso: 'Altíssima frequência em DA.' },
+      tags: ['licitação', 'dispensa', 'inexigibilidade'] },
+    { id: 'Q-DID-DA-0014', tipo: 'DIDATICA', area: 'DA', moduloId: 'DA-10', subtema: 'Controle interno e externo', dificuldade: 2, prioridade: 'alta',
+      enunciado: 'Sobre o controle da Administração Pública, é correto afirmar que:',
+      alternativas: [{ id: 'A', texto: 'O controle interno é exercido exclusivamente pelo Poder Legislativo.' }, { id: 'B', texto: 'O controle externo é exercido pelo próprio órgão sobre seus atos.' }, { id: 'C', texto: 'O controle interno é realizado dentro da própria estrutura do órgão; o externo, por outro Poder ou instituição autônoma.' }, { id: 'D', texto: 'O controle judicial analisa o mérito administrativo.' }],
+      gabarito: 'C',
+      explicacao: { correta: 'Controle INTERNO: dentro do próprio órgão. Controle EXTERNO: por outro Poder ou instituição (TC, Judiciário, Legislativo, MP).', incorretas: { A: 'Controle interno é exercido pelo próprio órgão.', B: 'Controle externo vem de fora do órgão.', D: 'O Judiciário, em regra, não analisa o mérito administrativo — só a legalidade.' }, conceitoCobrado: 'Classificação dos controles.', pegadinha: 'Achar que o Judiciário analisa mérito administrativo.', comoApareceEmConcurso: 'Cobrado em DA e AP.' },
+      tags: ['controle', 'interno', 'externo'] }
   ];
 
   /* ============================================================
@@ -1259,30 +924,20 @@ Changelog v0.1:
   var currentLessonId = null;
   var moduleFilter = 'todas';
   var professorAnswerOpen = null;
-
   var diagRunning = { moduleId: null, answers: {}, itemIndex: 0, revealed: {} };
-
-  // Estado do motor de questões (NOVO v0.4)
   var questionFilter = { area: 'todas', moduloId: 'todos', dificuldade: 'todas', tipo: 'TODAS' };
-  var questionRunning = null; // { ids: [], index: 0, respostas: {}, revealed: {}, startedAt: '' }
+  var questionRunning = null;
+  var importReport = null;
 
   function createDefaultState() {
     var now = new Date().toISOString();
     return {
-      schemaVersion: SCHEMA_VERSION,
-      appVersion: APP_VERSION,
+      schemaVersion: SCHEMA_VERSION, appVersion: APP_VERSION,
       createdAt: now, updatedAt: now,
       settings: { theme: 'light' },
       modules: {},
-      questions: {},           // <-- NOVO v0.4
-      stats: {
-        questoesRespondidas: 0,
-        acertos: 0,
-        erros: 0,
-        flashcardsEstudados: 0,
-        simuladosRealizados: 0,
-        tempoEstudoMin: 0
-      },
+      questions: {},
+      stats: { questoesRespondidas: 0, acertos: 0, erros: 0, flashcardsEstudados: 0, simuladosRealizados: 0, tempoEstudoMin: 0 },
       lastScreen: 'dashboard'
     };
   }
@@ -1295,22 +950,17 @@ Changelog v0.1:
       if (!parsed || typeof parsed !== 'object') return createDefaultState();
       var base = createDefaultState();
       return {
-        schemaVersion: SCHEMA_VERSION,
-        appVersion: APP_VERSION,
+        schemaVersion: SCHEMA_VERSION, appVersion: APP_VERSION,
         createdAt: parsed.createdAt || base.createdAt,
         updatedAt: parsed.updatedAt || base.updatedAt,
         settings: Object.assign({}, base.settings, parsed.settings || {}),
         modules: parsed.modules || {},
-        questions: parsed.questions || {},           // <-- NOVO v0.4
+        questions: parsed.questions || {},
         stats: Object.assign({}, base.stats, parsed.stats || {}),
         lastScreen: parsed.lastScreen || 'dashboard'
       };
-    } catch (e) {
-      console.error('[ADMIN-DIR] Falha ao ler estado:', e);
-      return createDefaultState();
-    }
+    } catch (e) { console.error('[ADMIN-DIR] Falha ao ler estado:', e); return createDefaultState(); }
   }
-
   function saveState() {
     AppState.updatedAt = new Date().toISOString();
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState)); }
@@ -1318,27 +968,13 @@ Changelog v0.1:
   }
 
   function getModuleUserState(modId) {
-    if (!AppState.modules[modId]) {
-      AppState.modules[modId] = { status: 'nao_iniciado', aulasLidas: [], diagnostico: null, dominioEstimado: 0, ultimaAtividade: null };
-    }
+    if (!AppState.modules[modId]) AppState.modules[modId] = { status: 'nao_iniciado', aulasLidas: [], diagnostico: null, dominioEstimado: 0, ultimaAtividade: null };
     if (!Array.isArray(AppState.modules[modId].aulasLidas)) AppState.modules[modId].aulasLidas = [];
     if (AppState.modules[modId].diagnostico === undefined) AppState.modules[modId].diagnostico = null;
     return AppState.modules[modId];
   }
-
   function getQuestionUserState(qid) {
-    if (!AppState.questions[qid]) {
-      AppState.questions[qid] = {
-        tentativas: 0,
-        acertos: 0,
-        erros: 0,
-        ultimaResposta: null,       // 'A'|'B'|'C'|'D'
-        ultimaCorreta: null,        // true|false
-        ultimaTentativa: null,
-        status: 'nao_respondida',   // nao_respondida | acerto | erro
-        historico: []               // [{ data, resposta, correta }]
-      };
-    }
+    if (!AppState.questions[qid]) AppState.questions[qid] = { tentativas: 0, acertos: 0, erros: 0, ultimaResposta: null, ultimaCorreta: null, ultimaTentativa: null, status: 'nao_respondida', historico: [] };
     return AppState.questions[qid];
   }
 
@@ -1346,45 +982,28 @@ Changelog v0.1:
      HELPERS
   ============================================================ */
   function esc(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
-  function getModule(modId) {
-    for (var i = 0; i < MODULES.length; i++) if (MODULES[i].id === modId) return MODULES[i];
-    return null;
-  }
+  function getModule(modId) { for (var i = 0; i < MODULES.length; i++) if (MODULES[i].id === modId) return MODULES[i]; return null; }
   function getLessonByModuleId(modId) { return LESSONS[modId] || null; }
-  function getLessonById(lessonId) {
-    for (var k in LESSONS) if (LESSONS.hasOwnProperty(k) && LESSONS[k].id === lessonId) return LESSONS[k];
-    return null;
-  }
+  function getLessonById(lessonId) { for (var k in LESSONS) if (LESSONS.hasOwnProperty(k) && LESSONS[k].id === lessonId) return LESSONS[k]; return null; }
   function getDiagnosticByModuleId(modId) { return DIAGNOSTICS[modId] || null; }
-  function getQuestion(qid) {
-    for (var i = 0; i < QUESTIONS.length; i++) if (QUESTIONS[i].id === qid) return QUESTIONS[i];
-    return null;
-  }
-  function formatDate(iso) {
-    if (!iso) return '—';
-    try { return new Date(iso).toLocaleString('pt-BR'); } catch (e) { return iso; }
-  }
-  function isObjective(item) {
-    return item.tipo === 'multipla_escolha' || item.tipo === 'verdadeiro_falso' || item.tipo === 'situacao';
-  }
+  function getQuestion(qid) { for (var i = 0; i < QUESTIONS.length; i++) if (QUESTIONS[i].id === qid) return QUESTIONS[i]; return null; }
+  function formatDate(iso) { if (!iso) return '—'; try { return new Date(iso).toLocaleString('pt-BR'); } catch (e) { return iso; } }
+  function isObjective(item) { return item.tipo === 'multipla_escolha' || item.tipo === 'verdadeiro_falso' || item.tipo === 'situacao'; }
   function difficultyLabel(d) { return DIFFICULTY_LABELS[d] || ('Nível ' + d); }
   function typeLabel(t) { return t === 'REAL' ? 'Real' : 'Didática'; }
   function typeBadgeClass(t) { return t === 'REAL' ? 'badge-real' : 'badge-did'; }
+  function qRealCount() { var n = 0; for (var i = 0; i < QUESTIONS.length; i++) if (QUESTIONS[i].tipo === 'REAL') n++; return n; }
+  function qDidCount() { var n = 0; for (var i = 0; i < QUESTIONS.length; i++) if (QUESTIONS[i].tipo === 'DIDATICA') n++; return n; }
   function shuffleArray(arr) {
     var a = arr.slice();
-    for (var i = a.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var t = a[i]; a[i] = a[j]; a[j] = t;
-    }
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
     return a;
   }
 
   /* ============================================================
-     ANÁLISE DO DIAGNÓSTICO (inalterada desde v0.3)
+     ANALISE DO DIAGNOSTICO
   ============================================================ */
   function computeDiagnosticResult(moduleId, answers) {
     var diag = getDiagnosticByModuleId(moduleId);
@@ -1397,12 +1016,10 @@ Changelog v0.1:
       var resp = answers[item.id];
       bySubtopic[sub].total += 1;
       if (isObjective(item)) {
-        if (resp === item.gabarito) { bySubtopic[sub].acertos += 1; totalPontos += 1; }
-        else bySubtopic[sub].erros += 1;
+        if (resp === item.gabarito) { bySubtopic[sub].acertos += 1; totalPontos += 1; } else bySubtopic[sub].erros += 1;
         totalSinais += 1;
       } else if (item.tipo === 'autoavaliacao') {
-        if (resp === 'sabia') { bySubtopic[sub].sabia += 1; totalPontos += 1; }
-        else if (resp === 'nao_sabia') bySubtopic[sub].nao_sabia += 1;
+        if (resp === 'sabia') { bySubtopic[sub].sabia += 1; totalPontos += 1; } else if (resp === 'nao_sabia') bySubtopic[sub].nao_sabia += 1;
         totalSinais += 1;
       }
     }
@@ -1431,14 +1048,10 @@ Changelog v0.1:
     result.completedAt = new Date().toISOString();
     return result;
   }
-  function negativosNoTotal(bySubtopic) {
-    var n = 0;
-    for (var k in bySubtopic) if (bySubtopic.hasOwnProperty(k)) n += bySubtopic[k].erros + bySubtopic[k].nao_sabia;
-    return n;
-  }
+  function negativosNoTotal(bySubtopic) { var n = 0; for (var k in bySubtopic) if (bySubtopic.hasOwnProperty(k)) n += bySubtopic[k].erros + bySubtopic[k].nao_sabia; return n; }
 
   /* ============================================================
-     FILTRO E MOTOR DE QUESTÕES (NOVO v0.4)
+     MOTOR DE QUESTOES
   ============================================================ */
   function filterQuestions() {
     return QUESTIONS.filter(function (q) {
@@ -1449,89 +1062,56 @@ Changelog v0.1:
       return true;
     });
   }
-
   function startQuestionSession() {
     var list = filterQuestions();
     if (list.length === 0) { window.alert('Nenhuma questão corresponde aos filtros escolhidos.'); return; }
-    // Embaralha a ordem e as alternativas de cada questão
     var ids = shuffleArray(list.map(function (q) { return q.id; }));
-    questionRunning = {
-      ids: ids,
-      index: 0,
-      respostas: {},
-      revealed: {},
-      startedAt: new Date().toISOString()
-    };
+    questionRunning = { ids: ids, index: 0, respostas: {}, revealed: {}, startedAt: new Date().toISOString() };
     navigate('questao-run');
   }
-
   function answerQuestion(altId) {
     if (!questionRunning) return;
     var qid = questionRunning.ids[questionRunning.index];
-    if (Object.prototype.hasOwnProperty.call(questionRunning.respostas, qid)) return; // já respondeu
+    if (Object.prototype.hasOwnProperty.call(questionRunning.respostas, qid)) return;
     questionRunning.respostas[qid] = altId;
     questionRunning.revealed[qid] = true;
-    // Persiste no estado
     var q = getQuestion(qid);
     if (!q) return;
     var qs = getQuestionUserState(qid);
     var correta = altId === q.gabarito;
     qs.tentativas += 1;
     if (correta) qs.acertos += 1; else qs.erros += 1;
-    qs.ultimaResposta = altId;
-    qs.ultimaCorreta = correta;
-    qs.ultimaTentativa = new Date().toISOString();
+    qs.ultimaResposta = altId; qs.ultimaCorreta = correta; qs.ultimaTentativa = new Date().toISOString();
     qs.status = correta ? 'acerto' : 'erro';
     qs.historico.push({ data: qs.ultimaTentativa, resposta: altId, correta: correta });
     if (qs.historico.length > 30) qs.historico = qs.historico.slice(-30);
-    // Estatísticas globais
     AppState.stats.questoesRespondidas += 1;
     if (correta) AppState.stats.acertos += 1; else AppState.stats.erros += 1;
-    // Estado do módulo
     var st = getModuleUserState(q.moduloId);
     if (st.status === 'nao_iniciado') st.status = 'em_estudo';
     st.ultimaAtividade = new Date().toISOString();
     saveState();
     render();
   }
-
-  function nextQuestion() {
-    if (!questionRunning) return;
-    if (questionRunning.index < questionRunning.ids.length - 1) {
-      questionRunning.index += 1;
-      render();
-      var main = document.getElementById('main');
-      if (main) main.scrollTop = 0;
-    }
-  }
-  function prevQuestion() {
-    if (!questionRunning) return;
-    if (questionRunning.index > 0) {
-      questionRunning.index -= 1;
-      render();
-      var main = document.getElementById('main');
-      if (main) main.scrollTop = 0;
-    }
-  }
+  function nextQuestion() { if (questionRunning && questionRunning.index < questionRunning.ids.length - 1) { questionRunning.index += 1; render(); var main = document.getElementById('main'); if (main) main.scrollTop = 0; } }
+  function prevQuestion() { if (questionRunning && questionRunning.index > 0) { questionRunning.index -= 1; render(); var main = document.getElementById('main'); if (main) main.scrollTop = 0; } }
   function cancelQuestionSession() {
     var ok = window.confirm('Cancelar a sessão? As respostas já registradas serão mantidas no histórico.');
     if (!ok) return;
-    questionRunning = null;
-    navigate('questoes');
+    questionRunning = null; navigate('questoes');
   }
   function finishQuestionSession() {
     if (!questionRunning) return;
     var sess = questionRunning;
     questionRunning = null;
-    // Guarda resultado para a tela seguinte
     window.__lastSession = sess;
     navigate('questao-result');
   }
 
   /* ============================================================
-     NAVEGAÇÃO
+     NAVEGACAO
   ============================================================ */
-  var VALID_SCREENS = ['dashboard','modulos','modulo-detalhe','licao','diagnostico','diag-resultado','questoes','questao-run','questao-result','configuracoes','sobre'];
+  var VALID_SCREENS = ['dashboard','modulos','modulo-detalhe','licao','diagnostico','diag-resultado','questoes','questao-run','questao-result','banco-questoes','configuracoes','sobre'];
 
   function navigate(screen, opts) {
     opts = opts || {};
@@ -1540,14 +1120,9 @@ Changelog v0.1:
     if (screen === 'modulo-detalhe') currentModuleId = opts.moduleId || currentModuleId;
     if (screen === 'licao') {
       currentLessonId = opts.lessonId || currentLessonId;
-      if (currentLessonId) {
-        var lesson = getLessonById(currentLessonId);
-        if (lesson) currentModuleId = lesson.moduloId;
-      }
+      if (currentLessonId) { var lesson = getLessonById(currentLessonId); if (lesson) currentModuleId = lesson.moduloId; }
     }
-    if (screen === 'diagnostico' || screen === 'diag-resultado') {
-      if (opts.moduleId) currentModuleId = opts.moduleId;
-    }
+    if (screen === 'diagnostico' || screen === 'diag-resultado') { if (opts.moduleId) currentModuleId = opts.moduleId; }
     AppState.lastScreen = screen;
     saveState();
     document.body.classList.remove('sidebar-open');
@@ -1561,8 +1136,7 @@ Changelog v0.1:
      RENDER
   ============================================================ */
   function render() {
-    renderSidebarActive();
-    renderMain();
+    renderSidebarActive(); renderMain();
     var badge = document.getElementById('appVersionBadge');
     if (badge) badge.textContent = 'v' + APP_VERSION;
   }
@@ -1594,6 +1168,7 @@ Changelog v0.1:
       case 'questoes': html = renderQuestions(); break;
       case 'questao-run': html = renderQuestionRun(); break;
       case 'questao-result': html = renderQuestionResult(); break;
+      case 'banco-questoes': html = renderQuestionBank(); break;
       case 'configuracoes': html = renderSettings(); break;
       case 'sobre': html = renderAbout(); break;
       default: html = renderDashboard();
@@ -1601,7 +1176,6 @@ Changelog v0.1:
     main.innerHTML = html;
   }
 
-  /* -------- Dashboard -------- */
   function renderDashboard() {
     var stats = AppState.stats;
     var taxa = stats.questoesRespondidas > 0 ? Math.round((stats.acertos / stats.questoesRespondidas) * 100) : 0;
@@ -1613,13 +1187,11 @@ Changelog v0.1:
       if (st.status === 'concluido') concluidos++;
     }
     var diagFeitos = 0;
-    for (var d = 0; d < MODULES.length; d++) {
-      var dst = AppState.modules[MODULES[d].id];
-      if (dst && dst.diagnostico) diagFeitos++;
-    }
+    for (var d = 0; d < MODULES.length; d++) { var dst = AppState.modules[MODULES[d].id]; if (dst && dst.diagnostico) diagFeitos++; }
     var diagDisponiveis = Object.keys(DIAGNOSTICS).length;
     var qRespondidas = Object.keys(AppState.questions).length;
     var qTotal = QUESTIONS.length;
+    var qReal = qRealCount(), qDid = qDidCount();
 
     var sugestoes = [];
     for (var j = 0; j < MODULES.length && sugestoes.length < 3; j++) {
@@ -1634,18 +1206,16 @@ Changelog v0.1:
     var html = '';
     html += '<h1 class="page-title">Dashboard</h1>';
     html += '<p class="page-subtitle">Visão geral do seu progresso. Dados salvos localmente no navegador.</p>';
-
     html += '<div class="cards-grid">';
-    html += statCard('Questões respondidas', stats.questoesRespondidas, qRespondidas + ' de ' + qTotal + ' já vistas');
+    html += statCard('Questões respondidas', stats.questoesRespondidas, qReal + ' reais · ' + qDid + ' didáticas');
     html += statCard('Taxa de acerto', taxa + '%', stats.acertos + ' acertos / ' + stats.erros + ' erros');
     html += statCard('Diagnósticos feitos', diagFeitos + ' / ' + diagDisponiveis, 'Fase 3 — análise por subtópico');
     html += statCard('Módulos em estudo', emEstudo + ' / ' + totalModulos, concluidos + ' concluído(s)');
     html += '</div>';
 
     html += '<h2 class="section-title">O que estudar hoje?</h2>';
-    if (sugestoes.length === 0) {
-      html += '<div class="notice"><strong>Sem sugestões ainda.</strong></div>';
-    } else {
+    if (sugestoes.length === 0) html += '<div class="notice"><strong>Sem sugestões ainda.</strong></div>';
+    else {
       html += '<div class="module-list">';
       for (var s = 0; s < sugestoes.length; s++) html += moduleCardHtml(sugestoes[s]);
       html += '</div>';
@@ -1653,13 +1223,12 @@ Changelog v0.1:
 
     html += '<h2 class="section-title">Aviso desta versão</h2>';
     html += '<div class="notice">' +
-            '<strong>Fase 4 — Motor de questões (parcial).</strong> ' +
-            'O motor está completo (filtros, execução, correção, explicação, histórico, desempenho). ' +
-            'O banco contém <strong>' + QUESTIONS.length + ' questões didáticas</strong> nos módulos com aula/diagnóstico. ' +
-            '<em>Nenhuma questão está marcada como REAL</em> — essa classificação exige origem verificável ' +
-            'e será feita somente na Fase 5, com as devidas fontes. ' +
-            'A interface diferencia claramente DIDÁTICA e REAL com selos visíveis.' +
-            '</div>';
+      '<strong>Fase 5 — Banco de questões.</strong> O banco contém <strong>' + qTotal + ' questões didáticas</strong> ' +
+      'cobrindo 18 módulos de alta prioridade. ' +
+      '<em>Nenhuma questão está marcada como REAL</em> — a classificação REAL exige banca, órgão, ano, prova e fonte verificáveis, ' +
+      'conforme regra do projeto. Use a tela <strong>Banco de Questões</strong> para importar questões reais com origem confirmada ' +
+      'ou exportar o banco atual.' +
+      '</div>';
 
     html += footerHtml();
     return html;
@@ -1669,7 +1238,6 @@ Changelog v0.1:
     return '<div class="stat-card"><div class="stat-label">' + esc(label) + '</div><div class="stat-value">' + esc(value) + '</div>' + (hint ? '<div class="stat-hint">' + esc(hint) + '</div>' : '') + '</div>';
   }
 
-  /* -------- Módulos -------- */
   function renderModules() {
     var areas = ['todas', 'ADM', 'AP', 'DA'];
     var pills = '';
@@ -1712,7 +1280,6 @@ Changelog v0.1:
     '</button>';
   }
 
-  /* -------- Detalhe do módulo -------- */
   function renderModuleDetail() {
     var m = getModule(currentModuleId);
     if (!m) return '<h1 class="page-title">Módulo não encontrado</h1><button class="btn" data-nav="modulos">← Voltar</button>';
@@ -1723,14 +1290,12 @@ Changelog v0.1:
     var diag = getDiagnosticByModuleId(m.id);
     var lessonRead = lesson && (st.aulasLidas || []).indexOf(lesson.id) !== -1;
     var diagDone = !!st.diagnostico;
-
     var moduleQuestions = QUESTIONS.filter(function (q) { return q.moduloId === m.id; });
     var qDone = 0, qAcc = 0, qErr = 0;
     for (var qi = 0; qi < moduleQuestions.length; qi++) {
       var qs = AppState.questions[moduleQuestions[qi].id];
       if (qs && qs.tentativas > 0) { qDone++; qAcc += qs.acertos; qErr += qs.erros; }
     }
-
     var chips = '';
     for (var i = 0; i < m.subtopicos.length; i++) chips += '<span class="subtopic-chip">' + esc(m.subtopicos[i]) + '</span>';
 
@@ -1738,7 +1303,6 @@ Changelog v0.1:
     html += '<button class="btn" data-nav="modulos" style="margin-bottom:16px;">← Voltar aos módulos</button>';
     html += '<h1 class="page-title">' + esc(m.id) + ' — ' + esc(m.titulo) + '</h1>';
     html += '<p class="page-subtitle">' + esc(areaLabel) + ' · Prioridade: ' + esc(pLabel) + '</p>';
-
     html += '<div class="info-list">';
     html += infoRow('Status', statusLabel(st.status));
     html += infoRow('Domínio estimado', Math.round((st.dominioEstimado || 0) * 100) + '%');
@@ -1760,9 +1324,7 @@ Changelog v0.1:
       html += '<button class="btn btn-primary" data-action="open-lesson" data-lesson-id="' + esc(lesson.id) + '">Estudar aula →</button>';
       html += lessonRead ? '<span class="lesson-read-indicator">✓ Lida</span>' : '<span class="lesson-read-indicator pending">Não lida</span>';
       html += '</div></div>';
-    } else {
-      html += '<div class="notice"><strong>Aula ainda não cadastrada.</strong></div>';
-    }
+    } else html += '<div class="notice"><strong>Aula ainda não cadastrada.</strong></div>';
 
     html += '<h2 class="section-title">Diagnóstico</h2>';
     if (diag) {
@@ -1773,29 +1335,23 @@ Changelog v0.1:
         html += '<p style="margin-top:6px;font-size:13px;color:var(--text-muted);">Conhecidos: ' + resumo.conhecido + ' · Em dúvida: ' + resumo.duvida + ' · Desconhecidos: ' + resumo.desconhecido + '</p>';
         html += '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">';
         html += '<button class="btn btn-purple" data-action="open-diag-result" data-module-id="' + esc(m.id) + '">Ver resultado</button>';
-        html += '<button class="btn" data-action="refazer-diag" data-module-id="' + esc(m.id) + '">Refazer diagnóstico</button>';
-        html += '</div>';
+        html += '<button class="btn" data-action="refazer-diag" data-module-id="' + esc(m.id) + '">Refazer diagnóstico</button></div>';
       } else {
         html += '<div style="margin-top:12px;"><button class="btn btn-purple" data-action="start-diag" data-module-id="' + esc(m.id) + '">Fazer diagnóstico →</button></div>';
       }
       html += '</div>';
-    } else {
-      html += '<div class="notice"><strong>Diagnóstico ainda não cadastrado.</strong></div>';
-    }
+    } else html += '<div class="notice"><strong>Diagnóstico ainda não cadastrado.</strong></div>';
 
     html += '<h2 class="section-title">Questões deste módulo</h2>';
     if (moduleQuestions.length > 0) {
       html += '<div class="notice">' + moduleQuestions.length + ' questão(ões) disponíveis. ';
       html += '<button class="btn btn-primary" style="margin-top:10px;" data-action="questions-by-module" data-module-id="' + esc(m.id) + '">Praticar questões deste módulo →</button>';
       html += '</div>';
-    } else {
-      html += '<div class="notice">Nenhuma questão cadastrada para este módulo ainda.</div>';
-    }
+    } else html += '<div class="notice">Nenhuma questão cadastrada para este módulo ainda.</div>';
 
     html += footerHtml();
     return html;
   }
-
   function summarizeResult(result) {
     var c = 0, d = 0, x = 0;
     var bs = result.bySubtopic || {};
@@ -1807,22 +1363,15 @@ Changelog v0.1:
     }
     return { conhecido: c, duvida: d, desconhecido: x };
   }
-  function infoRow(key, value) {
-    return '<div class="info-row"><span class="info-key">' + esc(key) + '</span><span class="info-val">' + esc(value) + '</span></div>';
-  }
-  function statusLabel(s) {
-    var map = { 'nao_iniciado': 'Não iniciado', 'em_estudo': 'Em estudo', 'concluido': 'Concluído' };
-    return map[s] || s || 'Não iniciado';
-  }
+  function infoRow(key, value) { return '<div class="info-row"><span class="info-key">' + esc(key) + '</span><span class="info-val">' + esc(value) + '</span></div>'; }
+  function statusLabel(s) { var map = { 'nao_iniciado': 'Não iniciado', 'em_estudo': 'Em estudo', 'concluido': 'Concluído' }; return map[s] || s || 'Não iniciado'; }
 
-  /* -------- Aula -------- */
   function renderLesson() {
     var lesson = currentLessonId ? getLessonById(currentLessonId) : null;
     if (!lesson) return '<h1 class="page-title">Aula não encontrada</h1><button class="btn" data-nav="modulos">← Voltar</button>';
     var m = getModule(lesson.moduloId);
     var st = m ? getModuleUserState(m.id) : null;
     var wasRead = st && (st.aulasLidas || []).indexOf(lesson.id) !== -1;
-
     var html = '';
     html += '<div class="lesson-toolbar"><div class="lt-left">';
     html += '<button class="btn" data-action="open-module" data-module-id="' + esc(lesson.moduloId) + '">← Módulo ' + esc(lesson.moduloId) + '</button>';
@@ -1830,10 +1379,8 @@ Changelog v0.1:
     html += '</div><div class="lt-right">';
     html += wasRead ? '<span class="lesson-read-indicator">✓ Aula lida</span>' : '<button class="btn btn-primary" data-action="mark-lesson-read" data-lesson-id="' + esc(lesson.id) + '">Marcar como lida</button>';
     html += '</div></div>';
-
     html += '<h1 class="page-title">' + esc(m ? m.titulo : lesson.moduloId) + '</h1>';
     html += '<p class="page-subtitle">Aula ' + esc(lesson.id) + ' · Módulo ' + esc(lesson.moduloId) + '</p>';
-
     html += '<div class="lesson-block block-objetivo"><h3><span class="lb-icon">🎯</span> Objetivo</h3><p>' + esc(lesson.objetivo) + '</p>';
     if (lesson.prerequisitos && lesson.prerequisitos.length) {
       var ptags = '';
@@ -1841,11 +1388,9 @@ Changelog v0.1:
       html += '<p style="margin-top:8px;font-size:13px;color:var(--text-muted);">Pré-requisitos:</p><div class="prereq-list">' + ptags + '</div>';
     }
     html += '</div>';
-
     html += '<div class="lesson-block"><h3><span class="lb-icon">📖</span> Introdução</h3><p>' + esc(lesson.introducao) + '</p></div>';
     html += '<div class="lesson-block"><h3><span class="lb-icon">💡</span> Explicação simples</h3><p>' + esc(lesson.explicacaoSimples) + '</p></div>';
     html += '<div class="lesson-block"><h3><span class="lb-icon">📐</span> Explicação técnica</h3><p>' + esc(lesson.explicacaoTecnica) + '</p></div>';
-
     if (lesson.exemplos && lesson.exemplos.length) {
       html += '<div class="lesson-block"><h3><span class="lb-icon">🔎</span> Exemplos</h3><ul>';
       for (var e = 0; e < lesson.exemplos.length; e++) html += '<li>' + esc(lesson.exemplos[e]) + '</li>';
@@ -1912,7 +1457,6 @@ Changelog v0.1:
     return html;
   }
 
-  /* -------- Diagnóstico em execução -------- */
   function renderDiagnosticRunning() {
     var moduleId = diagRunning.moduleId;
     var diag = getDiagnosticByModuleId(moduleId);
@@ -1924,23 +1468,19 @@ Changelog v0.1:
     var answered = Object.prototype.hasOwnProperty.call(diagRunning.answers, item.id);
     var userAnswer = diagRunning.answers[item.id];
     var percent = Math.round((idx / total) * 100);
-
     var html = '';
     html += '<div class="diag-progress"><div class="diag-progress-bar"><div class="diag-progress-fill" style="width:' + percent + '%"></div></div><div class="diag-progress-label">Item ' + (idx + 1) + ' / ' + total + '</div></div>';
     html += '<h1 class="page-title">Diagnóstico — ' + esc(m ? m.titulo : moduleId) + '</h1>';
     html += '<p class="page-subtitle">Módulo ' + esc(moduleId) + ' · ' + esc(DIAG_TYPE_LABELS[item.tipo] || item.tipo) + '</p>';
     html += '<div class="diag-meta"><span class="tag">Subtópico: ' + esc(item.subtopico) + '</span><span class="tag">' + esc(DIAG_TYPE_LABELS[item.tipo] || item.tipo) + '</span></div>';
     html += '<div class="diag-question"><h2>' + esc(item.pergunta) + '</h2>';
-
     if (isObjective(item)) {
       html += '<div class="diag-options">';
       for (var a = 0; a < item.alternativas.length; a++) {
         var alt = item.alternativas[a];
         var cls = 'diag-option';
-        if (answered) {
-          if (alt.id === item.gabarito) cls += ' correct';
-          else if (alt.id === userAnswer) cls += ' wrong';
-        } else if (alt.id === userAnswer) cls += ' selected';
+        if (answered) { if (alt.id === item.gabarito) cls += ' correct'; else if (alt.id === userAnswer) cls += ' wrong'; }
+        else if (alt.id === userAnswer) cls += ' selected';
         html += '<button class="' + cls + '" data-action="diag-answer" data-alt="' + esc(alt.id) + '"' + (answered ? ' disabled' : '') + '><span class="opt-letter">' + esc(alt.id) + '</span><span>' + esc(alt.texto) + '</span></button>';
       }
       html += '</div>';
@@ -1971,9 +1511,7 @@ Changelog v0.1:
     var m = getModule(moduleId);
     if (!m) return '<h1 class="page-title">Módulo não encontrado</h1><button class="btn" data-nav="modulos">← Voltar</button>';
     var st = getModuleUserState(moduleId);
-    if (!st.diagnostico || !st.diagnostico.result) {
-      return '<h1 class="page-title">Nenhum diagnóstico registrado</h1><button class="btn btn-primary" data-action="start-diag" data-module-id="' + esc(moduleId) + '">Fazer diagnóstico</button>';
-    }
+    if (!st.diagnostico || !st.diagnostico.result) return '<h1 class="page-title">Nenhum diagnóstico registrado</h1><button class="btn btn-primary" data-action="start-diag" data-module-id="' + esc(moduleId) + '">Fazer diagnóstico</button>';
     var r = st.diagnostico.result, bs = r.bySubtopic || {};
     var subtopicos = [];
     for (var k in bs) if (bs.hasOwnProperty(k)) subtopicos.push(k);
@@ -2019,13 +1557,9 @@ Changelog v0.1:
     html += footerHtml();
     return html;
   }
-  function resultStat(label, value) {
-    return '<div class="result-stat"><div class="rs-label">' + esc(label) + '</div><div class="rs-value">' + esc(value) + '</div></div>';
-  }
+  function resultStat(label, value) { return '<div class="result-stat"><div class="rs-label">' + esc(label) + '</div><div class="rs-value">' + esc(value) + '</div></div>'; }
 
-  /* -------- Questões: filtros e prévia (NOVO v0.4) -------- */
   function renderQuestions() {
-    // Filtros de área
     var areas = ['todas', 'ADM', 'AP', 'DA'];
     var areaPills = '';
     for (var i = 0; i < areas.length; i++) {
@@ -2034,8 +1568,6 @@ Changelog v0.1:
       var active = (questionFilter.area === a) ? ' active' : '';
       areaPills += '<button class="filter-pill' + active + '" data-qf-area="' + a + '">' + esc(label) + '</button>';
     }
-
-    // Selects: módulo, dificuldade, tipo
     var moduleOptions = '<option value="todos">Todos os módulos</option>';
     for (var j = 0; j < MODULES.length; j++) {
       var mo = MODULES[j];
@@ -2044,31 +1576,25 @@ Changelog v0.1:
       var sel = questionFilter.moduloId === mo.id ? ' selected' : '';
       moduleOptions += '<option value="' + esc(mo.id) + '"' + sel + '>' + esc(mo.id + ' — ' + mo.titulo) + '</option>';
     }
-
     var diffOptions = '';
     var diffs = [['todas','Todas as dificuldades'], ['1','Fácil'], ['2','Médio'], ['3','Difícil']];
     for (var d = 0; d < diffs.length; d++) {
       var sel2 = questionFilter.dificuldade === diffs[d][0] ? ' selected' : '';
       diffOptions += '<option value="' + diffs[d][0] + '"' + sel2 + '>' + esc(diffs[d][1]) + '</option>';
     }
-
     var tipoOptions = '';
     var tipos = [['TODAS','Todas'], ['DIDATICA','Somente didáticas'], ['REAL','Somente reais']];
     for (var t = 0; t < tipos.length; t++) {
       var sel3 = questionFilter.tipo === tipos[t][0] ? ' selected' : '';
       tipoOptions += '<option value="' + tipos[t][0] + '"' + sel3 + '>' + esc(tipos[t][1]) + '</option>';
     }
-
     var filtered = filterQuestions();
-
     var html = '';
     html += '<h1 class="page-title">Questões</h1>';
     html += '<p class="page-subtitle">Motor de questões — filtros, correção, explicação pedagógica estruturada, histórico e desempenho.</p>';
-
     html += '<div class="type-banner"><span class="badge-pill badge-did">DIDÁTICA</span><span>O banco atual contém <strong>' + QUESTIONS.length + ' questões didáticas</strong>. ';
-    html += 'Nenhuma questão foi classificada como <strong>REAL</strong> porque não há origem verificável. ';
-    html += 'Questões reais serão adicionadas na Fase 5 com banca, órgão, ano e prova.</span></div>';
-
+    html += 'Nenhuma foi classificada como <strong>REAL</strong> porque não há origem verificável. ';
+    html += 'Use a tela <strong>Banco de Questões</strong> para importar reais com banca, órgão, ano, prova e fonte.</span></div>';
     html += '<h2 class="section-title">Filtros</h2>';
     html += '<div class="filters">' + areaPills + '</div>';
     html += '<div class="filter-row">';
@@ -2076,15 +1602,12 @@ Changelog v0.1:
     html += '<label>Dificuldade</label><select id="qFilterDificuldade">' + diffOptions + '</select>';
     html += '<label>Tipo</label><select id="qFilterTipo">' + tipoOptions + '</select>';
     html += '</div>';
-
     html += '<div style="margin:14px 0;">';
     html += '<button class="btn btn-primary" data-action="start-question-session"' + (filtered.length === 0 ? ' disabled' : '') + '>▶ Iniciar sessão (' + filtered.length + ' questão(ões))</button>';
     html += '</div>';
-
     html += '<h2 class="section-title">Prévia das questões (' + filtered.length + ')</h2>';
-    if (filtered.length === 0) {
-      html += '<div class="notice">Nenhuma questão corresponde aos filtros escolhidos.</div>';
-    } else {
+    if (filtered.length === 0) html += '<div class="notice">Nenhuma questão corresponde aos filtros escolhidos.</div>';
+    else {
       for (var p = 0; p < filtered.length; p++) {
         var q = filtered[p];
         var qs = AppState.questions[q.id];
@@ -2109,94 +1632,67 @@ Changelog v0.1:
     return html;
   }
 
-  /* -------- Questão em execução (NOVO v0.4) -------- */
   function renderQuestionRun() {
-    if (!questionRunning) {
-      return '<h1 class="page-title">Sessão não iniciada</h1><button class="btn btn-primary" data-nav="questoes">Ir para Questões</button>';
-    }
+    if (!questionRunning) return '<h1 class="page-title">Sessão não iniciada</h1><button class="btn btn-primary" data-nav="questoes">Ir para Questões</button>';
     var total = questionRunning.ids.length;
     var idx = questionRunning.index;
     var qid = questionRunning.ids[idx];
     var q = getQuestion(qid);
-    if (!q) {
-      return '<h1 class="page-title">Questão não encontrada</h1><button class="btn" data-nav="questoes">← Questões</button>';
-    }
+    if (!q) return '<h1 class="page-title">Questão não encontrada</h1><button class="btn" data-nav="questoes">← Questões</button>';
     var answered = Object.prototype.hasOwnProperty.call(questionRunning.respostas, qid);
     var userAnswer = questionRunning.respostas[qid];
     var percent = Math.round(((idx + (answered ? 1 : 0)) / total) * 100);
-
     var html = '';
     html += '<div class="run-toolbar"><div class="rt-info"><span>Sessão · Questão ' + (idx + 1) + ' de ' + total + '</span><span class="badge-pill ' + typeBadgeClass(q.tipo) + '">' + esc(typeLabel(q.tipo)) + '</span><span class="badge-pill ' + (DIFFICULTY_CLASS[q.dificuldade] || '') + '">' + esc(difficultyLabel(q.dificuldade)) + '</span></div>';
     html += '<button class="btn" data-action="cancel-question-session">Cancelar sessão</button></div>';
-
     html += '<div class="diag-progress"><div class="diag-progress-bar"><div class="diag-progress-fill" style="width:' + percent + '%"></div></div><div class="diag-progress-label">' + (idx + 1) + ' / ' + total + '</div></div>';
-
     html += '<div class="q-card">';
     html += '<div class="q-head"><span class="q-id">' + esc(q.id) + '</span>';
     html += '<span class="badge-pill ' + typeBadgeClass(q.tipo) + '">' + esc(typeLabel(q.tipo)) + '</span>';
-    if (q.tipo === 'REAL') {
-      html += '<span style="font-size:12px;color:var(--text-muted);">' + esc(q.banca + ' · ' + q.orgao + ' · ' + q.ano) + '</span>';
-    } else {
-      html += '<span style="font-size:12px;color:var(--text-muted);">' + esc(q.moduloId + ' · ' + q.subtema) + '</span>';
-    }
+    if (q.tipo === 'REAL') html += '<span style="font-size:12px;color:var(--text-muted);">' + esc(q.banca + ' · ' + q.orgao + ' · ' + q.ano) + '</span>';
+    else html += '<span style="font-size:12px;color:var(--text-muted);">' + esc(q.moduloId + ' · ' + q.subtema) + '</span>';
     html += '</div>';
-
     html += '<div class="q-statement">' + esc(q.enunciado) + '</div>';
-
     html += '<div class="q-options">';
     for (var a = 0; a < q.alternativas.length; a++) {
       var alt = q.alternativas[a];
       var cls = 'q-option';
-      if (answered) {
-        if (alt.id === q.gabarito) cls += ' correct';
-        else if (alt.id === userAnswer) cls += ' wrong';
-      } else if (alt.id === userAnswer) cls += ' selected';
+      if (answered) { if (alt.id === q.gabarito) cls += ' correct'; else if (alt.id === userAnswer) cls += ' wrong'; }
+      else if (alt.id === userAnswer) cls += ' selected';
       html += '<button class="' + cls + '" data-action="answer-question" data-alt="' + esc(alt.id) + '"' + (answered ? ' disabled' : '') + '><span class="opt-letter">' + esc(alt.id) + '</span><span>' + esc(alt.texto) + '</span></button>';
     }
     html += '</div>';
-
     if (answered) {
       var acertou = userAnswer === q.gabarito;
       html += '<div class="q-feedback ' + (acertou ? 'ok' : 'no') + '">';
       html += '<strong>' + (acertou ? '✓ Você acertou' : '✗ Você errou') + '</strong>';
       html += 'Resposta correta: <strong>' + esc(q.gabarito) + '</strong>. Sua resposta: <strong>' + esc(userAnswer) + '</strong>.';
       html += '</div>';
-
-      // Explicação pedagógica estruturada
       var ex = q.explicacao || {};
       html += '<div class="explain-block"><h4>Por que a correta está correta</h4><p>' + esc(ex.correta || '') + '</p></div>';
       html += '<div class="explain-block"><h4>Por que as demais estão erradas</h4>';
       var inc = ex.incorretas || {};
-      for (var key in inc) {
-        if (!inc.hasOwnProperty(key)) continue;
-        html += '<div class="distractor"><span class="d-letter">' + esc(key) + '</span><span>' + esc(inc[key]) + '</span></div>';
-      }
+      for (var key in inc) { if (!inc.hasOwnProperty(key)) continue; html += '<div class="distractor"><span class="d-letter">' + esc(key) + '</span><span>' + esc(inc[key]) + '</span></div>'; }
       html += '</div>';
       html += '<div class="explain-block"><h4>Conceito cobrado</h4><p>' + esc(ex.conceitoCobrado || '') + '</p></div>';
       html += '<div class="explain-block"><h4>Pegadinha</h4><p>' + esc(ex.pegadinha || '') + '</p></div>';
       html += '<div class="explain-block"><h4>Como aparece em concurso</h4><p>' + esc(ex.comoApareceEmConcurso || '') + '</p></div>';
     }
-
     html += '<div class="q-actions"><div>';
     if (idx > 0) html += '<button class="btn" data-action="prev-question">← Questão anterior</button>';
     html += '</div><div>';
     if (answered && idx < total - 1) html += '<button class="btn btn-primary" data-action="next-question">Próxima →</button>';
     else if (answered && idx === total - 1) html += '<button class="btn btn-purple" data-action="finish-question-session">Finalizar sessão →</button>';
     html += '</div></div>';
-
     html += '</div>';
     html += footerHtml();
     return html;
   }
 
-  /* -------- Resultado da sessão de questões (NOVO v0.4) -------- */
   function renderQuestionResult() {
     var sess = window.__lastSession;
-    if (!sess) {
-      return '<h1 class="page-title">Nenhum resultado disponível</h1><button class="btn btn-primary" data-nav="questoes">Ir para Questões</button>';
-    }
-    var ids = sess.ids;
-    var total = ids.length;
+    if (!sess) return '<h1 class="page-title">Nenhum resultado disponível</h1><button class="btn btn-primary" data-nav="questoes">Ir para Questões</button>';
+    var ids = sess.ids, total = ids.length;
     var acertos = 0, erros = 0;
     var porModulo = {}, porDificuldade = {}, porTipo = {};
     for (var i = 0; i < ids.length; i++) {
@@ -2205,41 +1701,33 @@ Changelog v0.1:
       var resp = sess.respostas[ids[i]];
       var acertou = resp === q.gabarito;
       if (acertou) acertos++; else erros++;
-      // Por módulo
       if (!porModulo[q.moduloId]) porModulo[q.moduloId] = { total: 0, acertos: 0 };
       porModulo[q.moduloId].total++; if (acertou) porModulo[q.moduloId].acertos++;
-      // Por dificuldade
       var dl = difficultyLabel(q.dificuldade);
       if (!porDificuldade[dl]) porDificuldade[dl] = { total: 0, acertos: 0 };
       porDificuldade[dl].total++; if (acertou) porDificuldade[dl].acertos++;
-      // Por tipo
       if (!porTipo[q.tipo]) porTipo[q.tipo] = { total: 0, acertos: 0 };
       porTipo[q.tipo].total++; if (acertou) porTipo[q.tipo].acertos++;
     }
     var pct = total > 0 ? Math.round((acertos / total) * 100) : 0;
-
     var html = '';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;">';
     html += '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn" data-nav="questoes">← Questões</button></div>';
     html += '</div>';
-
     html += '<h1 class="page-title">Resultado da sessão</h1>';
     html += '<p class="page-subtitle">Sessão iniciada em ' + esc(formatDate(sess.startedAt)) + '</p>';
-
     html += '<div class="result-summary">';
     html += resultStat('Questões', total);
     html += resultStat('Acertos', acertos);
     html += resultStat('Erros', erros);
     html += resultStat('Aproveitamento', pct + '%');
     html += '</div>';
-
     html += '<h2 class="section-title">Desempenho por módulo</h2>';
     html += renderBreakdown(porModulo, function (k) { var m = getModule(k); return k + (m ? ' — ' + m.titulo : ''); });
     html += '<h2 class="section-title">Desempenho por dificuldade</h2>';
     html += renderBreakdown(porDificuldade, function (k) { return k; });
     html += '<h2 class="section-title">Desempenho por tipo de questão</h2>';
     html += renderBreakdown(porTipo, function (k) { return typeLabel(k); });
-
     html += '<h2 class="section-title">Detalhe por questão</h2>';
     for (var j = 0; j < ids.length; j++) {
       var qq = getQuestion(ids[j]);
@@ -2256,15 +1744,12 @@ Changelog v0.1:
       html += '<div class="qp-meta">Sua resposta: <strong>' + esc(rr || '—') + '</strong> · Gabarito: <strong>' + esc(qq.gabarito) + '</strong></div>';
       html += '</div>';
     }
-
     html += '<div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;">';
     html += '<button class="btn btn-primary" data-nav="questoes">Nova sessão →</button>';
     html += '</div>';
-
     html += footerHtml();
     return html;
   }
-
   function renderBreakdown(map, labelFn) {
     var html = '';
     for (var k in map) {
@@ -2280,7 +1765,159 @@ Changelog v0.1:
     return html;
   }
 
-  /* -------- Configurações -------- */
+  /* ============================================================
+     BANCO DE QUESTOES (v0.5)
+  ============================================================ */
+  function renderQuestionBank() {
+    var totalReal = qRealCount(), totalDid = qDidCount();
+    var respondidas = 0, acertos = 0;
+    for (var qid in AppState.questions) {
+      if (!AppState.questions.hasOwnProperty(qid)) continue;
+      var qs = AppState.questions[qid];
+      respondidas += qs.tentativas;
+      acertos += qs.acertos;
+    }
+    var html = '';
+    html += '<h1 class="page-title">Banco de Questões</h1>';
+    html += '<p class="page-subtitle">Gestão do banco. Exporte, importe e audite o conteúdo.</p>';
+    html += '<div class="db-summary">';
+    html += '<div class="db-stat dbs-total"><div class="dbs-label">Total</div><div class="dbs-value">' + QUESTIONS.length + '</div></div>';
+    html += '<div class="db-stat dbs-real"><div class="dbs-label">Reais verificáveis</div><div class="dbs-value">' + totalReal + '</div></div>';
+    html += '<div class="db-stat dbs-did"><div class="dbs-label">Didáticas</div><div class="dbs-value">' + totalDid + '</div></div>';
+    html += '<div class="db-stat"><div class="dbs-label">Tentativas registradas</div><div class="dbs-value">' + respondidas + '</div></div>';
+    html += '</div>';
+    html += '<div class="notice" style="margin-bottom:14px;">' +
+      '<strong>Sobre questões reais.</strong> Este app <em>nunca</em> inventa banca, órgão, ano ou prova. ' +
+      'Para que uma questão seja marcada como REAL, ela precisa vir de fonte verificável. ' +
+      'Atualmente há <strong>' + totalReal + ' questões reais</strong> e ' + totalDid + ' didáticas. ' +
+      'Use o importador abaixo para adicionar questões reais com origem confirmada.' +
+      '</div>';
+    html += '<div class="io-box"><h3><span>📤</span> Exportar</h3>';
+    html += '<p>Gera um JSON com todas as questões carregadas (reais + didáticas) ou com o seu progresso completo. Útil para backup.</p>';
+    html += '<div class="io-actions">';
+    html += '<button class="btn btn-primary" data-action="export-questions">Baixar JSON de questões</button>';
+    html += '<button class="btn" data-action="export-progress">Baixar JSON de progresso</button>';
+    html += '</div></div>';
+    html += '<div class="io-box"><h3><span>📥</span> Importar questões</h3>';
+    html += '<p>Cole abaixo um JSON no formato esperado. Aceita <strong>DIDÁTICAS</strong> e <strong>REAIS</strong>. ' +
+            'Questões marcadas como REAL que não tragam <strong>banca, órgão, ano, prova e fonte</strong> serão <em>rejeitadas</em>.</p>';
+    html += '<textarea id="importTextarea" placeholder=\'[{"id":"Q-REAL-XXX-0001","tipo":"REAL","banca":"...","orgao":"...","ano":2024,"prova":"...","fonte":{"descricao":"..."},"area":"ADM","moduloId":"ADM-02","subtema":"...","dificuldade":2,"enunciado":"...","alternativas":[{"id":"A","texto":"..."},{"id":"B","texto":"..."},{"id":"C","texto":"..."},{"id":"D","texto":"..."}],"gabarito":"B","explicacao":{"correta":"...","incorretas":{"A":"...","C":"...","D":"..."},"conceitoCobrado":"...","pegadinha":"...","comoApareceEmConcurso":"..."}}]\'></textarea>';
+    html += '<div class="io-actions">';
+    html += '<button class="btn btn-primary" data-action="import-questions">Validar e importar</button>';
+    html += '<button class="btn" data-action="clear-import">Limpar relatório</button>';
+    html += '<button class="btn" data-action="load-sample">Carregar exemplo</button>';
+    html += '</div>';
+    if (importReport) {
+      var cls = importReport.status === 'ok' ? 'ok' : (importReport.status === 'warn' ? 'warn' : 'err');
+      html += '<div class="import-report ' + cls + '">';
+      html += '<strong>' + esc(importReport.title) + '</strong>';
+      if (importReport.messages && importReport.messages.length) {
+        html += '<ul>';
+        for (var m = 0; m < importReport.messages.length; m++) html += '<li>' + esc(importReport.messages[m]) + '</li>';
+        html += '</ul>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    html += '<div class="io-box"><h3><span>🔒</span> Regras aplicadas pelo validador</h3>';
+    html += '<ul style="font-size:14px;line-height:1.6;padding-left:22px;">';
+    html += '<li>ID deve ser único. IDs já existentes são ignorados.</li>';
+    html += '<li><strong>DIDÁTICA</strong>: enunciado, alternativas com IDs, gabarito entre as alternativas e explicação estruturada são obrigatórios.</li>';
+    html += '<li><strong>REAL</strong>: além do acima, exige banca, órgão, ano, prova e fonte.</li>';
+    html += '<li>Questões com inconsistências são rejeitadas e reportadas.</li>';
+    html += '</ul></div>';
+    html += footerHtml();
+    return html;
+  }
+
+  function validateIncomingQuestion(q, existingIds) {
+    var errors = [];
+    if (!q || typeof q !== 'object') return ['Item não é objeto.'];
+    if (!q.id) errors.push('Sem ID.');
+    if (q.id && existingIds.indexOf(q.id) !== -1) errors.push('ID já existe (' + q.id + ').');
+    if (q.tipo !== 'REAL' && q.tipo !== 'DIDATICA') errors.push('tipo deve ser REAL ou DIDATICA.');
+    if (!q.enunciado) errors.push('Sem enunciado.');
+    if (!Array.isArray(q.alternativas) || q.alternativas.length < 2) errors.push('Alternativas insuficientes.');
+    else {
+      var altIds = q.alternativas.map(function (a) { return a.id; });
+      if (altIds.indexOf(q.gabarito) === -1) errors.push('Gabarito não corresponde a nenhuma alternativa.');
+    }
+    if (!q.explicacao || !q.explicacao.correta) errors.push('Explicação estruturada ausente (campo "correta").');
+    if (!q.moduloId || !getModule(q.moduloId)) errors.push('moduloId inválido.');
+    if (q.tipo === 'REAL') {
+      if (!q.banca) errors.push('REAL sem banca.');
+      if (!q.orgao) errors.push('REAL sem órgão.');
+      if (!q.ano) errors.push('REAL sem ano.');
+      if (!q.prova) errors.push('REAL sem prova.');
+      if (!q.fonte || !q.fonte.descricao) errors.push('REAL sem fonte verificável.');
+    }
+    return errors;
+  }
+
+  function importQuestionsFromText(text) {
+    var incoming;
+    try { incoming = JSON.parse(text); }
+    catch (e) { importReport = { status: 'err', title: 'JSON inválido', messages: [String(e.message)] }; render(); return; }
+    if (!Array.isArray(incoming)) { importReport = { status: 'err', title: 'Esperado um array JSON', messages: [] }; render(); return; }
+    var existingIds = QUESTIONS.map(function (q) { return q.id; });
+    var aceitas = 0, rejeitadas = 0;
+    var messages = [];
+    for (var i = 0; i < incoming.length; i++) {
+      var q = incoming[i];
+      var errs = validateIncomingQuestion(q, existingIds);
+      if (errs.length > 0) {
+        rejeitadas++;
+        messages.push('Item ' + (i + 1) + ' (' + (q && q.id ? q.id : 'sem id') + '): ' + errs.join(' · '));
+      } else {
+        if (!q.area && q.moduloId) { var mm = getModule(q.moduloId); if (mm) q.area = mm.area; }
+        if (!q.subtema) q.subtema = '';
+        if (!q.dificuldade) q.dificuldade = 2;
+        if (!q.prioridade) q.prioridade = 'alta';
+        if (!q.tags) q.tags = [];
+        if (q.tipo === 'DIDATICA') { q.banca = undefined; q.orgao = undefined; q.ano = undefined; q.prova = undefined; q.fonte = undefined; }
+        QUESTIONS.push(q);
+        existingIds.push(q.id);
+        aceitas++;
+      }
+    }
+    if (aceitas > 0) importReport = { status: rejeitadas === 0 ? 'ok' : 'warn', title: aceitas + ' questão(ões) importada(s); ' + rejeitadas + ' rejeitada(s).', messages: messages };
+    else importReport = { status: 'err', title: 'Nenhuma questão foi importada.', messages: messages };
+    render();
+  }
+
+  function clearImport() { importReport = null; render(); }
+
+  function loadImportSample() {
+    var sample = [{
+      id: 'Q-REAL-DEMO-0001', tipo: 'REAL', banca: 'BANCA-DE-EXEMPLO', orgao: 'ORGAO-DE-EXEMPLO', ano: 2024, prova: 'PROVA-DE-EXEMPLO',
+      fonte: { descricao: 'Documento de exemplo — substitua por fonte verificável' },
+      area: 'ADM', moduloId: 'ADM-02', subtema: 'Planejamento', dificuldade: 2,
+      enunciado: 'Substitua este enunciado pelo da questão real.',
+      alternativas: [{ id: 'A', texto: 'Alternativa A' }, { id: 'B', texto: 'Alternativa B' }, { id: 'C', texto: 'Alternativa C' }, { id: 'D', texto: 'Alternativa D' }],
+      gabarito: 'B',
+      explicacao: { correta: 'Explique por que a correta está correta.', incorretas: { A: 'Explique A.', C: 'Explique C.', D: 'Explique D.' }, conceitoCobrado: 'Conceito', pegadinha: 'Pegadinha', comoApareceEmConcurso: 'Como aparece em concurso' }
+    }];
+    var ta = document.getElementById('importTextarea');
+    if (ta) ta.value = JSON.stringify(sample, null, 2);
+  }
+
+  function downloadJson(filename, dataObj) {
+    try {
+      var blob = new Blob([JSON.stringify(dataObj, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+    } catch (e) { window.alert('Falha ao exportar: ' + e.message); }
+  }
+  function exportQuestions() {
+    downloadJson('admin-dir-questoes-v' + APP_VERSION + '.json', { exportedAt: new Date().toISOString(), appVersion: APP_VERSION, schemaVersion: SCHEMA_VERSION, questoes: QUESTIONS });
+  }
+  function exportProgress() {
+    downloadJson('admin-dir-progresso-v' + APP_VERSION + '.json', { exportedAt: new Date().toISOString(), appVersion: APP_VERSION, state: AppState });
+  }
+
   function renderSettings() {
     var totalModulos = MODULES.length;
     var modulosComEstado = 0;
@@ -2294,7 +1931,7 @@ Changelog v0.1:
     html += infoRow('Módulos catalogados', totalModulos);
     html += infoRow('Aulas cadastradas', Object.keys(LESSONS).length);
     html += infoRow('Diagnósticos cadastrados', Object.keys(DIAGNOSTICS).length);
-    html += infoRow('Questões cadastradas', QUESTIONS.length + ' (todas didáticas)');
+    html += infoRow('Questões cadastradas', QUESTIONS.length + ' (' + qRealCount() + ' reais, ' + qDidCount() + ' didáticas)');
     html += infoRow('Módulos com estado', modulosComEstado);
     html += infoRow('Criado em', formatDate(AppState.createdAt));
     html += infoRow('Atualizado em', formatDate(AppState.updatedAt));
@@ -2306,7 +1943,6 @@ Changelog v0.1:
     return html;
   }
 
-  /* -------- Sobre -------- */
   function renderAbout() {
     var html = '';
     html += '<h1 class="page-title">Sobre</h1>';
@@ -2315,23 +1951,22 @@ Changelog v0.1:
     html += infoRow('Aplicativo', 'Administração, Administração Pública e Direito Administrativo');
     html += infoRow('Público-alvo', 'Concursos de nível médio (Administrativo / Assistente / Técnico)');
     html += infoRow('Versão', 'ADMIN-DIR v' + APP_VERSION);
-    html += infoRow('Fase', '4 — Motor de questões (parcial)');
+    html += infoRow('Fase', '5 — Banco de questões');
     html += infoRow('Schema de dados', 'v' + SCHEMA_VERSION);
     html += infoRow('Aulas cadastradas', Object.keys(LESSONS).length + ' / ' + MODULES.length);
     html += infoRow('Diagnósticos cadastrados', Object.keys(DIAGNOSTICS).length + ' / ' + MODULES.length);
-    html += infoRow('Questões cadastradas', QUESTIONS.length + ' (didáticas)');
+    html += infoRow('Questões cadastradas', QUESTIONS.length + ' (' + qRealCount() + ' reais, ' + qDidCount() + ' didáticas)');
     html += infoRow('Modo', 'Offline — sem servidor ou IA externa');
     html += '</div>';
     html += '<h2 class="section-title">Changelog</h2><div class="info-list">';
-    html += infoRow('v0.4 — Fase 4', 'Motor de questões: filtros, sessão, correção, explicação estruturada, histórico e desempenho. 12 questões didáticas.');
+    html += infoRow('v0.5 — Fase 5', 'Banco expandido para 35 questões didáticas; painel de banco; importação/exportação JSON com validação de questões reais.');
+    html += infoRow('v0.4 — Fase 4', 'Motor de questões: filtros, sessão, correção, explicação estruturada.');
     html += infoRow('v0.3 — Fase 3', '4 diagnósticos com análise por subtópico.');
     html += infoRow('v0.2 — Fase 2', '4 aulas + modo professor.');
     html += infoRow('v0.1 — Fase 1', 'Estrutura base, dashboard, módulos, persistência.');
     html += '</div>';
     html += '<h2 class="section-title">Próximas entregas</h2><div class="notice">';
-    html += 'Fase 4 (continuação): expandir banco didático conforme necessário. · ';
-    html += 'Fase 5: banco de questões REAIS com banca, órgão, ano e fonte verificável. · ';
-    html += 'Fase 6: flashcards · Fase 7: revisão espaçada · Fase 8: simulados · ';
+    html += 'Fase 6: flashcards · Fase 7: revisão espaçada + caderno de erros · Fase 8: simulados + prova de concurso · ';
     html += 'Fase 9: dashboard avançado · Fase 10: auditoria final.';
     html += '</div>';
     html += footerHtml();
@@ -2339,11 +1974,11 @@ Changelog v0.1:
   }
 
   function footerHtml() {
-    return '<div class="app-footer"><span>ADMIN-DIR v' + esc(APP_VERSION) + ' · Fase 4</span><span>Offline · dados salvos neste navegador</span></div>';
+    return '<div class="app-footer"><span>ADMIN-DIR v' + esc(APP_VERSION) + ' · Fase 5</span><span>Offline · dados salvos neste navegador</span></div>';
   }
 
   /* ============================================================
-     AÇÕES
+     ACOES
   ============================================================ */
   function openModule(modId) {
     if (!getModule(modId)) return;
@@ -2373,15 +2008,10 @@ Changelog v0.1:
     saveState();
     render();
   }
-  function setModuleFilter(f) {
-    if (['todas','ADM','AP','DA'].indexOf(f) === -1) return;
-    moduleFilter = f;
-    render();
-  }
+  function setModuleFilter(f) { if (['todas','ADM','AP','DA'].indexOf(f) === -1) return; moduleFilter = f; render(); }
   function setQuestionFilterArea(a) {
     if (['todas','ADM','AP','DA'].indexOf(a) === -1) return;
     questionFilter.area = a;
-    // Reseta módulo para "todos" se o módulo atual não pertence à nova área
     if (questionFilter.moduloId !== 'todos') {
       var mm = getModule(questionFilter.moduloId);
       if (!mm || (a !== 'todas' && mm.area !== a)) questionFilter.moduloId = 'todos';
@@ -2392,7 +2022,6 @@ Changelog v0.1:
   function setQuestionFilterDificuldade(v) { questionFilter.dificuldade = v || 'todas'; render(); }
   function setQuestionFilterTipo(v) { questionFilter.tipo = v || 'TODAS'; render(); }
   function startQuestionsByModule(modId) {
-    // Aplica filtros rápidos e vai para a tela de questões
     questionFilter.area = 'todas';
     questionFilter.moduloId = modId;
     questionFilter.dificuldade = 'todas';
@@ -2430,15 +2059,11 @@ Changelog v0.1:
     if (!diag) return;
     if (diagRunning.itemIndex < diag.itens.length - 1) { diagRunning.itemIndex += 1; render(); var main = document.getElementById('main'); if (main) main.scrollTop = 0; }
   }
-  function prevDiag() {
-    if (diagRunning.itemIndex > 0) { diagRunning.itemIndex -= 1; render(); var main = document.getElementById('main'); if (main) main.scrollTop = 0; }
-  }
+  function prevDiag() { if (diagRunning.itemIndex > 0) { diagRunning.itemIndex -= 1; render(); var main = document.getElementById('main'); if (main) main.scrollTop = 0; } }
   function cancelDiag() {
     var ok = window.confirm('Cancelar o diagnóstico? As respostas não serão salvas.');
     if (!ok) return;
-    diagRunning.moduleId = null;
-    diagRunning.answers = {};
-    diagRunning.itemIndex = 0;
+    diagRunning.moduleId = null; diagRunning.answers = {}; diagRunning.itemIndex = 0;
     navigate('modulos');
   }
   function finishDiag() {
@@ -2448,53 +2073,32 @@ Changelog v0.1:
     for (var i = 0; i < diag.itens.length; i++) {
       if (!Object.prototype.hasOwnProperty.call(diagRunning.answers, diag.itens[i].id)) {
         window.alert('Existem itens não respondidos. Volte e complete.');
-        diagRunning.itemIndex = i;
-        render();
-        return;
+        diagRunning.itemIndex = i; render(); return;
       }
     }
     var result = computeDiagnosticResult(moduleId, diagRunning.answers);
     var st = getModuleUserState(moduleId);
-    st.diagnostico = {
-      diagId: diag.id,
-      answers: Object.assign({}, diagRunning.answers),
-      result: result,
-      completedAt: result.completedAt,
-      tentativas: (st.diagnostico && st.diagnostico.tentativas ? st.diagnostico.tentativas : 0) + 1
-    };
+    st.diagnostico = { diagId: diag.id, answers: Object.assign({}, diagRunning.answers), result: result, completedAt: result.completedAt, tentativas: (st.diagnostico && st.diagnostico.tentativas ? st.diagnostico.tentativas : 0) + 1 };
     st.dominioEstimado = result.dominioEstimado;
     st.ultimaAtividade = new Date().toISOString();
     if (st.status === 'nao_iniciado') st.status = 'em_estudo';
     saveState();
-    diagRunning.moduleId = null;
-    diagRunning.answers = {};
-    diagRunning.itemIndex = 0;
+    diagRunning.moduleId = null; diagRunning.answers = {}; diagRunning.itemIndex = 0;
     navigate('diag-resultado', { moduleId: moduleId });
   }
-  function openDiagResult(modId) {
-    if (!getModuleUserState(modId).diagnostico) return;
-    navigate('diag-resultado', { moduleId: modId });
-  }
-  function refazerDiag(modId) {
-    var ok = window.confirm('Refazer o diagnóstico? O resultado anterior será substituído.');
-    if (!ok) return;
-    startDiagnostic(modId);
-  }
+  function openDiagResult(modId) { if (!getModuleUserState(modId).diagnostico) return; navigate('diag-resultado', { moduleId: modId }); }
+  function refazerDiag(modId) { var ok = window.confirm('Refazer o diagnóstico? O resultado anterior será substituído.'); if (!ok) return; startDiagnostic(modId); }
   function resetProgress() {
     var ok = window.confirm('Zerar todo o progresso?\n\nApaga módulos, diagnóstico, questões e histórico. Não é possível desfazer.');
     if (!ok) return;
     localStorage.removeItem(STORAGE_KEY);
     AppState = createDefaultState();
     saveState();
-    currentScreen = 'dashboard';
-    currentModuleId = null;
-    currentLessonId = null;
-    moduleFilter = 'todas';
-    professorAnswerOpen = null;
+    currentScreen = 'dashboard'; currentModuleId = null; currentLessonId = null;
+    moduleFilter = 'todas'; professorAnswerOpen = null;
     diagRunning = { moduleId: null, answers: {}, itemIndex: 0, revealed: {} };
     questionFilter = { area: 'todas', moduloId: 'todos', dificuldade: 'todas', tipo: 'TODAS' };
-    questionRunning = null;
-    window.__lastSession = null;
+    questionRunning = null; window.__lastSession = null; importReport = null;
     render();
     window.alert('Progresso zerado.');
   }
@@ -2505,13 +2109,10 @@ Changelog v0.1:
   document.addEventListener('click', function (e) {
     var navEl = e.target.closest('[data-nav]');
     if (navEl) { e.preventDefault(); navigate(navEl.getAttribute('data-nav')); return; }
-
     var mfEl = e.target.closest('[data-filter]');
     if (mfEl) { e.preventDefault(); setModuleFilter(mfEl.getAttribute('data-filter')); return; }
-
     var qfaEl = e.target.closest('[data-qf-area]');
     if (qfaEl) { e.preventDefault(); setQuestionFilterArea(qfaEl.getAttribute('data-qf-area')); return; }
-
     var actionEl = e.target.closest('[data-action]');
     if (!actionEl) return;
     var action = actionEl.getAttribute('data-action');
@@ -2537,6 +2138,11 @@ Changelog v0.1:
       case 'cancel-question-session': cancelQuestionSession(); break;
       case 'finish-question-session': finishQuestionSession(); break;
       case 'questions-by-module': startQuestionsByModule(actionEl.getAttribute('data-module-id')); break;
+      case 'export-questions': exportQuestions(); break;
+      case 'export-progress': exportProgress(); break;
+      case 'import-questions': { var ta = document.getElementById('importTextarea'); if (ta) importQuestionsFromText(ta.value || ''); break; }
+      case 'clear-import': clearImport(); break;
+      case 'load-sample': loadImportSample(); break;
       case 'reset-progress': resetProgress(); break;
     }
   });
@@ -2550,7 +2156,7 @@ Changelog v0.1:
   });
 
   /* ============================================================
-     INICIALIZAÇÃO
+     INICIALIZACAO
   ============================================================ */
   function init() {
     AppState = loadState();
@@ -2563,9 +2169,9 @@ Changelog v0.1:
     questionFilter = { area: 'todas', moduloId: 'todos', dificuldade: 'todas', tipo: 'TODAS' };
     questionRunning = null;
     window.__lastSession = null;
+    importReport = null;
     render();
   }
-
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
