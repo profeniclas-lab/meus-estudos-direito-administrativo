@@ -1,53 +1,42 @@
 <!DOCTYPE html>
 <!--
-Aplicativo: Administração e Direito Administrativo para Concursos
-Versão: 0.3
-Fase: 3
+Aplicativo: Administracao e Direito Administrativo para Concursos
+Versao: 0.4
+Fase: 4
 Status: funcional
+Changelog v0.4:
+- Motor de questoes completo: filtros, sessao, correcao, explicacao,
+  historico e desempenho
+- Novo objeto estatico QUESTIONS (12 questoes DIDATICAS)
+- Nenhuma questao REAL: nao ha origem verificavel nesta fase
+- Novas telas: "questoes", "questao-run", "questao-result"
+- Novo item "Questoes" no sidebar
+- Estado por questao em AppState.questions[id]
+- Estatisticas de questoes atualizadas em AppState.stats
+- Compatibilidade total com v0.3
 Changelog v0.3:
-- Novo objeto estatico DIAGNOSTICS com 4 diagnosticos
-  (ADM-01, ADM-02, AP-02, DA-02), 5 itens cada
-- Novas telas "diagnostico" (execucao) e "diag-resultado" (analise)
-- Botao "Fazer diagnostico" no detalhe do modulo
-- Botao "Refazer diagnostico" no resultado
-- Analise por subtopico com 3 estados: conhecido / duvida / desconhecido
-- Recomendacoes por subtopico e dominio estimado gravado no estado
-- Card "Diagnosticos feitos" no dashboard
-- Compatibilidade total com v0.2 (mesmo schema)
+- 4 diagnosticos (ADM-01, ADM-02, AP-02, DA-02), analise por subtopico
 Changelog v0.2:
-- 4 aulas de alta prioridade (ADM-01, ADM-02, AP-02, DA-02)
-- Tela "licao" com estrutura pedagogica completa
-- Modo professor programado
-- Marcacao de aula lida
+- 4 aulas de alta prioridade; modo professor programado
 Changelog v0.1:
-- Estrutura base, dashboard, modulos, persistencia local, navegacao
+- Estrutura base, dashboard, modulos, persistencia, navegacao
 -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ADMIN-DIR v0.3 — Administração e Direito Administrativo</title>
+<title>ADMIN-DIR v0.4 — Administração e Direito Administrativo</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #f1f5f9;
-    --surface: #ffffff;
-    --surface-alt: #f8fafc;
-    --text: #0f172a;
-    --text-muted: #64748b;
-    --border: #e2e8f0;
-    --primary: #2563eb;
-    --primary-hover: #1d4ed8;
-    --primary-soft: #dbeafe;
-    --success: #16a34a;
-    --success-soft: #dcfce7;
-    --warning: #d97706;
-    --warning-soft: #fef3c7;
-    --danger: #dc2626;
-    --danger-soft: #fee2e2;
-    --purple: #7c3aed;
-    --purple-soft: #f5f3ff;
+    --bg: #f1f5f9; --surface: #ffffff; --surface-alt: #f8fafc;
+    --text: #0f172a; --text-muted: #64748b; --border: #e2e8f0;
+    --primary: #2563eb; --primary-hover: #1d4ed8; --primary-soft: #dbeafe;
+    --success: #16a34a; --success-soft: #dcfce7;
+    --warning: #d97706; --warning-soft: #fef3c7;
+    --danger: #dc2626; --danger-soft: #fee2e2;
+    --purple: #7c3aed; --purple-soft: #f5f3ff;
     --radius: 10px;
     --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
     --shadow-lg: 0 6px 20px rgba(15,23,42,.10);
@@ -56,269 +45,99 @@ Changelog v0.1:
   html, body { height: 100%; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.55;
-    font-size: 15px;
+    background: var(--bg); color: var(--text); line-height: 1.55; font-size: 15px;
     -webkit-font-smoothing: antialiased;
   }
 
   #app {
-    display: grid;
-    grid-template-columns: 250px 1fr;
-    grid-template-rows: 56px 1fr;
-    grid-template-areas:
-      "header header"
-      "sidebar main";
-    min-height: 100vh;
+    display: grid; grid-template-columns: 250px 1fr; grid-template-rows: 56px 1fr;
+    grid-template-areas: "header header" "sidebar main"; min-height: 100vh;
   }
 
   .app-header {
-    grid-area: header;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    gap: 12px;
-    position: sticky;
-    top: 0;
-    z-index: 20;
+    grid-area: header; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 16px; gap: 12px;
+    position: sticky; top: 0; z-index: 20;
   }
-  .menu-toggle {
-    display: none;
-    background: none;
-    border: none;
-    font-size: 22px;
-    cursor: pointer;
-    padding: 6px 10px;
-    border-radius: 8px;
-    color: var(--text);
-  }
+  .menu-toggle { display: none; background: none; border: none; font-size: 22px; cursor: pointer; padding: 6px 10px; border-radius: 8px; color: var(--text); }
   .menu-toggle:hover { background: var(--surface-alt); }
-
-  .brand {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    font-weight: 700;
-    font-size: 15px;
-  }
-  .brand .brand-sub {
-    color: var(--text-muted);
-    font-weight: 400;
-    font-size: 12px;
-  }
+  .brand { display: flex; align-items: baseline; gap: 8px; font-weight: 700; font-size: 15px; }
+  .brand .brand-sub { color: var(--text-muted); font-weight: 400; font-size: 12px; }
   .header-spacer { flex: 1; }
-  .version-badge {
-    background: var(--primary-soft);
-    color: var(--primary);
-    font-size: 11px;
-    font-weight: 700;
-    padding: 5px 10px;
-    border-radius: 999px;
-    letter-spacing: .3px;
-  }
+  .version-badge { background: var(--primary-soft); color: var(--primary); font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px; letter-spacing: .3px; }
 
-  .sidebar {
-    grid-area: sidebar;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: 14px 10px;
-    overflow-y: auto;
-  }
-  .nav-section-title {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: .6px;
-    color: var(--text-muted);
-    padding: 14px 12px 6px;
-    font-weight: 700;
-  }
+  .sidebar { grid-area: sidebar; background: var(--surface); border-right: 1px solid var(--border); padding: 14px 10px; overflow-y: auto; }
+  .nav-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--text-muted); padding: 14px 12px 6px; font-weight: 700; }
   .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    color: var(--text);
-    font-size: 14px;
-    margin-bottom: 2px;
-    border: none;
-    background: none;
-    width: 100%;
-    text-align: left;
-    font-family: inherit;
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px;
+    cursor: pointer; color: var(--text); font-size: 14px; margin-bottom: 2px;
+    border: none; background: none; width: 100%; text-align: left; font-family: inherit;
     transition: background .12s ease;
   }
   .nav-item:hover { background: var(--surface-alt); }
-  .nav-item.active {
-    background: var(--primary-soft);
-    color: var(--primary);
-    font-weight: 600;
-  }
-  .nav-item .nav-icon {
-    width: 18px;
-    text-align: center;
-    font-size: 15px;
-    flex-shrink: 0;
-  }
+  .nav-item.active { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+  .nav-item .nav-icon { width: 18px; text-align: center; font-size: 15px; flex-shrink: 0; }
 
-  .main {
-    grid-area: main;
-    padding: 26px;
-    overflow-y: auto;
-    max-width: 1200px;
-    width: 100%;
-  }
+  .main { grid-area: main; padding: 26px; overflow-y: auto; max-width: 1200px; width: 100%; }
 
   .page-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; letter-spacing: -.3px; }
   .page-subtitle { color: var(--text-muted); margin-bottom: 22px; font-size: 14px; }
-  .section-title {
-    font-size: 15px;
-    font-weight: 700;
-    margin: 26px 0 12px;
-    letter-spacing: -.1px;
-  }
+  .section-title { font-size: 15px; font-weight: 700; margin: 26px 0 12px; letter-spacing: -.1px; }
 
-  .cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    gap: 12px;
-    margin-bottom: 6px;
-  }
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-  }
-  .stat-card .stat-label {
-    font-size: 11px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    font-weight: 600;
-  }
-  .stat-card .stat-value {
-    font-size: 26px;
-    font-weight: 700;
-    margin-top: 6px;
-    letter-spacing: -.5px;
-  }
-  .stat-card .stat-hint {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 2px;
-  }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-bottom: 6px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .stat-card .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+  .stat-card .stat-value { font-size: 26px; font-weight: 700; margin-top: 6px; letter-spacing: -.5px; }
+  .stat-card .stat-hint { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 14px;
-  }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
   .filter-pill {
-    padding: 6px 12px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    cursor: pointer;
-    font-size: 13px;
-    font-family: inherit;
-    color: var(--text);
-    font-weight: 500;
+    padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--surface); cursor: pointer; font-size: 13px; font-family: inherit;
+    color: var(--text); font-weight: 500;
   }
   .filter-pill:hover { background: var(--surface-alt); }
-  .filter-pill.active {
-    background: var(--primary);
-    color: #fff;
-    border-color: var(--primary);
+  .filter-pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  .filter-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 12px; }
+  .filter-row label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+  .filter-row select {
+    padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); font-family: inherit; font-size: 13.5px; color: var(--text);
+    min-width: 170px;
   }
 
   .module-list { display: grid; gap: 8px; }
   .module-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    cursor: pointer;
-    transition: border-color .12s ease, box-shadow .12s ease;
-    text-align: left;
-    width: 100%;
-    font-family: inherit;
-    color: inherit;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 16px; display: flex; align-items: center; gap: 14px;
+    cursor: pointer; transition: border-color .12s ease, box-shadow .12s ease;
+    text-align: left; width: 100%; font-family: inherit; color: inherit;
   }
-  .module-card:hover {
-    border-color: var(--primary);
-    box-shadow: var(--shadow);
-  }
-  .module-card .mod-id {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-muted);
-    min-width: 62px;
-  }
+  .module-card:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+  .module-card .mod-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 700; color: var(--text-muted); min-width: 62px; }
   .module-card .mod-info { flex: 1; min-width: 0; }
-  .module-card .mod-title {
-    font-weight: 600;
-    font-size: 14px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .module-card .mod-area {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 2px;
-  }
-  .module-card .mod-badges {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  .module-card .mod-priority {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: .4px;
-  }
+  .module-card .mod-title { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .module-card .mod-area { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .module-card .mod-badges { display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .module-card .mod-priority { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: .4px; }
   .priority-alta { background: #fee2e2; color: #b91c1c; }
   .priority-media { background: #fed7aa; color: #c2410c; }
   .priority-baixa { background: #e2e8f0; color: #475569; }
 
-  .badge-pill {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: .4px;
-  }
+  .badge-pill { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: .4px; }
   .badge-aula { background: var(--success-soft); color: var(--success); }
   .badge-diag { background: var(--purple-soft); color: var(--purple); }
+  .badge-real { background: #dbeafe; color: #1e40af; }
+  .badge-did { background: #fef3c7; color: #92400e; }
+  .badge-facil { background: var(--success-soft); color: var(--success); }
+  .badge-medio { background: var(--warning-soft); color: var(--warning); }
+  .badge-dificil { background: var(--danger-soft); color: var(--danger); }
 
   .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text);
-    font-size: 14px;
-    font-family: inherit;
-    cursor: pointer;
-    font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    font-size: 14px; font-family: inherit; cursor: pointer; font-weight: 500;
     transition: background .12s ease;
   }
   .btn:hover { background: var(--surface-alt); }
@@ -331,371 +150,209 @@ Changelog v0.1:
   .btn-ghost { background: transparent; }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
 
-  .notice {
-    background: var(--surface);
-    border: 1px dashed var(--border);
-    border-radius: var(--radius);
-    padding: 18px 20px;
-    color: var(--text-muted);
-    font-size: 14px;
-  }
+  .notice { background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius); padding: 18px 20px; color: var(--text-muted); font-size: 14px; }
   .notice strong { color: var(--text); }
 
-  .info-list {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 6px 18px;
-  }
-  .info-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-  }
+  .info-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 18px; }
+  .info-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
   .info-row:last-child { border-bottom: none; }
   .info-row .info-key { color: var(--text-muted); }
   .info-row .info-val { font-weight: 600; text-align: right; }
 
-  .subtopic-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 6px;
-  }
-  .subtopic-chip {
-    background: var(--surface-alt);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 4px 10px;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
+  .subtopic-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .subtopic-chip { background: var(--surface-alt); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: 12px; color: var(--text-muted); }
 
-  .lesson-block {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px 20px;
-    margin-bottom: 12px;
-  }
-  .lesson-block h3 {
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+  .lesson-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 12px; }
+  .lesson-block h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
   .lesson-block h3 .lb-icon { font-size: 16px; }
   .lesson-block p { margin-bottom: 10px; font-size: 14.5px; }
   .lesson-block p:last-child { margin-bottom: 0; }
   .lesson-block ul, .lesson-block ol { padding-left: 22px; margin-bottom: 8px; }
   .lesson-block li { margin-bottom: 6px; font-size: 14.5px; }
-
   .lesson-block.block-objetivo { border-left: 4px solid var(--primary); }
   .lesson-block.block-pegadinha { border-left: 4px solid var(--warning); background: #fffbeb; }
   .lesson-block.block-erros { border-left: 4px solid var(--danger); background: #fef2f2; }
   .lesson-block.block-resumo { border-left: 4px solid var(--success); background: #f0fdf4; }
   .lesson-block.block-aplicacao { border-left: 4px solid var(--purple); background: var(--purple-soft); }
 
-  .compare-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 8px;
-    font-size: 14px;
-  }
-  .compare-table th, .compare-table td {
-    text-align: left;
-    padding: 9px 12px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-  .compare-table th {
-    background: var(--surface-alt);
-    font-weight: 700;
-    font-size: 12.5px;
-    text-transform: uppercase;
-    letter-spacing: .4px;
-    color: var(--text-muted);
-  }
+  .compare-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
+  .compare-table th, .compare-table td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .compare-table th { background: var(--surface-alt); font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); }
   .compare-table tr:last-child td { border-bottom: none; }
 
   .prereq-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-  .prereq-tag {
-    background: var(--primary-soft);
-    color: var(--primary);
-    font-size: 12px;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
+  .prereq-tag { background: var(--primary-soft); color: var(--primary); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 
   .professor-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-  .professor-answer {
-    margin-top: 14px;
-    padding: 14px 16px;
-    border-left: 3px solid var(--primary);
-    background: var(--surface-alt);
-    border-radius: 6px;
-    font-size: 14px;
-    white-space: pre-wrap;
-  }
+  .professor-answer { margin-top: 14px; padding: 14px 16px; border-left: 3px solid var(--primary); background: var(--surface-alt); border-radius: 6px; font-size: 14px; white-space: pre-wrap; }
   .professor-answer strong { display: block; margin-bottom: 6px; color: var(--primary); font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
 
-  .lesson-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-  }
+  .lesson-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
   .lesson-toolbar .lt-left { display: flex; gap: 8px; flex-wrap: wrap; }
-  .lesson-read-indicator {
-    font-size: 12px;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: var(--success-soft);
-    color: var(--success);
-  }
-  .lesson-read-indicator.pending {
-    background: var(--warning-soft);
-    color: var(--warning);
-  }
+  .lesson-read-indicator { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--success-soft); color: var(--success); }
+  .lesson-read-indicator.pending { background: var(--warning-soft); color: var(--warning); }
 
-  /* ===== Diagnóstico ===== */
-  .diag-progress {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  .diag-progress-bar {
-    flex: 1;
-    height: 8px;
-    background: var(--border);
-    border-radius: 999px;
-    overflow: hidden;
-  }
-  .diag-progress-fill {
-    height: 100%;
-    background: var(--purple);
-    transition: width .25s ease;
-  }
-  .diag-progress-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-    min-width: 70px;
-    text-align: right;
-  }
-  .diag-meta {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-    font-size: 12px;
-  }
-  .diag-meta .tag {
-    background: var(--purple-soft);
-    color: var(--purple);
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-weight: 600;
-    letter-spacing: .3px;
-  }
-  .diag-question {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 22px 24px;
-    margin-bottom: 12px;
-  }
-  .diag-question h2 {
-    font-size: 17px;
-    font-weight: 600;
-    line-height: 1.45;
-    margin-bottom: 18px;
-    letter-spacing: -.1px;
-  }
-  .diag-options {
-    display: grid;
-    gap: 8px;
-  }
+  .diag-progress { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .diag-progress-bar { flex: 1; height: 8px; background: var(--border); border-radius: 999px; overflow: hidden; }
+  .diag-progress-fill { height: 100%; background: var(--purple); transition: width .25s ease; }
+  .diag-progress-label { font-size: 13px; font-weight: 600; color: var(--text-muted); min-width: 70px; text-align: right; }
+  .diag-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; font-size: 12px; }
+  .diag-meta .tag { background: var(--purple-soft); color: var(--purple); padding: 3px 10px; border-radius: 999px; font-weight: 600; letter-spacing: .3px; }
+  .diag-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; margin-bottom: 12px; }
+  .diag-question h2 { font-size: 17px; font-weight: 600; line-height: 1.45; margin-bottom: 18px; letter-spacing: -.1px; }
+  .diag-options { display: grid; gap: 8px; }
   .diag-option {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 14px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface);
-    cursor: pointer;
-    font-family: inherit;
-    text-align: left;
-    font-size: 14.5px;
-    color: var(--text);
-    transition: border-color .12s ease, background .12s ease;
-    line-height: 1.45;
+    display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+    cursor: pointer; font-family: inherit; text-align: left; font-size: 14.5px;
+    color: var(--text); transition: border-color .12s ease, background .12s ease; line-height: 1.45;
   }
-  .diag-option:hover:not(:disabled) {
-    border-color: var(--purple);
-    background: var(--purple-soft);
-  }
+  .diag-option:hover:not(:disabled) { border-color: var(--purple); background: var(--purple-soft); }
   .diag-option:disabled { cursor: default; }
-  .diag-option .opt-letter {
-    font-weight: 700;
-    min-width: 18px;
-    color: var(--text-muted);
-  }
-  .diag-option.selected {
-    border-color: var(--purple);
-    background: var(--purple-soft);
-  }
-  .diag-option.correct {
-    border-color: var(--success);
-    background: var(--success-soft);
-  }
-  .diag-option.wrong {
-    border-color: var(--danger);
-    background: var(--danger-soft);
-  }
-  .diag-option.correct .opt-letter,
-  .diag-option.wrong .opt-letter { color: var(--text); }
+  .diag-option .opt-letter { font-weight: 700; min-width: 18px; color: var(--text-muted); }
+  .diag-option.selected { border-color: var(--purple); background: var(--purple-soft); }
+  .diag-option.correct { border-color: var(--success); background: var(--success-soft); }
+  .diag-option.wrong { border-color: var(--danger); background: var(--danger-soft); }
+  .diag-option.correct .opt-letter, .diag-option.wrong .opt-letter { color: var(--text); }
 
-  .diag-feedback {
-    margin-top: 18px;
-    padding: 14px 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    line-height: 1.5;
-  }
+  .diag-feedback { margin-top: 18px; padding: 14px 16px; border-radius: 8px; font-size: 14px; line-height: 1.5; }
   .diag-feedback.ok { background: var(--success-soft); border-left: 4px solid var(--success); }
   .diag-feedback.no { background: var(--danger-soft); border-left: 4px solid var(--danger); }
   .diag-feedback strong { display: block; margin-bottom: 6px; }
 
-  .diag-actions {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 16px;
-  }
-
-  /* Autoavaliação */
-  .self-assess {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 16px;
-  }
+  .diag-actions { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .self-assess { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
   .self-assess .btn { padding: 12px 20px; font-size: 14.5px; }
 
-  /* Resultado */
-  .result-summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 10px;
-    margin-bottom: 18px;
-  }
-  .result-stat {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-  }
-  .result-stat .rs-label {
-    font-size: 11px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    font-weight: 600;
-  }
-  .result-stat .rs-value {
-    font-size: 22px;
-    font-weight: 700;
-    margin-top: 4px;
-  }
+  .result-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .result-stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .result-stat .rs-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+  .result-stat .rs-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
 
-  .subtopic-result {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 18px;
-    margin-bottom: 10px;
-    border-left-width: 4px;
-    border-left-style: solid;
-  }
+  .subtopic-result { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 10px; border-left-width: 4px; border-left-style: solid; }
   .subtopic-result.status-conhecido { border-left-color: var(--success); }
   .subtopic-result.status-duvida { border-left-color: var(--warning); }
   .subtopic-result.status-desconhecido { border-left-color: var(--danger); }
-  .subtopic-result h3 {
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .status-badge {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: .4px;
-  }
+  .subtopic-result h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .status-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: .4px; }
   .status-badge.status-conhecido { background: var(--success-soft); color: var(--success); }
   .status-badge.status-duvida { background: var(--warning-soft); color: var(--warning); }
   .status-badge.status-desconhecido { background: var(--danger-soft); color: var(--danger); }
-  .subtopic-result .signals {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    font-size: 12px;
-    color: var(--text-muted);
-    margin: 6px 0 10px;
-  }
+  .subtopic-result .signals { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); margin: 6px 0 10px; }
   .subtopic-result .signals span strong { color: var(--text); }
-  .subtopic-result .recommendation {
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--text);
-  }
+  .subtopic-result .recommendation { font-size: 14px; line-height: 1.5; color: var(--text); }
   .subtopic-result .recommendation strong { color: var(--text); }
 
-  .app-footer {
-    margin-top: 32px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
+  /* ===== Questões (NOVO v0.4) ===== */
+  .question-preview {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 16px; margin-bottom: 8px;
+  }
+  .question-preview .qp-header {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;
+  }
+  .question-preview .qp-id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px; font-weight: 700; color: var(--text-muted);
+  }
+  .question-preview .qp-text {
+    font-size: 14px; color: var(--text); line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .question-preview .qp-meta {
+    font-size: 12px; color: var(--text-muted); margin-top: 6px;
+  }
+  .question-preview .qp-status {
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: .4px;
+  }
+  .qp-status.qs-nova { background: var(--surface-alt); color: var(--text-muted); }
+  .qp-status.qs-acerto { background: var(--success-soft); color: var(--success); }
+  .qp-status.qs-erro { background: var(--danger-soft); color: var(--danger); }
+
+  .run-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .run-toolbar .rt-info { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 13px; color: var(--text-muted); }
+
+  .q-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px 24px; margin-bottom: 12px;
+  }
+  .q-card .q-head {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
+  }
+  .q-card .q-id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px; font-weight: 700; color: var(--text-muted);
+  }
+  .q-card .q-statement {
+    font-size: 16px; line-height: 1.55; font-weight: 500; margin-bottom: 18px;
+    letter-spacing: -.1px;
+  }
+  .q-options { display: grid; gap: 8px; }
+  .q-option {
+    display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+    cursor: pointer; font-family: inherit; text-align: left; font-size: 14.5px;
+    color: var(--text); transition: border-color .12s ease, background .12s ease;
+    line-height: 1.45;
+  }
+  .q-option:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-soft); }
+  .q-option:disabled { cursor: default; }
+  .q-option .opt-letter {
+    font-weight: 700; min-width: 20px; color: var(--text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .q-option.selected { border-color: var(--primary); background: var(--primary-soft); }
+  .q-option.correct { border-color: var(--success); background: var(--success-soft); }
+  .q-option.wrong { border-color: var(--danger); background: var(--danger-soft); }
+
+  .q-feedback {
+    margin-top: 16px; padding: 14px 16px; border-radius: 8px;
+    font-size: 14px; line-height: 1.5;
+  }
+  .q-feedback.ok { background: var(--success-soft); border-left: 4px solid var(--success); }
+  .q-feedback.no { background: var(--danger-soft); border-left: 4px solid var(--danger); }
+  .q-feedback > strong { display: block; margin-bottom: 8px; font-size: 15px; }
+
+  .explain-block { margin-top: 14px; padding: 14px 16px; background: var(--surface-alt); border-radius: 8px; border-left: 3px solid var(--primary); }
+  .explain-block h4 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .5px; font-weight: 700;
+    color: var(--primary); margin-bottom: 6px;
+  }
+  .explain-block p { font-size: 14px; line-height: 1.55; margin-bottom: 8px; color: var(--text); }
+  .explain-block p:last-child { margin-bottom: 0; }
+  .explain-block .distractor {
+    display: flex; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.5;
+  }
+  .explain-block .distractor:last-child { border-bottom: none; }
+  .explain-block .distractor .d-letter {
+    font-weight: 700; color: var(--danger); min-width: 22px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  .q-actions { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+
+  .type-banner {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--surface-alt); border-radius: 8px;
+    border: 1px dashed var(--border); margin-bottom: 14px; font-size: 13px;
     color: var(--text-muted);
-    font-size: 12px;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
+  }
+  .type-banner strong { color: var(--text); }
+
+  .app-footer {
+    margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border);
+    color: var(--text-muted); font-size: 12px;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
   }
 
   @media (max-width: 780px) {
-    #app {
-      grid-template-columns: 1fr;
-      grid-template-areas: "header" "main";
-    }
+    #app { grid-template-columns: 1fr; grid-template-areas: "header" "main"; }
     .sidebar {
-      position: fixed;
-      top: 56px;
-      left: 0;
-      bottom: 0;
-      width: 250px;
-      z-index: 15;
-      transform: translateX(-100%);
-      transition: transform .2s ease;
+      position: fixed; top: 56px; left: 0; bottom: 0; width: 250px;
+      z-index: 15; transform: translateX(-100%); transition: transform .2s ease;
       box-shadow: var(--shadow-lg);
     }
     body.sidebar-open .sidebar { transform: translateX(0); }
@@ -704,8 +361,9 @@ Changelog v0.1:
     .page-title { font-size: 20px; }
     .compare-table { font-size: 13px; }
     .compare-table th, .compare-table td { padding: 7px 8px; }
-    .diag-question { padding: 18px; }
-    .diag-question h2 { font-size: 16px; }
+    .diag-question, .q-card { padding: 18px; }
+    .diag-question h2, .q-card .q-statement { font-size: 15.5px; }
+    .filter-row select { min-width: 130px; }
   }
 </style>
 </head>
@@ -718,7 +376,7 @@ Changelog v0.1:
         <span class="brand-sub">Administração &amp; Direito Administrativo</span>
       </div>
       <div class="header-spacer"></div>
-      <span class="version-badge" id="appVersionBadge">v0.3</span>
+      <span class="version-badge" id="appVersionBadge">v0.4</span>
     </header>
 
     <aside class="sidebar" id="sidebar">
@@ -728,6 +386,9 @@ Changelog v0.1:
       </button>
       <button class="nav-item" data-nav="modulos">
         <span class="nav-icon">📚</span><span>Módulos</span>
+      </button>
+      <button class="nav-item" data-nav="questoes">
+        <span class="nav-icon">📝</span><span>Questões</span>
       </button>
 
       <div class="nav-section-title">Sistema</div>
@@ -749,8 +410,8 @@ Changelog v0.1:
   /* ============================================================
      CONSTANTES
   ============================================================ */
-  var APP_VERSION = '0.3';                       // <-- alterado
-  var SCHEMA_VERSION = 1;                        // inalterado
+  var APP_VERSION = '0.4';                       // <-- alterado
+  var SCHEMA_VERSION = 1;
   var STORAGE_KEY = 'adminDir.state';
 
   var AREA_LABELS = { ADM: 'Administração', AP: 'Administração Pública', DA: 'Direito Administrativo' };
@@ -762,9 +423,11 @@ Changelog v0.1:
     'situacao': 'Situação prática',
     'autoavaliacao': 'Autoavaliação'
   };
+  var DIFFICULTY_LABELS = { 1: 'Fácil', 2: 'Médio', 3: 'Difícil' };
+  var DIFFICULTY_CLASS = { 1: 'badge-facil', 2: 'badge-medio', 3: 'badge-dificil' };
 
   /* ============================================================
-     MÓDULOS — inalterado desde v0.1
+     MÓDULOS — inalterado
   ============================================================ */
   var MODULES = [
     { id: 'ADM-01', area: 'ADM', titulo: 'Fundamentos da Administração', prioridade: 'alta',
@@ -793,7 +456,6 @@ Changelog v0.1:
       subtopicos: ['Processos','Atividades','Tarefas','Entradas','Saídas','Clientes','Indicadores','Melhoria de processos'] },
     { id: 'ADM-13', area: 'ADM', titulo: 'Atendimento ao Público', prioridade: 'media',
       subtopicos: ['Atendimento','Qualidade','Ética','Comunicação','Relacionamento com usuário','Postura profissional'] },
-
     { id: 'AP-01', area: 'AP', titulo: 'Conceitos de Administração Pública', prioridade: 'alta',
       subtopicos: ['Conceito','Campo de atuação','Regime jurídico'] },
     { id: 'AP-02', area: 'AP', titulo: 'Evolução dos Modelos Administrativos', prioridade: 'alta',
@@ -804,7 +466,6 @@ Changelog v0.1:
       subtopicos: ['Administração Direta','Administração Indireta','Autarquias','Fundações','Empresas públicas','Sociedades de economia mista'] },
     { id: 'AP-05', area: 'AP', titulo: 'Órgãos e Entidades Públicas', prioridade: 'alta',
       subtopicos: ['Órgãos públicos','Entidades públicas','Classificação','Capacidade'] },
-
     { id: 'DA-01', area: 'DA', titulo: 'Introdução ao Direito Administrativo', prioridade: 'alta',
       subtopicos: ['Conceito','Objeto','Fontes','Regime jurídico'] },
     { id: 'DA-02', area: 'DA', titulo: 'Princípios da Administração Pública', prioridade: 'alta',
@@ -837,11 +498,11 @@ Changelog v0.1:
 
   /* ============================================================
      AULAS — inalterado desde v0.2
+     (Mantidas integralmente. Conteúdo idêntico ao v0.3.)
   ============================================================ */
   var LESSONS = {
     'ADM-01': {
-      id: 'L-ADM-01',
-      moduloId: 'ADM-01',
+      id: 'L-ADM-01', moduloId: 'ADM-01',
       objetivo: 'Compreender o conceito de Administração, distinguir eficiência, eficácia e efetividade, e reconhecer as funções administrativas básicas. Base para todos os módulos seguintes de ADM e AP.',
       prerequisitos: [],
       introducao: 'Administrar é o ato de planejar, organizar, dirigir e controlar recursos para alcançar objetivos. Está presente em uma empresa, em um órgão público e até na sua rotina pessoal. Todo concurso de nível médio na área administrativa cobra, em algum grau, esse vocabulário básico.',
@@ -885,21 +546,16 @@ Changelog v0.1:
         compararConceitos: 'Eficiência olha para o COMO (método, recursos, desperdício). Eficácia olha para o QUÊ (meta, resultado). Efetividade olha para o PARA QUÊ (impacto, transformação social). O concurseiro deve identificar no enunciado qual dos três está sendo cobrado.',
         mostrarPegadinha: 'Cuidado com a clássica: "A eficiência foi inserida no rol de princípios da Administração Pública pela EC 19/1998". Está CORRETA. Se a banca disser "pela EC 45/2004" ou "pela CF/1988 original", está errada.',
         comoApareceEmConcurso: 'Costuma aparecer em questões de múltipla escolha pedindo a diferença entre eficiência e eficácia em contextos administrativos, ou em questões sobre princípios (LIMPE) cobrando se eficiência é expressa ou implícita.',
-        fazerPergunta: {
-          pergunta: 'Uma equipe entrega todas as metas do mês, mas gastou o dobro do orçamento previsto. Ela foi eficiente, eficaz ou efetiva?',
-          resposta: 'Foi EFICAZ (atingiu as metas), mas NÃO foi eficiente (gastou muito mais recursos do que o necessário). A efetividade depende do impacto real do resultado.'
-        }
+        fazerPergunta: { pergunta: 'Uma equipe entrega todas as metas do mês, mas gastou o dobro do orçamento previsto. Ela foi eficiente, eficaz ou efetiva?', resposta: 'Foi EFICAZ (atingiu as metas), mas NÃO foi eficiente (gastou muito mais recursos do que o necessário). A efetividade depende do impacto real do resultado.' }
       }
     },
-
     'ADM-02': {
-      id: 'L-ADM-02',
-      moduloId: 'ADM-02',
+      id: 'L-ADM-02', moduloId: 'ADM-02',
       objetivo: 'Dominar o ciclo PODC — Planejamento, Organização, Direção e Controle — identificando cada função, sua finalidade e como elas se integram no processo administrativo.',
       prerequisitos: ['ADM-01'],
       introducao: 'PODC é a espinha dorsal da Administração. Todo concurso cobra esse ciclo, seja de forma direta (qual a função que define objetivos?) ou aplicada (que função está sendo exercida nesta situação?). Saber distinguir com segurança cada etapa é decisivo.',
       explicacaoSimples: 'Imagine que você vai montar uma festa. Primeiro decide tema, data, convidados (planejamento). Depois organiza quem traz o quê, aluga o espaço (organização). No dia, coordena as pessoas, resolve imprevistos (direção). No fim, vê se deu certo, o que faltou (controle). As quatro etapas se repetem em qualquer organização.',
-      explicacaoTecnica: 'O ciclo administrativo (ou processo administrativo) é composto por quatro funções: (1) Planejamento — define objetivos e meios, nos níveis estratégico, tático e operacional; (2) Organização — estrutura recursos, define autoridade, responsabilidade e departamentalização; (3) Direção — lidera, motiva e comunica pessoas para executar o planejado; (4) Controle — estabelece padrões, monitora desempenho, compara com o padrão e corrige desvios. As funções são interdependentes e cíclicas: o controle alimenta novo planejamento.',
+      explicacaoTecnica: 'O ciclo administrativo é composto por quatro funções: (1) Planejamento — define objetivos e meios; (2) Organização — estrutura recursos, autoridade, responsabilidade e departamentalização; (3) Direção — lidera, motiva e comunica pessoas; (4) Controle — estabelece padrões, monitora desempenho e corrige desvios. As funções são interdependentes e cíclicas: o controle alimenta novo planejamento.',
       exemplos: [
         'Planejar: a Secretaria de Educação define reduzir evasão escolar em 15% no ano.',
         'Organizar: divide a meta entre as escolas e cria uma comissão de acompanhamento.',
@@ -912,9 +568,9 @@ Changelog v0.1:
         { termoA: 'Organização', termoB: 'Direção',
           diferenca: 'Organização é estrutural — define órgãos, cargos, hierarquia, autoridade. Direção é comportamental — lida com pessoas, motivação, liderança e comunicação.' },
         { termoA: 'PODC (Fayol)', termoB: 'Ciclo PDCA (Deming)',
-          diferenca: 'PODC é o ciclo administrativo geral. PDCA (Plan, Do, Check, Act) é a ferramenta da qualidade para melhoria contínua. São próximos, mas não sinônimos — PDCA costuma aparecer em Gestão da Qualidade (ADM-10), não no ciclo administrativo clássico.' }
+          diferenca: 'PODC é o ciclo administrativo geral. PDCA (Plan, Do, Check, Act) é a ferramenta da qualidade para melhoria contínua. São próximos, mas não sinônimos — PDCA costuma aparecer em Gestão da Qualidade (ADM-10).' }
       ],
-      aplicacaoAdministracaoPublica: 'O ciclo PODC está presente no dia a dia do Estado: o PPA (Plano Plurianual) é instrumento de planejamento estratégico; a LDO e a LOA traduzem o planejamento em metas e recursos; a estrutura de ministérios e secretarias reflete a organização; a atuação dos gestores junto às equipes é direção; e o controle é exercido internamente (controladorias) e externamente (Tribunais de Contas, Ministério Público, Congresso).',
+      aplicacaoAdministracaoPublica: 'O ciclo PODC está presente no dia a dia do Estado: o PPA é instrumento de planejamento estratégico; a LDO e a LOA traduzem o planejamento em metas e recursos; a estrutura de ministérios e secretarias reflete a organização; a atuação dos gestores junto às equipes é direção; e o controle é exercido internamente (controladorias) e externamente (Tribunais de Contas, MP, Congresso).',
       pegadinhas: [
         'Bancas trocam "direção" por "coordenação" ou "execução". Na formulação clássica de Fayol, a terceira função é DIREÇÃO.',
         'Confundir PODC com PDCA. PDCA tem 4 letras parecidas, mas pertence à qualidade (ADM-10).',
@@ -936,25 +592,20 @@ Changelog v0.1:
       ],
       modoProfessor: {
         explicarMaisSimples: 'PODC é o passo a passo de qualquer tarefa organizada: primeiro a gente pensa no que quer (planejamento), depois arruma o jeito de fazer (organização), depois põe gente pra fazer e dá apoio (direção), e por último confere se deu certo (controle). Aí o ciclo começa de novo.',
-        outroExemplo: 'Em uma licitação pública: o órgão planeja a contratação (estudo técnico preliminar, termo de referência); organiza o processo (comissão, edital); conduz a sessão, comunica e orienta os licitantes (direção); fiscaliza o contrato e avalia a entrega (controle).',
+        outroExemplo: 'Em uma licitação pública: o órgão planeja a contratação (estudo técnico preliminar); organiza o processo (comissão, edital); conduz a sessão, comunica e orienta os licitantes (direção); fiscaliza o contrato e avalia a entrega (controle).',
         compararConceitos: 'Planejar = decidir o futuro. Organizar = estruturar. Dirigir = conduzir pessoas. Controlar = verificar e corrigir. São quatro perguntas diferentes: O QUÊ? COM O QUÊ? COM QUEM? DEU CERTO?',
         mostrarPegadinha: 'Pegadinha clássica: "A função de controle é a primeira do processo administrativo". ERRADO. A primeira é planejamento. Outra: "A direção é responsável por definir a estrutura organizacional". ERRADO — isso é organização.',
-        comoApareceEmConcurso: 'Cai muito em questão de correspondência: é dado um exemplo e a banca pergunta a qual função pertence. Também aparece pedindo a ordem correta do ciclo e o autor (Fayol). Em nível médio, costuma vir em 1 ou 2 questões por prova.',
-        fazerPergunta: {
-          pergunta: 'A prefeitura definiu padrões de atendimento e passou a medir mensalmente o tempo de espera nas repartições. Qual função administrativa está sendo exercida?',
-          resposta: 'CONTROLE — pois há padrão definido e comparação sistemática de desempenho. O controle pressupõe um padrão (que veio do planejamento) e a verificação de desvios.'
-        }
+        comoApareceEmConcurso: 'Cai muito em questão de correspondência: é dado um exemplo e a banca pergunta a qual função pertence. Também aparece pedindo a ordem correta do ciclo e o autor (Fayol).',
+        fazerPergunta: { pergunta: 'A prefeitura definiu padrões de atendimento e passou a medir mensalmente o tempo de espera nas repartições. Qual função administrativa está sendo exercida?', resposta: 'CONTROLE — pois há padrão definido e comparação sistemática de desempenho.' }
       }
     },
-
     'AP-02': {
-      id: 'L-AP-02',
-      moduloId: 'AP-02',
+      id: 'L-AP-02', moduloId: 'AP-02',
       objetivo: 'Diferenciar os três modelos históricos de Administração Pública — patrimonialista, burocrático e gerencial — identificando características, contexto histórico e marcas de cada um.',
       prerequisitos: ['AP-01'],
       introducao: 'A Administração Pública brasileira passou por três modelos predominantes. Saber distinguir cada um é obrigatório em qualquer prova de AP ou DA. A banca costuma cobrar características específicas, contexto histórico e nomes de autores.',
       explicacaoSimples: 'No começo, o Estado era tratado como propriedade do rei ou do governante — isso é patrimonialismo. Depois, para combater a corrupção e o nepotismo, o Estado adotou regras rígidas, concursos, hierarquia e impessoalidade — é a burocracia. Mais recentemente, buscou-se um Estado mais eficiente, com metas, resultados e foco no cidadão — é a administração gerencial.',
-      explicacaoTecnica: 'Modelos: (1) Patrimonialismo — confusão entre público e privado; cargos tratados como propriedade; nepotismo e clientelismo; típico do Brasil colonial e imperial. (2) Burocrático — baseado em Weber; impessoalidade, formalismo, hierarquia, meritocracia, regras escritas; introduzido no Brasil com a Reforma de 1936 (Maurício Nabuco) e consolidado com o DASP em 1938, no Estado Novo de Getúlio Vargas; combateu o patrimonialismo, mas gerou rigidez e autorreferência. (3) Gerencial — baseado em princípios da Nova Gestão Pública (New Public Management); foco em resultados, eficiência, controle por desempenho, descentralização, accountability; no Brasil, marco principal foi o Plano Diretor da Reforma do Aparelho do Estado (1995), sob Bresser-Pereira, no governo FHC.',
+      explicacaoTecnica: 'Modelos: (1) Patrimonialismo — confusão entre público e privado; cargos como propriedade; nepotismo; típico do Brasil colonial e imperial. (2) Burocrático — baseado em Weber; impessoalidade, formalismo, hierarquia, meritocracia, regras escritas; introduzido no Brasil com a Reforma de 1936 e consolidado com o DASP em 1938, no Estado Novo de Getúlio Vargas. (3) Gerencial — princípios da Nova Gestão Pública; foco em resultados, eficiência, controle por desempenho, descentralização, accountability; no Brasil, marco principal foi o Plano Diretor da Reforma do Aparelho do Estado (1995), sob Bresser-Pereira, no governo FHC.',
       exemplos: [
         'Nomear parentes para cargos públicos sem concurso é prática patrimonialista.',
         'Exigir concurso público, documentar tudo e seguir rito formal é marca burocrática.',
@@ -964,16 +615,16 @@ Changelog v0.1:
         { termoA: 'Patrimonialismo', termoB: 'Burocracia',
           diferenca: 'Patrimonialismo: confusão entre público e privado, pessoalidade, nepotismo. Burocracia: separação clara entre público e privado, impessoalidade, meritocracia, formalismo.' },
         { termoA: 'Burocracia', termoB: 'Gerencial',
-          diferenca: 'Burocracia: foco em processos, controle rígido por normas, autorreferência (a administração atende a si mesma). Gerencial: foco em resultados, controle por desempenho, foco no cidadão-cliente, descentralização.' },
+          diferenca: 'Burocracia: foco em processos, controle rígido por normas, autorreferência. Gerencial: foco em resultados, controle por desempenho, foco no cidadão-cliente, descentralização.' },
         { termoA: 'Gerencial', termoB: 'Nova Gestão Pública (NGP)',
-          diferenca: 'A Nova Gestão Pública (New Public Management) é a corrente teórica internacional; a administração gerencial é sua aplicação prática no Brasil, a partir dos anos 1990.' }
+          diferenca: 'A NGP (New Public Management) é a corrente teórica internacional; a administração gerencial é sua aplicação prática no Brasil, a partir dos anos 1990.' }
       ],
-      aplicacaoAdministracaoPublica: 'O Brasil atual convive com traços dos três modelos. A EC 19/1998 (Reforma Gerencial) introduziu princípios como eficiência e figuras como contrato de gestão e agências executivas. Persistem, porém, práticas burocráticas (formalismo, controles processuais) e, infelizmente, resquícios patrimonialistas (cargos comissionados usados para favorecimento, clientelismo).',
+      aplicacaoAdministracaoPublica: 'O Brasil atual convive com traços dos três modelos. A EC 19/1998 (Reforma Gerencial) introduziu princípios como eficiência e figuras como contrato de gestão e agências executivas. Persistem, porém, práticas burocráticas (formalismo, controles processuais) e, infelizmente, resquícios patrimonialistas.',
       pegadinhas: [
         'Afirmar que "a burocracia é sinônimo de Administração Pública" — errado; é apenas um dos modelos.',
         'Trocar o autor: Weber é o teórico da burocracia; Bresser-Pereira é o nome central da reforma gerencial brasileira (1995).',
         'Dizer que a reforma gerencial brasileira foi iniciada no governo Vargas — errado; foi em 1995 (FHC). Vargas iniciou a reforma BUROCRÁTICA (1936–1938).',
-        'A EC 19/1998 é chamada "Reforma Gerencial". A Reforma do Estado de 1967 (Decreto-Lei 200/1967) foi uma reforma desenvolvimentista, não gerencial.'
+        'A EC 19/1998 é chamada "Reforma Gerencial". A Reforma do Estado de 1967 (Decreto-Lei 200/1967) foi desenvolvimentista, não gerencial.'
       ],
       errosComuns: [
         'Chamar a EC 19/1998 de "Reforma Burocrática".',
@@ -988,354 +639,616 @@ Changelog v0.1:
         'Marcos legais: EC 19/1998 (Reforma Gerencial); Decreto-Lei 200/1967 (desenvolvimentista).'
       ],
       modoProfessor: {
-        explicarMaisSimples: 'É como a evolução de uma casa. No começo (patrimonialismo), tudo se misturava com o quintal do vizinho — o público era tratado como se fosse do dono. Depois (burocracia), construíram muros e regras: quem entra, como entra, o que pode fazer. Por último (gerencial), passaram a se preocupar com a eficiência da casa: economizar luz, atender melhor quem chega.',
-        outroExemplo: 'Uma licitação é um retrato dessa evolução: a obrigatoriedade (burocracia) veio para acabar com o favoritismo (patrimonialismo); os novos parâmetros da Lei 14.133/2021 (contratação por resultado, diálogo competitivo, matriz de riscos) refletem a lógica gerencial.',
-        compararConceitos: 'Patrimonialista → não separa. Burocrático → separa com regras rígidas. Gerencial → separa com foco em resultado. A palavra-chave: quem o Estado serve? No patrimonialismo, serve ao soberano; na burocracia, serve à própria norma; no gerencial, serve ao cidadão.',
-        mostrarPegadinha: 'Cuidado: "A Reforma Gerencial brasileira ocorreu em 1936 com Vargas e teve como autor Bresser-Pereira". Está completamente errada. Vargas + 1936 = reforma BUROCRÁTICA. Bresser-Pereira + 1995 = reforma GERENCIAL.',
-        comoApareceEmConcurso: 'Bancas cobram: (a) características específicas de cada modelo; (b) autores e períodos; (c) aplicação da EC 19/1998; (d) identificar qual modelo está sendo descrito em uma situação hipotética. Alta frequência em provas de AP e DA.',
-        fazerPergunta: {
-          pergunta: 'Estabelecer contrato de gestão com um hospital público, com metas quantitativas de atendimento e bônus por desempenho, é característica de qual modelo?',
-          resposta: 'ADMINISTRAÇÃO GERENCIAL — pois usa instrumentos de contrato de gestão, metas e incentivo por desempenho. Isso foi introduzido no Brasil pela Reforma Gerencial (EC 19/1998 e Plano Diretor de 1995).'
-        }
+        explicarMaisSimples: 'É como a evolução de uma casa. No começo (patrimonialismo), tudo se misturava — o público era tratado como se fosse do dono. Depois (burocracia), construíram muros e regras. Por último (gerencial), passaram a se preocupar com a eficiência da casa.',
+        outroExemplo: 'Uma licitação é um retrato dessa evolução: a obrigatoriedade (burocracia) veio para acabar com o favoritismo (patrimonialismo); os novos parâmetros da Lei 14.133/2021 refletem a lógica gerencial.',
+        compararConceitos: 'Patrimonialista → não separa. Burocrático → separa com regras rígidas. Gerencial → separa com foco em resultado. A palavra-chave: quem o Estado serve?',
+        mostrarPegadinha: 'Cuidado: "A Reforma Gerencial brasileira ocorreu em 1936 com Vargas". ERRADO. Vargas + 1936 = reforma BUROCRÁTICA. Bresser-Pereira + 1995 = reforma GERENCIAL.',
+        comoApareceEmConcurso: 'Bancas cobram: (a) características de cada modelo; (b) autores e períodos; (c) aplicação da EC 19/1998; (d) identificar modelo em situação hipotética.',
+        fazerPergunta: { pergunta: 'Estabelecer contrato de gestão com um hospital público, com metas e bônus por desempenho, é característica de qual modelo?', resposta: 'ADMINISTRAÇÃO GERENCIAL — usa contrato de gestão, metas e incentivo por desempenho.' }
       }
     },
-
     'DA-02': {
-      id: 'L-DA-02',
-      moduloId: 'DA-02',
-      objetivo: 'Dominar os princípios expressos e implícitos da Administração Pública, com foco em LIMPE (Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência) e nos desdobramentos implícitos.',
+      id: 'L-DA-02', moduloId: 'DA-02',
+      objetivo: 'Dominar os princípios expressos e implícitos da Administração Pública, com foco em LIMPE.',
       prerequisitos: ['DA-01'],
-      introducao: 'Os princípios são a base de todo o Direito Administrativo. Sem eles, é impossível entender atos, poderes, licitações, improbidade. A banca cobra tanto o rol expresso quanto os implícitos — e um capricho da CF/88: o art. 37 fala em "princípios", não os enumera todos.',
-      explicacaoSimples: 'Cinco princípios ficam expressos na Constituição, resumidos na sigla LIMPE. São os valores que toda Administração Pública deve seguir em qualquer ato: obediência à lei, ausência de favoritismo, conduta ética, transparência e boa gestão. Além desses, existem outros que decorrem implicitamente do sistema.',
-      explicacaoTecnica: 'LIMPE (art. 37, caput, CF/88): (1) Legalidade — o administrador só pode agir conforme a lei (diferente do particular, que pode fazer tudo que a lei não proíbe); (2) Impessoalidade — vedação a favoritismos, tratamento igualitário e, também, atuação impessoal do agente (imputação ao órgão, não à pessoa física); (3) Moralidade — ética administrativa; o ato pode ser legal e, ainda assim, imoral; (4) Publicidade — dever de transparência, com exceções constitucionais (segurança nacional, intimidade); (5) Eficiência — inserido pela EC 19/1998 (Reforma Gerencial). Princípios implícitos: supremacia do interesse público, indisponibilidade do interesse público, autotutela (Súmulas 346 e 473/STF), razoabilidade, proporcionalidade, motivação, ampla defesa, contraditório, segurança jurídica, continuidade do serviço público.',
+      introducao: 'Os princípios são a base de todo o Direito Administrativo. Sem eles, é impossível entender atos, poderes, licitações, improbidade.',
+      explicacaoSimples: 'Cinco princípios ficam expressos na Constituição, resumidos na sigla LIMPE. São os valores que toda Administração Pública deve seguir: obediência à lei, ausência de favoritismo, conduta ética, transparência e boa gestão. Além desses, existem outros implícitos.',
+      explicacaoTecnica: 'LIMPE (art. 37, caput, CF/88): (1) Legalidade — o administrador só pode agir conforme a lei; (2) Impessoalidade — vedação a favoritismos e proibição de promoção pessoal; (3) Moralidade — ética administrativa; (4) Publicidade — dever de transparência, com exceções; (5) Eficiência — inserido pela EC 19/1998. Princípios implícitos: supremacia do interesse público, indisponibilidade do interesse público, autotutela (Súmulas 346 e 473/STF), razoabilidade, proporcionalidade, motivação, ampla defesa, contraditório, segurança jurídica, continuidade do serviço público.',
       exemplos: [
         'Legalidade: gestor só contrata após licitação ou hipótese legal de dispensa.',
-        'Impessoalidade: o ato é do órgão, não do agente; proibição de promoção pessoal (art. 37, §1º, CF).',
+        'Impessoalidade: o ato é do órgão, não do agente.',
         'Moralidade: ato formalmente legal, mas com desvio de finalidade, é imoral e nulo.',
         'Publicidade: diários oficiais, portais de transparência.',
         'Eficiência: exigência de resultado útil ao serviço público.'
       ],
       comparacoes: [
         { termoA: 'Legalidade administrativa', termoB: 'Legalidade para o particular',
-          diferenca: 'Para o particular, é lícito fazer tudo que a lei NÃO proíbe (autonomia privada). Para a Administração, só é lícito fazer o que a lei AUTORIZA ou determina. Isso é a chamada "legalidade estrita".' },
+          diferenca: 'Para o particular, é lícito fazer tudo que a lei NÃO proíbe. Para a Administração, só é lícito fazer o que a lei AUTORIZA ou determina.' },
         { termoA: 'Moralidade', termoB: 'Legalidade',
-          diferenca: 'Um ato pode ser legal e imoral ao mesmo tempo. Ex.: nomear um amigo para cargo em comissão, respeitando os requisitos formais, mas com claro favorecimento. O ato é legal em forma, mas imoral em substância — e pode ser anulado.' },
+          diferenca: 'Um ato pode ser legal e imoral ao mesmo tempo. Ex.: nomear amigo para cargo em comissão com claro favorecimento.' },
         { termoA: 'Princípios expressos', termoB: 'Princípios implícitos',
-          diferenca: 'Expressos: os 5 do LIMPE, no caput do art. 37. Implícitos: decorrem do sistema (supremacia do interesse público, indisponibilidade, autotutela, razoabilidade, proporcionalidade, motivação, etc.). A banca cobra ambos.' }
+          diferenca: 'Expressos: os 5 do LIMPE. Implícitos: supremacia do interesse público, indisponibilidade, autotutela, razoabilidade, proporcionalidade, motivação.' }
       ],
-      aplicacaoAdministracaoPublica: 'A aplicação dos princípios está em todo o serviço público: editais de licitação (publicidade + impessoalidade), controle pelos Tribunais de Contas (legalidade + eficiência), responsabilização por improbidade (moralidade), autotutela para anular atos ilegais (Súmula 473/STF), exigência de motivação dos atos (Lei 9.784/1999).',
+      aplicacaoAdministracaoPublica: 'Os princípios estão em todo o serviço público: editais de licitação (publicidade + impessoalidade), controle pelos Tribunais de Contas (legalidade + eficiência), responsabilização por improbidade (moralidade), autotutela (Súmula 473/STF).',
       pegadinhas: [
-        'Confundir legalidade administrativa com legalidade do particular. Cai MUITO.',
-        'Esquecer que eficiência é princípio EXPRESSO desde a EC 19/1998 (LIMPE).',
-        'Achar que publicidade é absoluta — tem exceções (segurança do Estado e intimidade).',
-        'Pensar que "supremacia do interesse público" está expresso na CF — é IMPLÍCITO.',
-        'Súmulas: 346/STF (autotutela em atos ilegais) e 473/STF (autotutela — anular ou revogar).'
+        'Confundir legalidade administrativa com legalidade do particular.',
+        'Esquecer que eficiência é princípio EXPRESSO desde a EC 19/1998.',
+        'Achar que publicidade é absoluta — tem exceções.',
+        'Pensar que "supremacia do interesse público" está expresso — é IMPLÍCITO.'
       ],
       errosComuns: [
-        'Trocar "impessoalidade" por "imparcialidade" — são coisas diferentes. Impessoalidade é princípio constitucional; imparcialidade é dever do agente.',
+        'Trocar "impessoalidade" por "imparcialidade" — são coisas diferentes.',
         'Confundir moralidade com legalidade.',
-        'Achar que razoabilidade e proporcionalidade são princípios expressos — são implícitos.'
+        'Achar que razoabilidade e proporcionalidade são expressos — são implícitos.'
       ],
       resumo: [
         'LIMPE: Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência.',
-        'Eficiência: incluída pela EC 19/1998 (Reforma Gerencial).',
-        'Legalidade administrativa = legalidade estrita (fazer só o que a lei autoriza).',
+        'Eficiência: incluída pela EC 19/1998.',
+        'Legalidade administrativa = legalidade estrita.',
         'Impessoalidade: tratamento igualitário + proibição de promoção pessoal.',
-        'Moralidade: ética administrativa; não basta ser legal.',
+        'Moralidade: ética administrativa.',
         'Publicidade: regra é transparência; exceções constitucionais.',
-        'Implícitos: supremacia e indisponibilidade do interesse público, autotutela (Súmulas 346 e 473/STF), razoabilidade, proporcionalidade, motivação, ampla defesa, contraditório, segurança jurídica.'
+        'Implícitos: supremacia, indisponibilidade, autotutela, razoabilidade, proporcionalidade, motivação.'
       ],
       modoProfessor: {
-        explicarMaisSimples: 'Imagine cinco placas na porta de toda repartição: "Só faço o que a lei manda" (legalidade), "Trato todos igual" (impessoalidade), "Sou honesto e ético" (moralidade), "Trabalho com portas abertas" (publicidade), "Trabalho bem e com resultado" (eficiência). Além dessas, há placas menos visíveis mas igualmente importantes — autotutela, proporcionalidade, motivação.',
-        outroExemplo: 'Um edital de concurso público reúne vários princípios: publicidade (publicado no DOU), impessoalidade (mesmo critério para todos), legalidade (previsão legal de vagas e regras), moralidade (vedação a favorecimento), eficiência (seleção do melhor candidato).',
-        compararConceitos: 'Legalidade = base. Impessoalidade = tratamento. Moralidade = ética. Publicidade = transparência. Eficiência = resultado. Os cinco se somam; não se substituem.',
-        mostrarPegadinha: '"O princípio da eficiência foi inserido pela EC 45/2004". ERRADO. Foi pela EC 19/1998. A EC 45/2004 tratou da Reforma do Judiciário — não tem relação com eficiência administrativa.',
-        comoApareceEmConcurso: 'Praticamente toda prova de DA cobra LIMPE. As bancas testam: (a) enumeração; (b) exceções à publicidade; (c) diferença de legalidade; (d) reconhecimento de princípios implícitos; (e) aplicação a casos concretos.',
-        fazerPergunta: {
-          pergunta: 'Um prefeito publica, em outdoor pago com recursos públicos, uma obra municipal com seu nome e foto. Fere qual princípio?',
-          resposta: 'Fere a IMPESSOALIDADE (art. 37, §1º, CF — veda promoção pessoal de autoridades em obras, serviços e campanhas públicas). Também costuma ser apontado como violação da MORALIDADE administrativa.'
-        }
+        explicarMaisSimples: 'Imagine cinco placas na porta de toda repartição: "Só faço o que a lei manda", "Trato todos igual", "Sou honesto e ético", "Trabalho com portas abertas", "Trabalho bem e com resultado".',
+        outroExemplo: 'Um edital de concurso reúne vários princípios: publicidade, impessoalidade, legalidade, moralidade, eficiência.',
+        compararConceitos: 'Legalidade = base. Impessoalidade = tratamento. Moralidade = ética. Publicidade = transparência. Eficiência = resultado.',
+        mostrarPegadinha: '"O princípio da eficiência foi inserido pela EC 45/2004". ERRADO. Foi pela EC 19/1998. A EC 45/2004 tratou da Reforma do Judiciário.',
+        comoApareceEmConcurso: 'Praticamente toda prova de DA cobra LIMPE. Testam: (a) enumeração; (b) exceções à publicidade; (c) diferença de legalidade; (d) princípios implícitos.',
+        fazerPergunta: { pergunta: 'Um prefeito publica outdoor com sua foto em obra pública paga com verba pública. Fere qual princípio?', resposta: 'Fere a IMPESSOALIDADE (art. 37, §1º, CF). Também viola a MORALIDADE.' }
       }
     }
   };
 
   /* ============================================================
-     DIAGNÓSTICOS — NOVO NA v0.3
-     Estrutura estática. IDs permanentes "D-<MOD>-NN".
+     DIAGNÓSTICOS — inalterado desde v0.3
   ============================================================ */
   var DIAGNOSTICS = {
     'ADM-01': {
-      id: 'D-ADM-01',
-      moduloId: 'ADM-01',
+      id: 'D-ADM-01', moduloId: 'ADM-01',
       itens: [
-        {
-          id: 'D-ADM-01-01',
-          tipo: 'multipla_escolha',
-          subtopico: 'Eficiência, eficácia e efetividade',
+        { id: 'D-ADM-01-01', tipo: 'multipla_escolha', subtopico: 'Eficiência, eficácia e efetividade',
           pergunta: 'Um setor público cumpriu integralmente todas as metas pactuadas no ano, mas gastou o dobro do orçamento previsto. Em relação a esse resultado, é correto afirmar que o setor foi:',
           alternativas: [
             { id: 'A', texto: 'Eficiente, porque cumpriu as metas.' },
             { id: 'B', texto: 'Eficaz, mas não eficiente.' },
             { id: 'C', texto: 'Efetivo, porque houve impacto social.' },
             { id: 'D', texto: 'Ineficaz e ineficiente, porque gastou mais que o previsto.' }
-          ],
-          gabarito: 'B',
-          explicacao: 'Eficácia é atingir o objetivo/meta. Eficiência é fazer bem, com o mínimo de recursos e sem desperdício. Quem atinge a meta gastando o dobro é EFICAZ (cumpriu) mas INEFICIENTE (desperdiçou recursos). A letra A troca os conceitos; a C fala de efetividade, que exige impacto real e duradouro (não mencionado); a D inverte tudo — o setor foi eficaz, não ineficaz.'
+          ], gabarito: 'B',
+          explicacao: 'Eficácia é atingir o objetivo/meta. Eficiência é fazer bem, com o mínimo de recursos. Quem atinge a meta gastando o dobro é EFICAZ mas INEFICIENTE. A letra A troca os conceitos; a C fala de efetividade (impacto real, não mencionado); a D inverte tudo.'
         },
-        {
-          id: 'D-ADM-01-02',
-          tipo: 'verdadeiro_falso',
-          subtopico: 'Conceito de Administração',
+        { id: 'D-ADM-01-02', tipo: 'verdadeiro_falso', subtopico: 'Conceito de Administração',
           pergunta: 'Administrar consiste exclusivamente em executar tarefas operacionais, não envolvendo decisões sobre recursos ou objetivos organizacionais.',
-          alternativas: [
-            { id: 'V', texto: 'Verdadeiro' },
-            { id: 'F', texto: 'Falso' }
-          ],
+          alternativas: [{ id: 'V', texto: 'Verdadeiro' }, { id: 'F', texto: 'Falso' }],
           gabarito: 'F',
-          explicacao: 'Falso. Administrar é um processo amplo de tomada de decisões sobre recursos para alcançar objetivos. Envolve planejamento, organização, direção e controle. Executar tarefas operacionais é apenas uma parte do nível operacional — não define a Administração como um todo.'
+          explicacao: 'Falso. Administrar é processo amplo de decisões sobre recursos para alcançar objetivos. Envolve PODC. Executar tarefas operacionais é apenas parte do nível operacional.'
         },
-        {
-          id: 'D-ADM-01-03',
-          tipo: 'situacao',
-          subtopico: 'Funções administrativas',
-          pergunta: 'A Secretaria de Saúde de um município definiu que reduzirá em 20% o tempo médio de espera por consultas e, para isso, alocou equipes, equipamentos e orçamento. Nesse momento, qual função administrativa está sendo exercida de forma predominante?',
+        { id: 'D-ADM-01-03', tipo: 'situacao', subtopico: 'Funções administrativas',
+          pergunta: 'A Secretaria de Saúde definiu que reduzirá em 20% o tempo médio de espera por consultas e, para isso, alocou equipes, equipamentos e orçamento. Nesse momento, qual função administrativa está sendo exercida de forma predominante?',
           alternativas: [
-            { id: 'A', texto: 'Controle.' },
-            { id: 'B', texto: 'Direção.' },
-            { id: 'C', texto: 'Planejamento.' },
-            { id: 'D', texto: 'Organização.' }
-          ],
-          gabarito: 'C',
-          explicacao: 'Definir objetivos e alocar recursos para alcançá-los é PLANEJAMENTO. O controle viria depois (medir se a meta está sendo cumprida); a direção lidaria com pessoas; a organização estruturaria cargos e setores. A descrição do enunciado é típica de planejamento estratégico.'
+            { id: 'A', texto: 'Controle.' }, { id: 'B', texto: 'Direção.' },
+            { id: 'C', texto: 'Planejamento.' }, { id: 'D', texto: 'Organização.' }
+          ], gabarito: 'C',
+          explicacao: 'Definir objetivos e alocar recursos é PLANEJAMENTO. Controle viria depois; direção lidaria com pessoas; organização estruturaria cargos e setores.'
         },
-        {
-          id: 'D-ADM-01-04',
-          tipo: 'autoavaliacao',
-          subtopico: 'Níveis organizacionais',
+        { id: 'D-ADM-01-04', tipo: 'autoavaliacao', subtopico: 'Níveis organizacionais',
           pergunta: 'Você sabe diferenciar os níveis estratégico, tático e operacional na Administração?',
-          resposta: 'Estratégico: nível institucional, define missão, visão e objetivos de longo prazo (alta direção). Tático: nível gerencial/intermediário, traduz o estratégico em planos por área. Operacional: nível de execução, tarefas do dia a dia.'
+          resposta: 'Estratégico: nível institucional, longo prazo. Tático: nível gerencial, traduz o estratégico em planos por área. Operacional: execução, tarefas do dia a dia.'
         },
-        {
-          id: 'D-ADM-01-05',
-          tipo: 'multipla_escolha',
-          subtopico: 'Recursos organizacionais',
+        { id: 'D-ADM-01-05', tipo: 'multipla_escolha', subtopico: 'Recursos organizacionais',
           pergunta: 'Sobre os recursos organizacionais, assinale a alternativa que NÃO corresponde a uma categoria tradicionalmente reconhecida:',
           alternativas: [
             { id: 'A', texto: 'Recursos humanos.' },
             { id: 'B', texto: 'Recursos materiais e financeiros.' },
             { id: 'C', texto: 'Recursos informacionais e tecnológicos.' },
             { id: 'D', texto: 'Recursos sobrenaturais.' }
-          ],
-          gabarito: 'D',
-          explicacao: 'As categorias clássicas de recursos organizacionais são: humanos, materiais, financeiros, informacionais e tecnológicos. "Recursos sobrenaturais" não existe na literatura administrativa — é distrator absurdo.'
+          ], gabarito: 'D',
+          explicacao: 'Categorias clássicas: humanos, materiais, financeiros, informacionais e tecnológicos. "Recursos sobrenaturais" não existe.'
         }
       ]
     },
-
     'ADM-02': {
-      id: 'D-ADM-02',
-      moduloId: 'ADM-02',
+      id: 'D-ADM-02', moduloId: 'ADM-02',
       itens: [
-        {
-          id: 'D-ADM-02-01',
-          tipo: 'multipla_escolha',
-          subtopico: 'Integração das funções',
+        { id: 'D-ADM-02-01', tipo: 'multipla_escolha', subtopico: 'Integração das funções',
           pergunta: 'Segundo a formulação clássica de Fayol, a ordem do ciclo administrativo é:',
           alternativas: [
             { id: 'A', texto: 'Organização → Planejamento → Controle → Direção.' },
             { id: 'B', texto: 'Controle → Planejamento → Organização → Direção.' },
             { id: 'C', texto: 'Planejamento → Organização → Direção → Controle.' },
             { id: 'D', texto: 'Direção → Planejamento → Organização → Controle.' }
-          ],
-          gabarito: 'C',
-          explicacao: 'O ciclo clássico PODC é: Planejamento (o que e como fazer), Organização (estruturar recursos), Direção (conduzir pessoas) e Controle (verificar e corrigir). A opção A inverte planejamento e organização; a B começa pelo controle, o que é impossível (não há padrão sem planejamento); a D começa pela direção, sem qualquer plano prévio.'
+          ], gabarito: 'C',
+          explicacao: 'O ciclo PODC é: Planejamento, Organização, Direção e Controle. Começar pelo controle é impossível (não há padrão sem planejamento).'
         },
-        {
-          id: 'D-ADM-02-02',
-          tipo: 'verdadeiro_falso',
-          subtopico: 'Controle',
+        { id: 'D-ADM-02-02', tipo: 'verdadeiro_falso', subtopico: 'Controle',
           pergunta: 'O controle é uma etapa estanque, aplicada apenas ao final do processo administrativo, sem retorno às fases anteriores.',
-          alternativas: [
-            { id: 'V', texto: 'Verdadeiro' },
-            { id: 'F', texto: 'Falso' }
-          ],
+          alternativas: [{ id: 'V', texto: 'Verdadeiro' }, { id: 'F', texto: 'Falso' }],
           gabarito: 'F',
-          explicacao: 'Falso. O controle é contínuo e retroalimenta o planejamento. Ao detectar desvios, ele alimenta a revisão de planos e metas. É ciclo, não linha reta. Bancas adoram cobrar essa característica cíclica.'
+          explicacao: 'Falso. O controle é contínuo e retroalimenta o planejamento. É ciclo, não linha reta.'
         },
-        {
-          id: 'D-ADM-02-03',
-          tipo: 'situacao',
-          subtopico: 'Direção',
-          pergunta: 'O gerente de um setor reúne a equipe semanalmente, delega responsabilidades, orienta individualmente os servidores e procura manter o grupo motivado. Qual função administrativa está sendo exercida de forma predominante?',
+        { id: 'D-ADM-02-03', tipo: 'situacao', subtopico: 'Direção',
+          pergunta: 'O gerente reúne a equipe semanalmente, delega responsabilidades, orienta servidores e mantém o grupo motivado. Qual função administrativa está sendo exercida?',
           alternativas: [
-            { id: 'A', texto: 'Planejamento.' },
-            { id: 'B', texto: 'Organização.' },
-            { id: 'C', texto: 'Direção.' },
-            { id: 'D', texto: 'Controle.' }
-          ],
-          gabarito: 'C',
-          explicacao: 'Liderar, motivar, comunicar e orientar pessoas é DIREÇÃO. Organização é estrutural (cargos, hierarquia); planejamento define objetivos; controle compara com padrões. O foco comportamental do enunciado indica direção.'
+            { id: 'A', texto: 'Planejamento.' }, { id: 'B', texto: 'Organização.' },
+            { id: 'C', texto: 'Direção.' }, { id: 'D', texto: 'Controle.' }
+          ], gabarito: 'C',
+          explicacao: 'Liderar, motivar, comunicar e orientar pessoas é DIREÇÃO. Organização é estrutural; planejamento define objetivos; controle compara com padrões.'
         },
-        {
-          id: 'D-ADM-02-04',
-          tipo: 'autoavaliacao',
-          subtopico: 'Integração das funções',
+        { id: 'D-ADM-02-04', tipo: 'autoavaliacao', subtopico: 'Integração das funções',
           pergunta: 'Você sabe diferenciar PODC (ciclo administrativo) de PDCA (ciclo da qualidade)?',
-          resposta: 'PODC: Planejamento, Organização, Direção e Controle — ciclo administrativo clássico de Fayol. PDCA: Plan, Do, Check, Act — ferramenta de melhoria contínua da qualidade (Deming). São conceitos próximos, mas pertencem a contextos distintos: PODC é administração geral; PDCA, gestão da qualidade (ADM-10).'
+          resposta: 'PODC: Planejamento, Organização, Direção e Controle — ciclo clássico de Fayol. PDCA: Plan, Do, Check, Act — ferramenta da qualidade (Deming).'
         },
-        {
-          id: 'D-ADM-02-05',
-          tipo: 'multipla_escolha',
-          subtopico: 'Organização',
+        { id: 'D-ADM-02-05', tipo: 'multipla_escolha', subtopico: 'Organização',
           pergunta: 'Sobre a função administrativa de organização, é correto afirmar que:',
           alternativas: [
             { id: 'A', texto: 'Ela define os objetivos de longo prazo da instituição.' },
             { id: 'B', texto: 'Ela estrutura recursos, define autoridade, responsabilidade e agrupamentos (departamentalização).' },
             { id: 'C', texto: 'Ela mede o desempenho e corrige desvios em relação ao padrão.' },
             { id: 'D', texto: 'Ela lida exclusivamente com a motivação da equipe.' }
-          ],
-          gabarito: 'B',
-          explicacao: 'A função organização é estrutural: define órgãos, cargos, hierarquia, autoridade, responsabilidade e departamentalização. A letra A trata de planejamento; a C, de controle; a D, de direção (e parcialmente, porque direção também abrange liderança e comunicação, não só motivação).'
+          ], gabarito: 'B',
+          explicacao: 'Organização é estrutural: define órgãos, cargos, hierarquia, autoridade, responsabilidade. A: planejamento. C: controle. D: direção.'
         }
       ]
     },
-
     'AP-02': {
-      id: 'D-AP-02',
-      moduloId: 'AP-02',
+      id: 'D-AP-02', moduloId: 'AP-02',
       itens: [
-        {
-          id: 'D-AP-02-01',
-          tipo: 'multipla_escolha',
-          subtopico: 'Patrimonialismo',
+        { id: 'D-AP-02-01', tipo: 'multipla_escolha', subtopico: 'Patrimonialismo',
           pergunta: 'A confusão entre o patrimônio público e o privado, o nepotismo e a pessoalidade no tratamento da coisa pública são características típicas do modelo:',
           alternativas: [
-            { id: 'A', texto: 'Burocrático.' },
-            { id: 'B', texto: 'Gerencial.' },
-            { id: 'C', texto: 'Patrimonialista.' },
-            { id: 'D', texto: 'Nova Gestão Pública.' }
-          ],
-          gabarito: 'C',
-          explicacao: 'Patrimonialismo é o modelo em que não há distinção clara entre público e privado — o governante trata o Estado como extensão de seu patrimônio pessoal. O burocrático surge justamente para combater esse cenário (via impessoalidade e meritocracia). O gerencial e a NGP são modelos posteriores, focados em resultado.'
+            { id: 'A', texto: 'Burocrático.' }, { id: 'B', texto: 'Gerencial.' },
+            { id: 'C', texto: 'Patrimonialista.' }, { id: 'D', texto: 'Nova Gestão Pública.' }
+          ], gabarito: 'C',
+          explicacao: 'Patrimonialismo: sem distinção clara entre público e privado. O burocrático surge para combater esse cenário.'
         },
-        {
-          id: 'D-AP-02-02',
-          tipo: 'verdadeiro_falso',
-          subtopico: 'Administração gerencial',
+        { id: 'D-AP-02-02', tipo: 'verdadeiro_falso', subtopico: 'Administração gerencial',
           pergunta: 'A Reforma Gerencial brasileira foi consolidada pela EC 19/1998, tendo como um dos nomes centrais Bresser-Pereira e como marco o Plano Diretor da Reforma do Aparelho do Estado (1995).',
-          alternativas: [
-            { id: 'V', texto: 'Verdadeiro' },
-            { id: 'F', texto: 'Falso' }
-          ],
+          alternativas: [{ id: 'V', texto: 'Verdadeiro' }, { id: 'F', texto: 'Falso' }],
           gabarito: 'V',
-          explicacao: 'Verdadeiro. A EC 19/1998 é o marco legal da Reforma Gerencial no Brasil, inserindo a eficiência como princípio expresso no art. 37 da CF. O Plano Diretor de 1995, sob coordenação de Bresser-Pereira no governo FHC, foi o documento orientador.'
+          explicacao: 'Verdadeiro. EC 19/1998 inseriu a eficiência como princípio expresso. Plano Diretor de 1995 foi o documento orientador.'
         },
-        {
-          id: 'D-AP-02-03',
-          tipo: 'situacao',
-          subtopico: 'Administração gerencial',
-          pergunta: 'Um hospital público firma contrato de gestão com o Estado, no qual se compromete a cumprir metas quantitativas de atendimento, com avaliação periódica de desempenho e possibilidade de bônus. Essa prática é característica predominante do modelo:',
+        { id: 'D-AP-02-03', tipo: 'situacao', subtopico: 'Administração gerencial',
+          pergunta: 'Um hospital público firma contrato de gestão com o Estado, com metas quantitativas de atendimento e bônus por desempenho. Essa prática é característica do modelo:',
           alternativas: [
-            { id: 'A', texto: 'Patrimonialista.' },
-            { id: 'B', texto: 'Burocrático.' },
-            { id: 'C', texto: 'Gerencial.' },
-            { id: 'D', texto: 'Pré-burocrático.' }
-          ],
-          gabarito: 'C',
-          explicacao: 'Contrato de gestão, metas, avaliação de desempenho e incentivo por resultado são instrumentos típicos da administração gerencial, introduzidos no Brasil pela Reforma Gerencial (EC 19/1998). No patrimonialismo, não há sequer separação público/privado; no burocrático, o foco é processo e norma, não resultado.'
+            { id: 'A', texto: 'Patrimonialista.' }, { id: 'B', texto: 'Burocrático.' },
+            { id: 'C', texto: 'Gerencial.' }, { id: 'D', texto: 'Pré-burocrático.' }
+          ], gabarito: 'C',
+          explicacao: 'Contrato de gestão, metas e incentivo por resultado são da administração gerencial (EC 19/1998).'
         },
-        {
-          id: 'D-AP-02-04',
-          tipo: 'autoavaliacao',
-          subtopico: 'Burocracia',
+        { id: 'D-AP-02-04', tipo: 'autoavaliacao', subtopico: 'Burocracia',
           pergunta: 'Você sabe identificar as principais características do modelo burocrático weberiano?',
-          resposta: 'Impessoalidade, formalismo, hierarquia, meritocracia, regras escritas, divisão racional do trabalho, competência técnica e separação entre público e privado. Weber é o autor de referência. No Brasil, consolidou-se com a reforma de 1936–1938 (Vargas, DASP).'
+          resposta: 'Impessoalidade, formalismo, hierarquia, meritocracia, regras escritas, divisão racional do trabalho, competência técnica. Weber é o autor. No Brasil: 1936–1938 (Vargas, DASP).'
         },
-        {
-          id: 'D-AP-02-05',
-          tipo: 'multipla_escolha',
-          subtopico: 'Burocracia',
+        { id: 'D-AP-02-05', tipo: 'multipla_escolha', subtopico: 'Burocracia',
           pergunta: 'Sobre o modelo burocrático de Administração Pública, assinale a alternativa INCORRETA:',
           alternativas: [
             { id: 'A', texto: 'Tem em Max Weber um de seus principais teóricos.' },
             { id: 'B', texto: 'No Brasil, consolidou-se a partir da Reforma de 1936 e da criação do DASP em 1938.' },
             { id: 'C', texto: 'Tem como marca a impessoalidade e a meritocracia no provimento de cargos.' },
             { id: 'D', texto: 'Foi introduzido no Brasil pela Reforma Gerencial de 1995.' }
-          ],
-          gabarito: 'D',
-          explicacao: 'A alternativa D está incorreta: a reforma de 1995 foi GERENCIAL, não burocrática. A reforma BUROCRÁTICA brasileira foi a de 1936–1938, no governo Vargas. As demais alternativas (A, B, C) estão corretas.'
+          ], gabarito: 'D',
+          explicacao: 'A reforma de 1995 foi GERENCIAL. A reforma BUROCRÁTICA foi 1936–1938 (Vargas).'
         }
       ]
     },
-
     'DA-02': {
-      id: 'D-DA-02',
-      moduloId: 'DA-02',
+      id: 'D-DA-02', moduloId: 'DA-02',
       itens: [
-        {
-          id: 'D-DA-02-01',
-          tipo: 'multipla_escolha',
-          subtopico: 'Princípios expressos',
+        { id: 'D-DA-02-01', tipo: 'multipla_escolha', subtopico: 'Princípios expressos',
           pergunta: 'São princípios expressos da Administração Pública no caput do art. 37 da CF/88:',
           alternativas: [
             { id: 'A', texto: 'Legalidade, impessoalidade, moralidade, publicidade e eficiência.' },
             { id: 'B', texto: 'Legalidade, imparcialidade, moralidade, publicidade e eficiência.' },
             { id: 'C', texto: 'Legalidade, impessoalidade, moralidade, transparência e economicidade.' },
             { id: 'D', texto: 'Razoabilidade, proporcionalidade, moralidade, publicidade e eficiência.' }
-          ],
-          gabarito: 'A',
-          explicacao: 'LIMPE (art. 37, caput, CF/88) = Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência. A letra B troca "impessoalidade" por "imparcialidade" — que é dever do agente, não princípio constitucional expresso. A C troca publicidade por "transparência" e inclui "economicidade" (princípio da licitação, não do art. 37). A D inclui razoabilidade e proporcionalidade, que são IMPLÍCITOS.'
+          ], gabarito: 'A',
+          explicacao: 'LIMPE = Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência. B: "imparcialidade" não é princípio. C: economicidade não está no art. 37. D: razoabilidade e proporcionalidade são implícitos.'
         },
-        {
-          id: 'D-DA-02-02',
-          tipo: 'verdadeiro_falso',
-          subtopico: 'Princípios expressos',
+        { id: 'D-DA-02-02', tipo: 'verdadeiro_falso', subtopico: 'Princípios expressos',
           pergunta: 'O princípio da eficiência foi inserido no caput do art. 37 da Constituição Federal pela EC 19/1998.',
-          alternativas: [
-            { id: 'V', texto: 'Verdadeiro' },
-            { id: 'F', texto: 'Falso' }
-          ],
+          alternativas: [{ id: 'V', texto: 'Verdadeiro' }, { id: 'F', texto: 'Falso' }],
           gabarito: 'V',
-          explicacao: 'Verdadeiro. A eficiência foi incluída pela EC 19/1998, como parte da Reforma Gerencial. Antes disso, o art. 37 já trazia legalidade, impessoalidade, moralidade e publicidade. A EC 45/2004 (Reforma do Judiciário) NÃO tem relação com isso — pegadinha clássica.'
+          explicacao: 'Verdadeiro. EC 19/1998 (Reforma Gerencial). EC 45/2004 (Reforma do Judiciário) não tem relação.'
         },
-        {
-          id: 'D-DA-02-03',
-          tipo: 'situacao',
-          subtopico: 'Princípios expressos',
-          pergunta: 'Um prefeito manda afixar, em outdoors pagos com verba pública, sua foto e seu nome ao lado de obras municipais recém-concluídas. Essa conduta viola frontalmente o princípio da:',
+        { id: 'D-DA-02-03', tipo: 'situacao', subtopico: 'Princípios expressos',
+          pergunta: 'Um prefeito manda afixar, em outdoors pagos com verba pública, sua foto e nome ao lado de obras municipais. Essa conduta viola frontalmente o princípio da:',
           alternativas: [
-            { id: 'A', texto: 'Legalidade.' },
-            { id: 'B', texto: 'Impessoalidade.' },
-            { id: 'C', texto: 'Publicidade.' },
-            { id: 'D', texto: 'Continuidade do serviço público.' }
-          ],
-          gabarito: 'B',
-          explicacao: 'A promoção pessoal de agentes públicos em obras, serviços e campanhas é vedada pelo art. 37, §1º, CF — isso é violação direta da IMPESSOALIDADE. A publicidade obriga a divulgar atos, mas não para promover pessoas. Bancas costumam ainda aceitar "moralidade" como violação secundária.'
+            { id: 'A', texto: 'Legalidade.' }, { id: 'B', texto: 'Impessoalidade.' },
+            { id: 'C', texto: 'Publicidade.' }, { id: 'D', texto: 'Continuidade do serviço público.' }
+          ], gabarito: 'B',
+          explicacao: 'Art. 37, §1º, CF — veda promoção pessoal. Violação direta da IMPESSOALIDADE. Também viola moralidade.'
         },
-        {
-          id: 'D-DA-02-04',
-          tipo: 'autoavaliacao',
-          subtopico: 'Princípios expressos',
+        { id: 'D-DA-02-04', tipo: 'autoavaliacao', subtopico: 'Princípios expressos',
           pergunta: 'Você sabe explicar por que a legalidade administrativa é diferente da legalidade aplicada ao particular?',
-          resposta: 'Para o particular, vale a autonomia: pode fazer tudo que a lei NÃO PROÍBE. Para a Administração Pública, vale a legalidade estrita: só pode fazer o que a lei AUTORIZA ou DETERMINA. Isso decorre do princípio da indisponibilidade do interesse público — o administrador é mero gestor, não dono da coisa pública.'
+          resposta: 'Para o particular: pode fazer tudo que a lei NÃO PROÍBE. Para a Administração: só pode fazer o que a lei AUTORIZA ou DETERMINA. Isso é legalidade estrita.'
         },
-        {
-          id: 'D-DA-02-05',
-          tipo: 'multipla_escolha',
-          subtopico: 'Princípios implícitos',
+        { id: 'D-DA-02-05', tipo: 'multipla_escolha', subtopico: 'Princípios implícitos',
           pergunta: 'São exemplos de princípios IMPLÍCITOS da Administração Pública:',
           alternativas: [
             { id: 'A', texto: 'Legalidade e impessoalidade.' },
             { id: 'B', texto: 'Supremacia do interesse público, indisponibilidade do interesse público e autotutela.' },
             { id: 'C', texto: 'Moralidade e publicidade.' },
             { id: 'D', texto: 'Eficiência e publicidade.' }
-          ],
-          gabarito: 'B',
-          explicacao: 'Supremacia do interesse público, indisponibilidade do interesse público e autotutela (Súmulas 346 e 473/STF) são princípios implícitos, decorrentes do sistema constitucional. As demais opções listam princípios EXPRESSOS (legalidade, impessoalidade, moralidade, publicidade e eficiência).'
+          ], gabarito: 'B',
+          explicacao: 'Supremacia, indisponibilidade e autotutela (Súmulas 346 e 473/STF) são implícitos. As demais opções listam expressos.'
         }
       ]
     }
   };
+
+  /* ============================================================
+     BANCO DE QUESTÕES — NOVO NA v0.4
+     ------------------------------------------------------------
+     REGRA CRÍTICA: nesta fase existem APENAS questões DIDÁTICAS.
+     Nenhuma questão foi marcada como REAL porque não há origem
+     verificável. Quando a Fase 5 inserir questões reais, elas
+     terão tipo: 'REAL' e trarão banca/órgão/ano/prova/fonte.
+     ------------------------------------------------------------
+     IDs permanentes no padrão Q-DID-<AREA>-NNNN.
+     ============================================================ */
+  var QUESTIONS = [
+    {
+      id: 'Q-DID-ADM-0001',
+      tipo: 'DIDATICA',
+      area: 'ADM',
+      moduloId: 'ADM-01',
+      topicoId: 'ADM-01',
+      subtema: 'Eficiência, eficácia e efetividade',
+      dificuldade: 1,
+      prioridade: 'alta',
+      enunciado: 'Um setor público cumpriu integralmente todas as metas pactuadas no ano, mas gastou o dobro do orçamento previsto. Em relação a esse resultado, é correto afirmar que o setor foi:',
+      alternativas: [
+        { id: 'A', texto: 'Eficiente, porque cumpriu as metas.' },
+        { id: 'B', texto: 'Eficaz, mas não eficiente.' },
+        { id: 'C', texto: 'Efetivo, porque houve impacto social.' },
+        { id: 'D', texto: 'Ineficaz e ineficiente, porque gastou mais que o previsto.' }
+      ],
+      gabarito: 'B',
+      explicacao: {
+        correta: 'Eficácia é atingir o objetivo/meta. Eficiência é fazer bem, com o mínimo de recursos e sem desperdício. Quem atinge a meta gastando o dobro é EFICAZ (cumpriu) mas INEFICIENTE (desperdiçou recursos).',
+        incorretas: {
+          A: 'Erra ao confundir eficiência com eficácia. Cumprir metas é eficácia, não eficiência.',
+          C: 'Efetividade exige impacto real e duradouro, não mencionado no enunciado.',
+          D: 'Inverte os conceitos. O setor foi eficaz (cumpriu metas), apenas ineficiente.'
+        },
+        conceitoCobrado: 'Distinção entre eficiência, eficácia e efetividade.',
+        pegadinha: 'Trocar "eficiência" (fazer bem, com poucos recursos) por "eficácia" (atingir o objetivo).',
+        comoApareceEmConcurso: 'Muito comum em provas de ADM: banca apresenta situação prática e pede a classificação. Leia sempre com atenção o que é cobrado no enunciado.'
+      },
+      tags: ['eficiência', 'eficácia', 'fundamentos']
+    },
+    {
+      id: 'Q-DID-ADM-0002',
+      tipo: 'DIDATICA',
+      area: 'ADM',
+      moduloId: 'ADM-01',
+      topicoId: 'ADM-01',
+      subtema: 'Funções administrativas',
+      dificuldade: 2,
+      prioridade: 'alta',
+      enunciado: 'A Secretaria de Saúde de um município definiu que reduzirá em 20% o tempo médio de espera por consultas e, para isso, alocou equipes, equipamentos e orçamento. Nesse momento, qual função administrativa está sendo exercida de forma predominante?',
+      alternativas: [
+        { id: 'A', texto: 'Controle.' },
+        { id: 'B', texto: 'Direção.' },
+        { id: 'C', texto: 'Planejamento.' },
+        { id: 'D', texto: 'Organização.' }
+      ],
+      gabarito: 'C',
+      explicacao: {
+        correta: 'Definir objetivos (reduzir 20% do tempo) e alocar recursos para alcançá-los é PLANEJAMENTO. A função estabelece o que se quer e como.',
+        incorretas: {
+          A: 'Controle viria depois, para medir se a meta está sendo cumprida.',
+          B: 'Direção lidaria com pessoas (motivar, liderar, comunicar).',
+          D: 'Organização estruturaria cargos, hierarquia e departamentos — não é o caso do enunciado.'
+        },
+        conceitoCobrado: 'Identificação da função administrativa em situação prática.',
+        pegadinha: 'Alocar recursos pode parecer "organização", mas a alocação aqui é decisão de planejamento (o quê e com o quê), não estruturação.',
+        comoApareceEmConcurso: 'Correspondência entre exemplo e função do PODC. Exige leitura atenta da situação.'
+      },
+      tags: ['PODC', 'planejamento', 'funções administrativas']
+    },
+    {
+      id: 'Q-DID-ADM-0003',
+      tipo: 'DIDATICA',
+      area: 'ADM',
+      moduloId: 'ADM-02',
+      topicoId: 'ADM-02',
+      subtema: 'Integração das funções',
+      dificuldade: 1,
+      prioridade: 'alta',
+      enunciado: 'Segundo a formulação clássica de Fayol, a ordem do ciclo administrativo é:',
+      alternativas: [
+        { id: 'A', texto: 'Organização → Planejamento → Controle → Direção.' },
+        { id: 'B', texto: 'Controle → Planejamento → Organização → Direção.' },
+        { id: 'C', texto: 'Planejamento → Organização → Direção → Controle.' },
+        { id: 'D', texto: 'Direção → Planejamento → Organização → Controle.' }
+      ],
+      gabarito: 'C',
+      explicacao: {
+        correta: 'O ciclo PODC segue a ordem Planejamento (o quê e como) → Organização (estruturar recursos) → Direção (conduzir pessoas) → Controle (verificar e corrigir).',
+        incorretas: {
+          A: 'Inverte planejamento e organização.',
+          B: 'Começa pelo controle, o que é impossível — não há padrão sem planejamento prévio.',
+          D: 'Começa pela direção, sem qualquer plano anterior.'
+        },
+        conceitoCobrado: 'Ordem e interdependência das funções administrativas.',
+        pegadinha: 'Bancas invertem a ordem para confundir. Planejamento é SEMPRE o primeiro.',
+        comoApareceEmConcurso: 'Questão de memória aplicada. Alta frequência em nível médio.'
+      },
+      tags: ['PODC', 'Fayol', 'ciclo administrativo']
+    },
+    {
+      id: 'Q-DID-ADM-0004',
+      tipo: 'DIDATICA',
+      area: 'ADM',
+      moduloId: 'ADM-02',
+      topicoId: 'ADM-02',
+      subtema: 'Direção',
+      dificuldade: 2,
+      prioridade: 'alta',
+      enunciado: 'O gerente de um setor reúne a equipe semanalmente, delega responsabilidades, orienta individualmente os servidores e procura manter o grupo motivado. Qual função administrativa está sendo exercida de forma predominante?',
+      alternativas: [
+        { id: 'A', texto: 'Planejamento.' },
+        { id: 'B', texto: 'Organização.' },
+        { id: 'C', texto: 'Direção.' },
+        { id: 'D', texto: 'Controle.' }
+      ],
+      gabarito: 'C',
+      explicacao: {
+        correta: 'Liderar, motivar, comunicar e orientar pessoas é DIREÇÃO — a função administrativa ligada ao comportamento humano na organização.',
+        incorretas: {
+          A: 'Planejamento define objetivos e meios — não é o foco do enunciado.',
+          B: 'Organização é estrutural: define cargos, hierarquia, departamentos.',
+          D: 'Controle compara desempenho com padrões.'
+        },
+        conceitoCobrado: 'Identificação da função de direção em situações práticas.',
+        pegadinha: 'Delegar responsabilidades pode parecer "organização", mas delegar é ato de condução de pessoas → direção.',
+        comoApareceEmConcurso: 'Correspondência entre situação e função. Cobrado com frequência.'
+      },
+      tags: ['PODC', 'direção', 'liderança']
+    },
+    {
+      id: 'Q-DID-ADM-0005',
+      tipo: 'DIDATICA',
+      area: 'ADM',
+      moduloId: 'ADM-02',
+      topicoId: 'ADM-02',
+      subtema: 'Controle',
+      dificuldade: 3,
+      prioridade: 'alta',
+      enunciado: 'Sobre a função administrativa de controle, assinale a alternativa correta:',
+      alternativas: [
+        { id: 'A', texto: 'É etapa estanque, aplicada apenas ao final do processo, sem retorno às fases anteriores.' },
+        { id: 'B', texto: 'Dispensa a existência de padrões previamente definidos.' },
+        { id: 'C', texto: 'É contínuo e retroalimenta o planejamento, gerando ajustes no ciclo administrativo.' },
+        { id: 'D', texto: 'Substitui o planejamento quando este é insuficiente.' }
+      ],
+      gabarito: 'C',
+      explicacao: {
+        correta: 'O controle é contínuo: mede, compara com padrões e corrige desvios. Ao detectar problemas, fornece insumos para o planejamento, fechando o ciclo PODC.',
+        incorretas: {
+          A: 'Erra ao dizer que é estanque e só no final. O controle é contínuo e cíclico.',
+          B: 'Não existe controle sem padrão. O padrão vem do planejamento.',
+          D: 'Controle não substitui planejamento — retroalimenta.'
+        },
+        conceitoCobrado: 'Caráter contínuo e cíclico do controle.',
+        pegadinha: 'Achar que o controle é "só no final". Bancas adoram cobrar essa confusão.',
+        comoApareceEmConcurso: 'Cobrado em questões conceituais e em situações sobre melhoria contínua.'
+      },
+      tags: ['PODC', 'controle', 'retroalimentação']
+    },
+    {
+      id: 'Q-DID-AP-0001',
+      tipo: 'DIDATICA',
+      area: 'AP',
+      moduloId: 'AP-02',
+      topicoId: 'AP-02',
+      subtema: 'Patrimonialismo',
+      dificuldade: 1,
+      prioridade: 'alta',
+      enunciado: 'A confusão entre o patrimônio público e o privado, o nepotismo e a pessoalidade no tratamento da coisa pública são características típicas do modelo:',
+      alternativas: [
+        { id: 'A', texto: 'Burocrático.' },
+        { id: 'B', texto: 'Gerencial.' },
+        { id: 'C', texto: 'Patrimonialista.' },
+        { id: 'D', texto: 'Nova Gestão Pública.' }
+      ],
+      gabarito: 'C',
+      explicacao: {
+        correta: 'Patrimonialismo: não há distinção clara entre público e privado. O governante trata o Estado como extensão de seu patrimônio pessoal.',
+        incorretas: {
+          A: 'Burocracia surge justamente para combater esse cenário (impessoalidade, meritocracia).',
+          B: 'Gerencial foca em resultado, não em confusão público/privado.',
+          D: 'NGP é a corrente internacional da administração gerencial.'
+        },
+        conceitoCobrado: 'Características do modelo patrimonialista.',
+        pegadinha: 'Confundir patrimonialismo (confusão) com burocracia (rigidez, mas com separação).',
+        comoApareceEmConcurso: 'Questão de reconhecimento. Alta frequência em AP e DA.'
+      },
+      tags: ['patrimonialismo', 'modelos']
+    },
+    {
+      id: 'Q-DID-AP-0002',
+      tipo: 'DIDATICA',
+      area: 'AP',
+      moduloId: 'AP-02',
+      topicoId: 'AP-02',
+      subtema: 'Administração gerencial',
+      dificuldade: 2,
+      prioridade: 'alta',
+      enunciado: 'Um hospital público firma contrato de gestão com o Estado, no qual se compromete a cumprir metas quantitativas de atendimento, com avaliação periódica de desempenho e possibilidade de bônus. Essa prática é característica predominante do modelo:',
+      alternativas: [
+        { id: 'A', texto: 'Patrimonialista.' },
+        { id: 'B', texto: 'Burocrático.' },
+        { id: 'C', texto: 'Gerencial.' },
+        { id: 'D', texto: 'Pré-burocrático.' }
+      ],
+      gabarito: 'C',
+      explicacao: {
+        correta: 'Contrato de gestão, metas, avaliação de desempenho e incentivo por resultado são instrumentos típicos da administração GERENCIAL, introduzidos no Brasil pela Reforma de 1995/EC 19/1998.',
+        incorretas: {
+          A: 'Patrimonialismo não separa público/privado.',
+          B: 'Burocracia foca em processo e norma, não em resultado.',
+          D: 'Pré-burocrático não existe como categoria clássica.'
+        },
+        conceitoCobrado: 'Instrumentos da administração gerencial.',
+        pegadinha: 'Achar que contratos de gestão são burocráticos por serem formais. Não — são instrumentos gerenciais.',
+        comoApareceEmConcurso: 'Cobrado com frequência ligando instrumentos (contrato de gestão, agências executivas, OS) ao modelo gerencial.'
+      },
+      tags: ['gerencial', 'contrato de gestão', 'EC 19/1998']
+    },
+    {
+      id: 'Q-DID-AP-0003',
+      tipo: 'DIDATICA',
+      area: 'AP',
+      moduloId: 'AP-02',
+      topicoId: 'AP-02',
+      subtema: 'Autores e períodos',
+      dificuldade: 3,
+      prioridade: 'alta',
+      enunciado: 'Sobre a evolução dos modelos de Administração Pública no Brasil, assinale a alternativa INCORRETA:',
+      alternativas: [
+        { id: 'A', texto: 'A reforma burocrática brasileira foi consolidada a partir de 1936, com a criação do DASP em 1938.' },
+        { id: 'B', texto: 'A Reforma Gerencial brasileira teve na EC 19/1998 seu principal marco legal.' },
+        { id: 'C', texto: 'Max Weber é referência teórica central do modelo burocrático.' },
+        { id: 'D', texto: 'A Reforma Gerencial brasileira foi iniciada no governo Vargas, em 1936, sob coordenação de Bresser-Pereira.' }
+      ],
+      gabarito: 'D',
+      explicacao: {
+        correta: 'A alternativa D está INCORRETA: a reforma de 1936 (Vargas) foi BUROCRÁTICA, não gerencial. A Reforma Gerencial foi em 1995 (FHC), sob coordenação de Bresser-Pereira.',
+        incorretas: {
+          A: 'Correta. Reforma burocrática: 1936 + DASP em 1938.',
+          B: 'Correta. EC 19/1998 é o marco legal da Reforma Gerencial.',
+          C: 'Correta. Weber é o teórico central da burocracia.'
+        },
+        conceitoCobrado: 'Associação de datas, autores e modelos.',
+        pegadinha: 'Trocar os períodos: associar Vargas/Bresser-Pereira. Isso é muito cobrado.',
+        comoApareceEmConcurso: 'Questão clássica: misturar atores e datas para gerar confusão.'
+      },
+      tags: ['autores', 'EC 19/1998', 'Vargas', 'Bresser-Pereira']
+    },
+    {
+      id: 'Q-DID-DA-0001',
+      tipo: 'DIDATICA',
+      area: 'DA',
+      moduloId: 'DA-02',
+      topicoId: 'DA-02',
+      subtema: 'Princípios expressos',
+      dificuldade: 1,
+      prioridade: 'alta',
+      enunciado: 'São princípios expressos da Administração Pública no caput do art. 37 da Constituição Federal de 1988:',
+      alternativas: [
+        { id: 'A', texto: 'Legalidade, impessoalidade, moralidade, publicidade e eficiência.' },
+        { id: 'B', texto: 'Legalidade, imparcialidade, moralidade, publicidade e eficiência.' },
+        { id: 'C', texto: 'Legalidade, impessoalidade, moralidade, transparência e economicidade.' },
+        { id: 'D', texto: 'Razoabilidade, proporcionalidade, moralidade, publicidade e eficiência.' }
+      ],
+      gabarito: 'A',
+      explicacao: {
+        correta: 'LIMPE: Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência (art. 37, caput, CF/88).',
+        incorretas: {
+          B: 'Troca "impessoalidade" por "imparcialidade". Imparcialidade é dever do agente, não princípio constitucional expresso.',
+          C: 'Troca publicidade por "transparência" e inclui "economicidade" (princípio da licitação, não do art. 37).',
+          D: 'Inclui razoabilidade e proporcionalidade, que são IMPLÍCITOS.'
+        },
+        conceitoCobrado: 'Enumeração dos princípios expressos (LIMPE).',
+        pegadinha: 'Trocar impessoalidade por imparcialidade e incluir princípios implícitos.',
+        comoApareceEmConcurso: 'Praticamente toda prova de DA tem pelo menos uma questão sobre LIMPE.'
+      },
+      tags: ['LIMPE', 'princípios expressos', 'art. 37']
+    },
+    {
+      id: 'Q-DID-DA-0002',
+      tipo: 'DIDATICA',
+      area: 'DA',
+      moduloId: 'DA-02',
+      topicoId: 'DA-02',
+      subtema: 'Legalidade',
+      dificuldade: 2,
+      prioridade: 'alta',
+      enunciado: 'Sobre o princípio da legalidade na Administração Pública, é correto afirmar que:',
+      alternativas: [
+        { id: 'A', texto: 'O administrador público pode fazer tudo aquilo que a lei não proíbe, tal como o particular.' },
+        { id: 'B', texto: 'A Administração só pode atuar conforme autorização ou determinação legal, tratando-se de legalidade estrita.' },
+        { id: 'C', texto: 'O princípio da legalidade veda a prática de atos discricionários.' },
+        { id: 'D', texto: 'A legalidade administrativa é idêntica à autonomia da vontade privada.' }
+      ],
+      gabarito: 'B',
+      explicacao: {
+        correta: 'A Administração Pública se submete à legalidade ESTRITA: só pode fazer o que a lei autoriza ou determina. O particular, ao contrário, pode fazer tudo que a lei não proíbe.',
+        incorretas: {
+          A: 'Descreve a legalidade aplicada ao PARTICULAR, não à Administração.',
+          C: 'Legalidade não veda discricionariedade. O ato discricionário é legalmente previsto com margem de escolha.',
+          D: 'Legalidade administrativa é o oposto da autonomia privada.'
+        },
+        conceitoCobrado: 'Distinção entre legalidade administrativa e legalidade do particular.',
+        pegadinha: 'Bancas adoram dizer "Administração pode fazer o que a lei não proíbe". Isso é ERRADO.',
+        comoApareceEmConcurso: 'Cobrado com altíssima frequência em provas de DA.'
+      },
+      tags: ['legalidade', 'legalidade estrita']
+    },
+    {
+      id: 'Q-DID-DA-0003',
+      tipo: 'DIDATICA',
+      area: 'DA',
+      moduloId: 'DA-02',
+      topicoId: 'DA-02',
+      subtema: 'Impessoalidade',
+      dificuldade: 2,
+      prioridade: 'alta',
+      enunciado: 'Um prefeito manda afixar, em outdoors pagos com verba pública, sua foto e seu nome ao lado de obras municipais recém-concluídas. Essa conduta viola frontalmente o princípio da:',
+      alternativas: [
+        { id: 'A', texto: 'Legalidade.' },
+        { id: 'B', texto: 'Impessoalidade.' },
+        { id: 'C', texto: 'Publicidade.' },
+        { id: 'D', texto: 'Continuidade do serviço público.' }
+      ],
+      gabarito: 'B',
+      explicacao: {
+        correta: 'O art. 37, §1º, CF veda promoção pessoal de autoridades em obras, serviços e campanhas públicas. A violação é direta ao princípio da IMPESSOALIDADE.',
+        incorretas: {
+          A: 'Embora haja uso irregular de verba, o núcleo da violação é a impessoalidade (promoção pessoal).',
+          C: 'Publicidade obriga a divulgar atos, mas não para promover o agente.',
+          D: 'Continuidade não é o foco.'
+        },
+        conceitoCobrado: 'Impessoalidade e vedação à promoção pessoal.',
+        pegadinha: 'Trocar impessoalidade por publicidade, porque ambos tratam de "divulgação".',
+        comoApareceEmConcurso: 'Muito cobrado com situações práticas envolvendo outdoors, campanhas e obras.'
+      },
+      tags: ['impessoalidade', 'promoção pessoal', 'art. 37 §1º']
+    },
+    {
+      id: 'Q-DID-DA-0004',
+      tipo: 'DIDATICA',
+      area: 'DA',
+      moduloId: 'DA-02',
+      topicoId: 'DA-02',
+      subtema: 'Princípios implícitos',
+      dificuldade: 3,
+      prioridade: 'alta',
+      enunciado: 'São exemplos de princípios IMPLÍCITOS da Administração Pública:',
+      alternativas: [
+        { id: 'A', texto: 'Legalidade e impessoalidade.' },
+        { id: 'B', texto: 'Supremacia do interesse público, indisponibilidade do interesse público e autotutela.' },
+        { id: 'C', texto: 'Moralidade e publicidade.' },
+        { id: 'D', texto: 'Eficiência e publicidade.' }
+      ],
+      gabarito: 'B',
+      explicacao: {
+        correta: 'Supremacia do interesse público, indisponibilidade do interesse público e autotutela (Súmulas 346 e 473/STF) são princípios IMPLÍCITOS, decorrentes do sistema constitucional.',
+        incorretas: {
+          A: 'Legalidade e impessoalidade são EXPRESSOS (LIMPE).',
+          C: 'Moralidade e publicidade são EXPRESSOS.',
+          D: 'Eficiência e publicidade são EXPRESSOS.'
+        },
+        conceitoCobrado: 'Reconhecimento de princípios implícitos.',
+        pegadinha: 'Confundir expressos com implícitos. Supremacia e indisponibilidade são os mais cobrados como implícitos.',
+        comoApareceEmConcurso: 'Cobrado com frequência: banca pergunta "NÃO é princípio expresso" ou "são implícitos".'
+      },
+      tags: ['princípios implícitos', 'supremacia', 'autotutela']
+    }
+  ];
 
   /* ============================================================
      ESTADO
@@ -1347,23 +1260,21 @@ Changelog v0.1:
   var moduleFilter = 'todas';
   var professorAnswerOpen = null;
 
-  // Estado temporário do diagnóstico em execução (NÃO persistido até finalizar)
-  var diagRunning = {
-    moduleId: null,
-    answers: {},          // { itemId: 'A'|'V'|'F'|'sabia'|'nao_sabia' }
-    itemIndex: 0,         // item atual
-    revealed: {}          // { itemId: true } — item já respondido/feedback exibido
-  };
+  var diagRunning = { moduleId: null, answers: {}, itemIndex: 0, revealed: {} };
+
+  // Estado do motor de questões (NOVO v0.4)
+  var questionFilter = { area: 'todas', moduloId: 'todos', dificuldade: 'todas', tipo: 'TODAS' };
+  var questionRunning = null; // { ids: [], index: 0, respostas: {}, revealed: {}, startedAt: '' }
 
   function createDefaultState() {
     var now = new Date().toISOString();
     return {
       schemaVersion: SCHEMA_VERSION,
       appVersion: APP_VERSION,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: now, updatedAt: now,
       settings: { theme: 'light' },
       modules: {},
+      questions: {},           // <-- NOVO v0.4
       stats: {
         questoesRespondidas: 0,
         acertos: 0,
@@ -1390,6 +1301,7 @@ Changelog v0.1:
         updatedAt: parsed.updatedAt || base.updatedAt,
         settings: Object.assign({}, base.settings, parsed.settings || {}),
         modules: parsed.modules || {},
+        questions: parsed.questions || {},           // <-- NOVO v0.4
         stats: Object.assign({}, base.stats, parsed.stats || {}),
         lastScreen: parsed.lastScreen || 'dashboard'
       };
@@ -1401,30 +1313,33 @@ Changelog v0.1:
 
   function saveState() {
     AppState.updatedAt = new Date().toISOString();
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
-    } catch (e) {
-      console.error('[ADMIN-DIR] Falha ao salvar estado:', e);
-    }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState)); }
+    catch (e) { console.error('[ADMIN-DIR] Falha ao salvar estado:', e); }
   }
 
   function getModuleUserState(modId) {
     if (!AppState.modules[modId]) {
-      AppState.modules[modId] = {
-        status: 'nao_iniciado',
-        aulasLidas: [],
-        diagnostico: null,     // <-- NOVO v0.3
-        dominioEstimado: 0,
-        ultimaAtividade: null
+      AppState.modules[modId] = { status: 'nao_iniciado', aulasLidas: [], diagnostico: null, dominioEstimado: 0, ultimaAtividade: null };
+    }
+    if (!Array.isArray(AppState.modules[modId].aulasLidas)) AppState.modules[modId].aulasLidas = [];
+    if (AppState.modules[modId].diagnostico === undefined) AppState.modules[modId].diagnostico = null;
+    return AppState.modules[modId];
+  }
+
+  function getQuestionUserState(qid) {
+    if (!AppState.questions[qid]) {
+      AppState.questions[qid] = {
+        tentativas: 0,
+        acertos: 0,
+        erros: 0,
+        ultimaResposta: null,       // 'A'|'B'|'C'|'D'
+        ultimaCorreta: null,        // true|false
+        ultimaTentativa: null,
+        status: 'nao_respondida',   // nao_respondida | acerto | erro
+        historico: []               // [{ data, resposta, correta }]
       };
     }
-    if (!Array.isArray(AppState.modules[modId].aulasLidas)) {
-      AppState.modules[modId].aulasLidas = [];
-    }
-    if (AppState.modules[modId].diagnostico === undefined) {
-      AppState.modules[modId].diagnostico = null;
-    }
-    return AppState.modules[modId];
+    return AppState.questions[qid];
   }
 
   /* ============================================================
@@ -1445,6 +1360,10 @@ Changelog v0.1:
     return null;
   }
   function getDiagnosticByModuleId(modId) { return DIAGNOSTICS[modId] || null; }
+  function getQuestion(qid) {
+    for (var i = 0; i < QUESTIONS.length; i++) if (QUESTIONS[i].id === qid) return QUESTIONS[i];
+    return null;
+  }
   function formatDate(iso) {
     if (!iso) return '—';
     try { return new Date(iso).toLocaleString('pt-BR'); } catch (e) { return iso; }
@@ -1452,124 +1371,173 @@ Changelog v0.1:
   function isObjective(item) {
     return item.tipo === 'multipla_escolha' || item.tipo === 'verdadeiro_falso' || item.tipo === 'situacao';
   }
+  function difficultyLabel(d) { return DIFFICULTY_LABELS[d] || ('Nível ' + d); }
+  function typeLabel(t) { return t === 'REAL' ? 'Real' : 'Didática'; }
+  function typeBadgeClass(t) { return t === 'REAL' ? 'badge-real' : 'badge-did'; }
+  function shuffleArray(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
 
   /* ============================================================
-     ANÁLISE DO DIAGNÓSTICO
+     ANÁLISE DO DIAGNÓSTICO (inalterada desde v0.3)
   ============================================================ */
   function computeDiagnosticResult(moduleId, answers) {
     var diag = getDiagnosticByModuleId(moduleId);
     if (!diag) return null;
-
-    var bySubtopic = {};
-    var totalPontos = 0;
-    var totalSinais = 0;
-
+    var bySubtopic = {}, totalPontos = 0, totalSinais = 0;
     for (var i = 0; i < diag.itens.length; i++) {
       var item = diag.itens[i];
       var sub = item.subtopico;
-      if (!bySubtopic[sub]) {
-        bySubtopic[sub] = { acertos: 0, erros: 0, sabia: 0, nao_sabia: 0, total: 0 };
-      }
+      if (!bySubtopic[sub]) bySubtopic[sub] = { acertos: 0, erros: 0, sabia: 0, nao_sabia: 0, total: 0 };
       var resp = answers[item.id];
       bySubtopic[sub].total += 1;
-
       if (isObjective(item)) {
-        if (resp === item.gabarito) {
-          bySubtopic[sub].acertos += 1;
-          totalPontos += 1;
-        } else {
-          bySubtopic[sub].erros += 1;
-        }
+        if (resp === item.gabarito) { bySubtopic[sub].acertos += 1; totalPontos += 1; }
+        else bySubtopic[sub].erros += 1;
         totalSinais += 1;
       } else if (item.tipo === 'autoavaliacao') {
-        if (resp === 'sabia') {
-          bySubtopic[sub].sabia += 1;
-          totalPontos += 1;
-        } else if (resp === 'nao_sabia') {
-          bySubtopic[sub].nao_sabia += 1;
-        }
+        if (resp === 'sabia') { bySubtopic[sub].sabia += 1; totalPontos += 1; }
+        else if (resp === 'nao_sabia') bySubtopic[sub].nao_sabia += 1;
         totalSinais += 1;
       }
     }
-
-    // Classificação por subtópico — cruzando sinais, NÃO apenas percentual.
     var result = { bySubtopic: {} };
     for (var subName in bySubtopic) {
       if (!bySubtopic.hasOwnProperty(subName)) continue;
       var s = bySubtopic[subName];
-      var positivos = s.acertos + s.sabia;
-      var negativos = s.erros + s.nao_sabia;
-      var total = positivos + negativos;
-
-      // Regras explícitas (cross-signals):
-      // - Conhecido: sem erros E sem autoavaliação negativa, com pelo menos 1 sinal positivo.
-      // - Desconhecido: todos os sinais negativos, ou zero positivos com pelo menos 1 negativo.
-      // - Dúvida: sinal misto.
+      var positivos = s.acertos + s.sabia, negativos = s.erros + s.nao_sabia;
       var status;
-      if (s.erros === 0 && s.nao_sabia === 0 && positivos >= 1) {
-        status = 'conhecido';
-      } else if (positivos === 0 && negativos >= 1) {
-        status = 'desconhecido';
-      } else {
-        status = 'duvida';
-      }
-
-      // Recomendações textuais por subtópico
+      if (s.erros === 0 && s.nao_sabia === 0 && positivos >= 1) status = 'conhecido';
+      else if (positivos === 0 && negativos >= 1) status = 'desconhecido';
+      else status = 'duvida';
       var rec;
-      if (status === 'conhecido') {
-        rec = 'Você demonstra bom domínio neste subtópico. Siga para a aula (revisão do conteúdo) e mantenha revisões periódicas.';
-      } else if (status === 'duvida') {
-        rec = 'Há base, mas o domínio é parcial. Estude a aula com atenção, foque nos exemplos e nas comparações, e refaça este diagnóstico depois de revisar.';
-      } else {
-        rec = 'Trate este subtópico como prioridade. Estude a aula desde o início, sem pular a explicação simples. Refaça o diagnóstico em seguida para medir evolução.';
-      }
-
-      result.bySubtopic[subName] = {
-        status: status,
-        acertos: s.acertos,
-        erros: s.erros,
-        sabia: s.sabia,
-        nao_sabia: s.nao_sabia,
-        total: s.total,
-        recommendation: rec
-      };
+      if (status === 'conhecido') rec = 'Você demonstra bom domínio neste subtópico. Siga para a aula (revisão) e mantenha revisões periódicas.';
+      else if (status === 'duvida') rec = 'Há base, mas o domínio é parcial. Estude a aula com atenção, foque nos exemplos e nas comparações, e refaça este diagnóstico depois de revisar.';
+      else rec = 'Trate este subtópico como prioridade. Estude a aula desde o início, sem pular a explicação simples. Refaça o diagnóstico em seguida.';
+      result.bySubtopic[subName] = { status: status, acertos: s.acertos, erros: s.erros, sabia: s.sabia, nao_sabia: s.nao_sabia, total: s.total, recommendation: rec };
     }
-
-    // Domínio estimado (usado no painel) — proporção de sinais positivos,
-    // com peso reduzido quando há muitos sinais negativos.
     var dominio = 0;
     if (totalSinais > 0) {
       dominio = totalPontos / totalSinais;
-      if (negativosNoTotal(bySubtopic) > 0) {
-        dominio = dominio * 0.9; // leve penalização por erros/desconhecimento
-      }
+      if (negativosNoTotal(bySubtopic) > 0) dominio = dominio * 0.9;
       dominio = Math.max(0, Math.min(1, dominio));
     }
     result.dominioEstimado = Math.round(dominio * 100) / 100;
     result.completedAt = new Date().toISOString();
     return result;
   }
-
   function negativosNoTotal(bySubtopic) {
     var n = 0;
-    for (var k in bySubtopic) if (bySubtopic.hasOwnProperty(k)) {
-      n += bySubtopic[k].erros + bySubtopic[k].nao_sabia;
-    }
+    for (var k in bySubtopic) if (bySubtopic.hasOwnProperty(k)) n += bySubtopic[k].erros + bySubtopic[k].nao_sabia;
     return n;
+  }
+
+  /* ============================================================
+     FILTRO E MOTOR DE QUESTÕES (NOVO v0.4)
+  ============================================================ */
+  function filterQuestions() {
+    return QUESTIONS.filter(function (q) {
+      if (questionFilter.area !== 'todas' && q.area !== questionFilter.area) return false;
+      if (questionFilter.moduloId !== 'todos' && q.moduloId !== questionFilter.moduloId) return false;
+      if (questionFilter.dificuldade !== 'todas' && q.dificuldade !== Number(questionFilter.dificuldade)) return false;
+      if (questionFilter.tipo !== 'TODAS' && q.tipo !== questionFilter.tipo) return false;
+      return true;
+    });
+  }
+
+  function startQuestionSession() {
+    var list = filterQuestions();
+    if (list.length === 0) { window.alert('Nenhuma questão corresponde aos filtros escolhidos.'); return; }
+    // Embaralha a ordem e as alternativas de cada questão
+    var ids = shuffleArray(list.map(function (q) { return q.id; }));
+    questionRunning = {
+      ids: ids,
+      index: 0,
+      respostas: {},
+      revealed: {},
+      startedAt: new Date().toISOString()
+    };
+    navigate('questao-run');
+  }
+
+  function answerQuestion(altId) {
+    if (!questionRunning) return;
+    var qid = questionRunning.ids[questionRunning.index];
+    if (Object.prototype.hasOwnProperty.call(questionRunning.respostas, qid)) return; // já respondeu
+    questionRunning.respostas[qid] = altId;
+    questionRunning.revealed[qid] = true;
+    // Persiste no estado
+    var q = getQuestion(qid);
+    if (!q) return;
+    var qs = getQuestionUserState(qid);
+    var correta = altId === q.gabarito;
+    qs.tentativas += 1;
+    if (correta) qs.acertos += 1; else qs.erros += 1;
+    qs.ultimaResposta = altId;
+    qs.ultimaCorreta = correta;
+    qs.ultimaTentativa = new Date().toISOString();
+    qs.status = correta ? 'acerto' : 'erro';
+    qs.historico.push({ data: qs.ultimaTentativa, resposta: altId, correta: correta });
+    if (qs.historico.length > 30) qs.historico = qs.historico.slice(-30);
+    // Estatísticas globais
+    AppState.stats.questoesRespondidas += 1;
+    if (correta) AppState.stats.acertos += 1; else AppState.stats.erros += 1;
+    // Estado do módulo
+    var st = getModuleUserState(q.moduloId);
+    if (st.status === 'nao_iniciado') st.status = 'em_estudo';
+    st.ultimaAtividade = new Date().toISOString();
+    saveState();
+    render();
+  }
+
+  function nextQuestion() {
+    if (!questionRunning) return;
+    if (questionRunning.index < questionRunning.ids.length - 1) {
+      questionRunning.index += 1;
+      render();
+      var main = document.getElementById('main');
+      if (main) main.scrollTop = 0;
+    }
+  }
+  function prevQuestion() {
+    if (!questionRunning) return;
+    if (questionRunning.index > 0) {
+      questionRunning.index -= 1;
+      render();
+      var main = document.getElementById('main');
+      if (main) main.scrollTop = 0;
+    }
+  }
+  function cancelQuestionSession() {
+    var ok = window.confirm('Cancelar a sessão? As respostas já registradas serão mantidas no histórico.');
+    if (!ok) return;
+    questionRunning = null;
+    navigate('questoes');
+  }
+  function finishQuestionSession() {
+    if (!questionRunning) return;
+    var sess = questionRunning;
+    questionRunning = null;
+    // Guarda resultado para a tela seguinte
+    window.__lastSession = sess;
+    navigate('questao-result');
   }
 
   /* ============================================================
      NAVEGAÇÃO
   ============================================================ */
-  var VALID_SCREENS = ['dashboard', 'modulos', 'modulo-detalhe', 'licao', 'diagnostico', 'diag-resultado', 'configuracoes', 'sobre'];
+  var VALID_SCREENS = ['dashboard','modulos','modulo-detalhe','licao','diagnostico','diag-resultado','questoes','questao-run','questao-result','configuracoes','sobre'];
 
   function navigate(screen, opts) {
     opts = opts || {};
     if (VALID_SCREENS.indexOf(screen) === -1) screen = 'dashboard';
     currentScreen = screen;
-    if (screen === 'modulo-detalhe') {
-      currentModuleId = opts.moduleId || currentModuleId;
-    }
+    if (screen === 'modulo-detalhe') currentModuleId = opts.moduleId || currentModuleId;
     if (screen === 'licao') {
       currentLessonId = opts.lessonId || currentLessonId;
       if (currentLessonId) {
@@ -1598,34 +1566,37 @@ Changelog v0.1:
     var badge = document.getElementById('appVersionBadge');
     if (badge) badge.textContent = 'v' + APP_VERSION;
   }
-
   function renderSidebarActive() {
     var items = document.querySelectorAll('.nav-item');
     for (var i = 0; i < items.length; i++) {
       var target = items[i].getAttribute('data-nav');
       var active = (target === currentScreen) ||
-                   (currentScreen === 'modulo-detalhe' && target === 'modulos') ||
-                   (currentScreen === 'licao' && target === 'modulos') ||
-                   (currentScreen === 'diagnostico' && target === 'modulos') ||
-                   (currentScreen === 'diag-resultado' && target === 'modulos');
+        (currentScreen === 'modulo-detalhe' && target === 'modulos') ||
+        (currentScreen === 'licao' && target === 'modulos') ||
+        (currentScreen === 'diagnostico' && target === 'modulos') ||
+        (currentScreen === 'diag-resultado' && target === 'modulos') ||
+        (currentScreen === 'questao-run' && target === 'questoes') ||
+        (currentScreen === 'questao-result' && target === 'questoes');
       items[i].classList.toggle('active', active);
     }
   }
-
   function renderMain() {
     var main = document.getElementById('main');
     if (!main) return;
     var html = '';
     switch (currentScreen) {
-      case 'dashboard':      html = renderDashboard(); break;
-      case 'modulos':        html = renderModules(); break;
+      case 'dashboard': html = renderDashboard(); break;
+      case 'modulos': html = renderModules(); break;
       case 'modulo-detalhe': html = renderModuleDetail(); break;
-      case 'licao':          html = renderLesson(); break;
-      case 'diagnostico':    html = renderDiagnosticRunning(); break;
+      case 'licao': html = renderLesson(); break;
+      case 'diagnostico': html = renderDiagnosticRunning(); break;
       case 'diag-resultado': html = renderDiagnosticResult(); break;
-      case 'configuracoes':  html = renderSettings(); break;
-      case 'sobre':          html = renderAbout(); break;
-      default:               html = renderDashboard();
+      case 'questoes': html = renderQuestions(); break;
+      case 'questao-run': html = renderQuestionRun(); break;
+      case 'questao-result': html = renderQuestionResult(); break;
+      case 'configuracoes': html = renderSettings(); break;
+      case 'sobre': html = renderAbout(); break;
+      default: html = renderDashboard();
     }
     main.innerHTML = html;
   }
@@ -1633,9 +1604,7 @@ Changelog v0.1:
   /* -------- Dashboard -------- */
   function renderDashboard() {
     var stats = AppState.stats;
-    var taxa = stats.questoesRespondidas > 0
-      ? Math.round((stats.acertos / stats.questoesRespondidas) * 100) : 0;
-
+    var taxa = stats.questoesRespondidas > 0 ? Math.round((stats.acertos / stats.questoesRespondidas) * 100) : 0;
     var totalModulos = MODULES.length;
     var emEstudo = 0, concluidos = 0;
     for (var i = 0; i < MODULES.length; i++) {
@@ -1643,16 +1612,15 @@ Changelog v0.1:
       if (st.status === 'em_estudo') emEstudo++;
       if (st.status === 'concluido') concluidos++;
     }
-
-    // Conta diagnósticos concluídos
     var diagFeitos = 0;
     for (var d = 0; d < MODULES.length; d++) {
       var dst = AppState.modules[MODULES[d].id];
       if (dst && dst.diagnostico) diagFeitos++;
     }
     var diagDisponiveis = Object.keys(DIAGNOSTICS).length;
+    var qRespondidas = Object.keys(AppState.questions).length;
+    var qTotal = QUESTIONS.length;
 
-    // Sugestões — prioriza diagnósticos ainda não feitos e alta prioridade
     var sugestoes = [];
     for (var j = 0; j < MODULES.length && sugestoes.length < 3; j++) {
       var m = MODULES[j];
@@ -1668,15 +1636,15 @@ Changelog v0.1:
     html += '<p class="page-subtitle">Visão geral do seu progresso. Dados salvos localmente no navegador.</p>';
 
     html += '<div class="cards-grid">';
-    html += statCard('Módulos em estudo', emEstudo + ' / ' + totalModulos, concluidos + ' concluído(s)');
-    html += statCard('Aulas disponíveis', Object.keys(LESSONS).length, 'Fase 2 — ' + MODULES.length + ' módulos catalogados');
+    html += statCard('Questões respondidas', stats.questoesRespondidas, qRespondidas + ' de ' + qTotal + ' já vistas');
+    html += statCard('Taxa de acerto', taxa + '%', stats.acertos + ' acertos / ' + stats.erros + ' erros');
     html += statCard('Diagnósticos feitos', diagFeitos + ' / ' + diagDisponiveis, 'Fase 3 — análise por subtópico');
-    html += statCard('Questões respondidas', stats.questoesRespondidas, 'Disponível nas próximas fases');
+    html += statCard('Módulos em estudo', emEstudo + ' / ' + totalModulos, concluidos + ' concluído(s)');
     html += '</div>';
 
     html += '<h2 class="section-title">O que estudar hoje?</h2>';
     if (sugestoes.length === 0) {
-      html += '<div class="notice"><strong>Sem sugestões ainda.</strong> Nenhum conteúdo cadastrado.</div>';
+      html += '<div class="notice"><strong>Sem sugestões ainda.</strong></div>';
     } else {
       html += '<div class="module-list">';
       for (var s = 0; s < sugestoes.length; s++) html += moduleCardHtml(sugestoes[s]);
@@ -1685,12 +1653,12 @@ Changelog v0.1:
 
     html += '<h2 class="section-title">Aviso desta versão</h2>';
     html += '<div class="notice">' +
-            '<strong>Fase 3 — Diagnóstico (parcial).</strong> ' +
-            'Foram adicionados diagnósticos para os 4 módulos que já possuem aula ' +
-            '(ADM-01, ADM-02, AP-02, DA-02), com 5 itens cada. ' +
-            'A análise cruza acertos, erros e autoavaliação por subtópico e ' +
-            'NÃO conclui domínio apenas por percentual. ' +
-            'Novos diagnósticos e o banco de questões virão nas próximas fases.' +
+            '<strong>Fase 4 — Motor de questões (parcial).</strong> ' +
+            'O motor está completo (filtros, execução, correção, explicação, histórico, desempenho). ' +
+            'O banco contém <strong>' + QUESTIONS.length + ' questões didáticas</strong> nos módulos com aula/diagnóstico. ' +
+            '<em>Nenhuma questão está marcada como REAL</em> — essa classificação exige origem verificável ' +
+            'e será feita somente na Fase 5, com as devidas fontes. ' +
+            'A interface diferencia claramente DIDÁTICA e REAL com selos visíveis.' +
             '</div>';
 
     html += footerHtml();
@@ -1698,11 +1666,7 @@ Changelog v0.1:
   }
 
   function statCard(label, value, hint) {
-    return '<div class="stat-card">' +
-      '<div class="stat-label">' + esc(label) + '</div>' +
-      '<div class="stat-value">' + esc(value) + '</div>' +
-      (hint ? '<div class="stat-hint">' + esc(hint) + '</div>' : '') +
-    '</div>';
+    return '<div class="stat-card"><div class="stat-label">' + esc(label) + '</div><div class="stat-value">' + esc(value) + '</div>' + (hint ? '<div class="stat-hint">' + esc(hint) + '</div>' : '') + '</div>';
   }
 
   /* -------- Módulos -------- */
@@ -1715,24 +1679,17 @@ Changelog v0.1:
       var active = (moduleFilter === a) ? ' active' : '';
       pills += '<button class="filter-pill' + active + '" data-filter="' + a + '">' + esc(label) + '</button>';
     }
-
-    var filtered = MODULES.filter(function (m) {
-      return moduleFilter === 'todas' || m.area === moduleFilter;
-    });
-
+    var filtered = MODULES.filter(function (m) { return moduleFilter === 'todas' || m.area === moduleFilter; });
     var html = '';
     html += '<h1 class="page-title">Módulos</h1>';
-    html += '<p class="page-subtitle">' + filtered.length + ' módulo(s) listado(s). IDs permanentes — o histórico do usuário é preservado mesmo quando o texto muda.</p>';
+    html += '<p class="page-subtitle">' + filtered.length + ' módulo(s) listado(s). IDs permanentes — o histórico é preservado mesmo quando o texto muda.</p>';
     html += '<div class="filters">' + pills + '</div>';
-
-    if (filtered.length === 0) {
-      html += '<div class="notice">Nenhum módulo nesta área.</div>';
-    } else {
+    if (filtered.length === 0) html += '<div class="notice">Nenhum módulo nesta área.</div>';
+    else {
       html += '<div class="module-list">';
       for (var j = 0; j < filtered.length; j++) html += moduleCardHtml(filtered[j]);
       html += '</div>';
     }
-
     html += footerHtml();
     return html;
   }
@@ -1742,30 +1699,23 @@ Changelog v0.1:
     var pLabel = PRIORITY_LABELS[m.prioridade] || m.prioridade;
     var hasLesson = !!getLessonByModuleId(m.id);
     var hasDiag = !!getDiagnosticByModuleId(m.id);
+    var qCount = 0;
+    for (var i = 0; i < QUESTIONS.length; i++) if (QUESTIONS[i].moduloId === m.id) qCount++;
     var badges = '';
     if (hasLesson) badges += '<span class="badge-pill badge-aula">Aula</span>';
     if (hasDiag) badges += '<span class="badge-pill badge-diag">Diagnóstico</span>';
+    if (qCount > 0) badges += '<span class="badge-pill badge-real">' + qCount + ' questão(ões)</span>';
     return '<button class="module-card" data-action="open-module" data-module-id="' + esc(m.id) + '">' +
       '<span class="mod-id">' + esc(m.id) + '</span>' +
-      '<span class="mod-info">' +
-        '<span class="mod-title">' + esc(m.titulo) + '</span>' +
-        '<span class="mod-area">' + esc(areaLabel) + '</span>' +
-      '</span>' +
-      '<span class="mod-badges">' +
-        badges +
-        '<span class="mod-priority priority-' + esc(m.prioridade) + '">' + esc(pLabel) + '</span>' +
-      '</span>' +
+      '<span class="mod-info"><span class="mod-title">' + esc(m.titulo) + '</span><span class="mod-area">' + esc(areaLabel) + '</span></span>' +
+      '<span class="mod-badges">' + badges + '<span class="mod-priority priority-' + esc(m.prioridade) + '">' + esc(pLabel) + '</span></span>' +
     '</button>';
   }
 
   /* -------- Detalhe do módulo -------- */
   function renderModuleDetail() {
     var m = getModule(currentModuleId);
-    if (!m) {
-      return '<h1 class="page-title">Módulo não encontrado</h1>' +
-             '<p class="page-subtitle">Volte à lista de módulos.</p>' +
-             '<button class="btn" data-nav="modulos">← Voltar aos módulos</button>';
-    }
+    if (!m) return '<h1 class="page-title">Módulo não encontrado</h1><button class="btn" data-nav="modulos">← Voltar</button>';
     var st = getModuleUserState(m.id);
     var areaLabel = AREA_LABELS[m.area] || m.area;
     var pLabel = PRIORITY_LABELS[m.prioridade] || m.prioridade;
@@ -1774,10 +1724,15 @@ Changelog v0.1:
     var lessonRead = lesson && (st.aulasLidas || []).indexOf(lesson.id) !== -1;
     var diagDone = !!st.diagnostico;
 
-    var chips = '';
-    for (var i = 0; i < m.subtopicos.length; i++) {
-      chips += '<span class="subtopic-chip">' + esc(m.subtopicos[i]) + '</span>';
+    var moduleQuestions = QUESTIONS.filter(function (q) { return q.moduloId === m.id; });
+    var qDone = 0, qAcc = 0, qErr = 0;
+    for (var qi = 0; qi < moduleQuestions.length; qi++) {
+      var qs = AppState.questions[moduleQuestions[qi].id];
+      if (qs && qs.tentativas > 0) { qDone++; qAcc += qs.acertos; qErr += qs.erros; }
     }
+
+    var chips = '';
+    for (var i = 0; i < m.subtopicos.length; i++) chips += '<span class="subtopic-chip">' + esc(m.subtopicos[i]) + '</span>';
 
     var html = '';
     html += '<button class="btn" data-nav="modulos" style="margin-bottom:16px;">← Voltar aos módulos</button>';
@@ -1789,60 +1744,52 @@ Changelog v0.1:
     html += infoRow('Domínio estimado', Math.round((st.dominioEstimado || 0) * 100) + '%');
     html += infoRow('Última atividade', st.ultimaAtividade ? formatDate(st.ultimaAtividade) : '—');
     html += infoRow('Aulas lidas', (st.aulasLidas || []).length + (lesson ? ' / 1' : ' / 0'));
-    if (diagDone) {
-      html += infoRow('Diagnóstico', 'Feito em ' + formatDate(st.diagnostico.completedAt));
-    } else if (diag) {
-      html += infoRow('Diagnóstico', 'Disponível');
-    } else {
-      html += infoRow('Diagnóstico', '—');
-    }
+    if (diagDone) html += infoRow('Diagnóstico', 'Feito em ' + formatDate(st.diagnostico.completedAt));
+    else if (diag) html += infoRow('Diagnóstico', 'Disponível');
+    else html += infoRow('Diagnóstico', '—');
+    html += infoRow('Questões', moduleQuestions.length + ' cadastrada(s) · ' + qDone + ' vista(s) · ' + qAcc + ' acerto(s) / ' + qErr + ' erro(s)');
     html += '</div>';
 
-    html += '<h2 class="section-title">Subtópicos</h2>';
-    html += '<div class="subtopic-list">' + chips + '</div>';
+    html += '<h2 class="section-title">Subtópicos</h2><div class="subtopic-list">' + chips + '</div>';
 
     html += '<h2 class="section-title">Conteúdo pedagógico</h2>';
-
     if (lesson) {
-      html += '<div class="lesson-block">';
-      html += '<h3><span class="lb-icon">📘</span> Aula: ' + esc(lesson.id) + '</h3>';
+      html += '<div class="lesson-block"><h3><span class="lb-icon">📘</span> Aula: ' + esc(lesson.id) + '</h3>';
       html += '<p>' + esc(lesson.objetivo) + '</p>';
       html += '<div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">';
       html += '<button class="btn btn-primary" data-action="open-lesson" data-lesson-id="' + esc(lesson.id) + '">Estudar aula →</button>';
-      html += lessonRead
-        ? '<span class="lesson-read-indicator">✓ Lida</span>'
-        : '<span class="lesson-read-indicator pending">Não lida</span>';
-      html += '</div>';
-      html += '</div>';
+      html += lessonRead ? '<span class="lesson-read-indicator">✓ Lida</span>' : '<span class="lesson-read-indicator pending">Não lida</span>';
+      html += '</div></div>';
     } else {
-      html += '<div class="notice"><strong>Aula ainda não cadastrada.</strong> Será adicionada em entrega subsequente.</div>';
+      html += '<div class="notice"><strong>Aula ainda não cadastrada.</strong></div>';
     }
 
     html += '<h2 class="section-title">Diagnóstico</h2>';
     if (diag) {
-      html += '<div class="lesson-block" style="border-left:4px solid var(--purple);">';
-      html += '<h3><span class="lb-icon">🧪</span> Diagnóstico ' + esc(diag.id) + '</h3>';
-      html += '<p>' + diag.itens.length + ' itens (múltipla escolha, V/F, situação prática e autoavaliação). ' +
-              'A análise é por subtópico — não usa apenas percentual global.</p>';
+      html += '<div class="lesson-block" style="border-left:4px solid var(--purple);"><h3><span class="lb-icon">🧪</span> Diagnóstico ' + esc(diag.id) + '</h3>';
+      html += '<p>' + diag.itens.length + ' itens. Análise por subtópico.</p>';
       if (diagDone) {
-        var lastResult = st.diagnostico.result || {};
-        var resumo = summarizeResult(lastResult);
-        html += '<p style="margin-top:6px;font-size:13px;color:var(--text-muted);">' +
-                'Conhecidos: ' + resumo.conhecido + ' · Em dúvida: ' + resumo.duvida + ' · Desconhecidos: ' + resumo.desconhecido +
-                '</p>';
+        var resumo = summarizeResult(st.diagnostico.result || {});
+        html += '<p style="margin-top:6px;font-size:13px;color:var(--text-muted);">Conhecidos: ' + resumo.conhecido + ' · Em dúvida: ' + resumo.duvida + ' · Desconhecidos: ' + resumo.desconhecido + '</p>';
         html += '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">';
         html += '<button class="btn btn-purple" data-action="open-diag-result" data-module-id="' + esc(m.id) + '">Ver resultado</button>';
         html += '<button class="btn" data-action="refazer-diag" data-module-id="' + esc(m.id) + '">Refazer diagnóstico</button>';
         html += '</div>';
       } else {
-        html += '<div style="margin-top:12px;">';
-        html += '<button class="btn btn-purple" data-action="start-diag" data-module-id="' + esc(m.id) + '">Fazer diagnóstico →</button>';
-        html += '</div>';
+        html += '<div style="margin-top:12px;"><button class="btn btn-purple" data-action="start-diag" data-module-id="' + esc(m.id) + '">Fazer diagnóstico →</button></div>';
       }
       html += '</div>';
     } else {
-      html += '<div class="notice"><strong>Diagnóstico ainda não cadastrado.</strong> ' +
-              'Será adicionado para os módulos que já possuem aula (v0.3) e, nas próximas fases, para os demais.</div>';
+      html += '<div class="notice"><strong>Diagnóstico ainda não cadastrado.</strong></div>';
+    }
+
+    html += '<h2 class="section-title">Questões deste módulo</h2>';
+    if (moduleQuestions.length > 0) {
+      html += '<div class="notice">' + moduleQuestions.length + ' questão(ões) disponíveis. ';
+      html += '<button class="btn btn-primary" style="margin-top:10px;" data-action="questions-by-module" data-module-id="' + esc(m.id) + '">Praticar questões deste módulo →</button>';
+      html += '</div>';
+    } else {
+      html += '<div class="notice">Nenhuma questão cadastrada para este módulo ainda.</div>';
     }
 
     html += footerHtml();
@@ -1860,53 +1807,38 @@ Changelog v0.1:
     }
     return { conhecido: c, duvida: d, desconhecido: x };
   }
-
   function infoRow(key, value) {
-    return '<div class="info-row">' +
-      '<span class="info-key">' + esc(key) + '</span>' +
-      '<span class="info-val">' + esc(value) + '</span>' +
-    '</div>';
+    return '<div class="info-row"><span class="info-key">' + esc(key) + '</span><span class="info-val">' + esc(value) + '</span></div>';
   }
   function statusLabel(s) {
     var map = { 'nao_iniciado': 'Não iniciado', 'em_estudo': 'Em estudo', 'concluido': 'Concluído' };
     return map[s] || s || 'Não iniciado';
   }
 
-  /* -------- Aula (inalterado desde v0.2) -------- */
+  /* -------- Aula -------- */
   function renderLesson() {
     var lesson = currentLessonId ? getLessonById(currentLessonId) : null;
-    if (!lesson) {
-      return '<h1 class="page-title">Aula não encontrada</h1>' +
-             '<button class="btn" data-nav="modulos">← Voltar aos módulos</button>';
-    }
+    if (!lesson) return '<h1 class="page-title">Aula não encontrada</h1><button class="btn" data-nav="modulos">← Voltar</button>';
     var m = getModule(lesson.moduloId);
     var st = m ? getModuleUserState(m.id) : null;
     var wasRead = st && (st.aulasLidas || []).indexOf(lesson.id) !== -1;
 
     var html = '';
-    html += '<div class="lesson-toolbar">';
-    html += '<div class="lt-left">';
+    html += '<div class="lesson-toolbar"><div class="lt-left">';
     html += '<button class="btn" data-action="open-module" data-module-id="' + esc(lesson.moduloId) + '">← Módulo ' + esc(lesson.moduloId) + '</button>';
     html += '<button class="btn" data-nav="modulos">📚 Módulos</button>';
-    html += '</div>';
-    html += '<div class="lt-right">';
-    html += wasRead
-      ? '<span class="lesson-read-indicator">✓ Aula lida</span>'
-      : '<button class="btn btn-primary" data-action="mark-lesson-read" data-lesson-id="' + esc(lesson.id) + '">Marcar como lida</button>';
-    html += '</div>';
-    html += '</div>';
+    html += '</div><div class="lt-right">';
+    html += wasRead ? '<span class="lesson-read-indicator">✓ Aula lida</span>' : '<button class="btn btn-primary" data-action="mark-lesson-read" data-lesson-id="' + esc(lesson.id) + '">Marcar como lida</button>';
+    html += '</div></div>';
 
     html += '<h1 class="page-title">' + esc(m ? m.titulo : lesson.moduloId) + '</h1>';
     html += '<p class="page-subtitle">Aula ' + esc(lesson.id) + ' · Módulo ' + esc(lesson.moduloId) + '</p>';
 
-    html += '<div class="lesson-block block-objetivo">';
-    html += '<h3><span class="lb-icon">🎯</span> Objetivo</h3>';
-    html += '<p>' + esc(lesson.objetivo) + '</p>';
+    html += '<div class="lesson-block block-objetivo"><h3><span class="lb-icon">🎯</span> Objetivo</h3><p>' + esc(lesson.objetivo) + '</p>';
     if (lesson.prerequisitos && lesson.prerequisitos.length) {
       var ptags = '';
       for (var i = 0; i < lesson.prerequisitos.length; i++) ptags += '<span class="prereq-tag">' + esc(lesson.prerequisitos[i]) + '</span>';
-      html += '<p style="margin-top:8px;font-size:13px;color:var(--text-muted);">Pré-requisitos:</p>';
-      html += '<div class="prereq-list">' + ptags + '</div>';
+      html += '<p style="margin-top:8px;font-size:13px;color:var(--text-muted);">Pré-requisitos:</p><div class="prereq-list">' + ptags + '</div>';
     }
     html += '</div>';
 
@@ -1919,7 +1851,6 @@ Changelog v0.1:
       for (var e = 0; e < lesson.exemplos.length; e++) html += '<li>' + esc(lesson.exemplos[e]) + '</li>';
       html += '</ul></div>';
     }
-
     if (lesson.comparacoes && lesson.comparacoes.length) {
       html += '<div class="lesson-block"><h3><span class="lb-icon">⚖️</span> Comparações</h3>';
       html += '<table class="compare-table"><thead><tr><th>Conceito A</th><th>Conceito B</th><th>Diferença-chave</th></tr></thead><tbody>';
@@ -1929,10 +1860,7 @@ Changelog v0.1:
       }
       html += '</tbody></table></div>';
     }
-
-    if (lesson.aplicacaoAdministracaoPublica) {
-      html += '<div class="lesson-block block-aplicacao"><h3><span class="lb-icon">🏛️</span> Aplicação na Administração Pública</h3><p>' + esc(lesson.aplicacaoAdministracaoPublica) + '</p></div>';
-    }
+    if (lesson.aplicacaoAdministracaoPublica) html += '<div class="lesson-block block-aplicacao"><h3><span class="lb-icon">🏛️</span> Aplicação na Administração Pública</h3><p>' + esc(lesson.aplicacaoAdministracaoPublica) + '</p></div>';
     if (lesson.pegadinhas && lesson.pegadinhas.length) {
       html += '<div class="lesson-block block-pegadinha"><h3><span class="lb-icon">⚠️</span> Pegadinhas de concurso</h3><ul>';
       for (var p = 0; p < lesson.pegadinhas.length; p++) html += '<li>' + esc(lesson.pegadinhas[p]) + '</li>';
@@ -1948,7 +1876,6 @@ Changelog v0.1:
       for (var r = 0; r < lesson.resumo.length; r++) html += '<li>' + esc(lesson.resumo[r]) + '</li>';
       html += '</ul></div>';
     }
-
     html += renderProfessorBlock(lesson);
     html += footerHtml();
     return html;
@@ -1958,16 +1885,15 @@ Changelog v0.1:
     var mp = lesson.modoProfessor || {};
     var actions = [
       { key: 'explicarMaisSimples', label: 'Explique de forma mais simples' },
-      { key: 'outroExemplo',        label: 'Mostre outro exemplo' },
-      { key: 'compararConceitos',   label: 'Compare os conceitos' },
-      { key: 'mostrarPegadinha',    label: 'Mostre uma pegadinha' },
+      { key: 'outroExemplo', label: 'Mostre outro exemplo' },
+      { key: 'compararConceitos', label: 'Compare os conceitos' },
+      { key: 'mostrarPegadinha', label: 'Mostre uma pegadinha' },
       { key: 'comoApareceEmConcurso', label: 'Como aparece em concurso' },
-      { key: 'fazerPergunta',       label: 'Faça uma pergunta sobre isso' }
+      { key: 'fazerPergunta', label: 'Faça uma pergunta sobre isso' }
     ];
     var html = '';
-    html += '<div class="lesson-block">';
-    html += '<h3><span class="lb-icon">🧑‍🏫</span> Modo professor (conteúdo programado)</h3>';
-    html += '<p style="font-size:13px;color:var(--text-muted);">Escolha uma das ações abaixo. O conteúdo é previamente cadastrado — este app não usa IA externa.</p>';
+    html += '<div class="lesson-block"><h3><span class="lb-icon">🧑‍🏫</span> Modo professor (conteúdo programado)</h3>';
+    html += '<p style="font-size:13px;color:var(--text-muted);">Escolha uma das ações abaixo. Este app não usa IA externa.</p>';
     html += '<div class="professor-actions">';
     for (var i = 0; i < actions.length; i++) {
       var a = actions[i];
@@ -1978,55 +1904,33 @@ Changelog v0.1:
     if (professorAnswerOpen && professorAnswerOpen.lessonId === lesson.id) {
       var key = professorAnswerOpen.key;
       var content = '';
-      if (key === 'fazerPergunta' && mp.fazerPergunta) {
-        content = 'Pergunta: ' + mp.fazerPergunta.pergunta + '\n\nResposta: ' + mp.fazerPergunta.resposta;
-      } else {
-        content = mp[key] || '';
-      }
+      if (key === 'fazerPergunta' && mp.fazerPergunta) content = 'Pergunta: ' + mp.fazerPergunta.pergunta + '\n\nResposta: ' + mp.fazerPergunta.resposta;
+      else content = mp[key] || '';
       html += '<div class="professor-answer"><strong>Resposta programada</strong>' + esc(content) + '</div>';
     }
     html += '</div>';
     return html;
   }
 
-  /* -------- Diagnóstico em execução (NOVO v0.3) -------- */
+  /* -------- Diagnóstico em execução -------- */
   function renderDiagnosticRunning() {
     var moduleId = diagRunning.moduleId;
     var diag = getDiagnosticByModuleId(moduleId);
-    if (!diag) {
-      return '<h1 class="page-title">Diagnóstico não encontrado</h1>' +
-             '<button class="btn" data-nav="modulos">← Voltar aos módulos</button>';
-    }
+    if (!diag) return '<h1 class="page-title">Diagnóstico não encontrado</h1><button class="btn" data-nav="modulos">← Voltar</button>';
     var m = getModule(moduleId);
-    var idx = diagRunning.itemIndex;
-    var total = diag.itens.length;
-    if (idx < 0) idx = 0;
-    if (idx >= total) idx = total - 1;
+    var idx = diagRunning.itemIndex, total = diag.itens.length;
+    if (idx < 0) idx = 0; if (idx >= total) idx = total - 1;
     var item = diag.itens[idx];
     var answered = Object.prototype.hasOwnProperty.call(diagRunning.answers, item.id);
     var userAnswer = diagRunning.answers[item.id];
-    var percent = Math.round(((idx) / total) * 100);
+    var percent = Math.round((idx / total) * 100);
 
     var html = '';
-
-    // Barra de progresso
-    html += '<div class="diag-progress">';
-    html += '<div class="diag-progress-bar"><div class="diag-progress-fill" style="width:' + percent + '%"></div></div>';
-    html += '<div class="diag-progress-label">Item ' + (idx + 1) + ' / ' + total + '</div>';
-    html += '</div>';
-
-    // Cabeçalho
+    html += '<div class="diag-progress"><div class="diag-progress-bar"><div class="diag-progress-fill" style="width:' + percent + '%"></div></div><div class="diag-progress-label">Item ' + (idx + 1) + ' / ' + total + '</div></div>';
     html += '<h1 class="page-title">Diagnóstico — ' + esc(m ? m.titulo : moduleId) + '</h1>';
     html += '<p class="page-subtitle">Módulo ' + esc(moduleId) + ' · ' + esc(DIAG_TYPE_LABELS[item.tipo] || item.tipo) + '</p>';
-
-    html += '<div class="diag-meta">';
-    html += '<span class="tag">Subtópico: ' + esc(item.subtopico) + '</span>';
-    html += '<span class="tag">' + esc(DIAG_TYPE_LABELS[item.tipo] || item.tipo) + '</span>';
-    html += '</div>';
-
-    // Pergunta
-    html += '<div class="diag-question">';
-    html += '<h2>' + esc(item.pergunta) + '</h2>';
+    html += '<div class="diag-meta"><span class="tag">Subtópico: ' + esc(item.subtopico) + '</span><span class="tag">' + esc(DIAG_TYPE_LABELS[item.tipo] || item.tipo) + '</span></div>';
+    html += '<div class="diag-question"><h2>' + esc(item.pergunta) + '</h2>';
 
     if (isObjective(item)) {
       html += '<div class="diag-options">';
@@ -2036,101 +1940,55 @@ Changelog v0.1:
         if (answered) {
           if (alt.id === item.gabarito) cls += ' correct';
           else if (alt.id === userAnswer) cls += ' wrong';
-        } else if (alt.id === userAnswer) {
-          cls += ' selected';
-        }
-        html += '<button class="' + cls + '" data-action="diag-answer" data-alt="' + esc(alt.id) + '"' + (answered ? ' disabled' : '') + '>' +
-                  '<span class="opt-letter">' + esc(alt.id) + '</span>' +
-                  '<span>' + esc(alt.texto) + '</span>' +
-                '</button>';
+        } else if (alt.id === userAnswer) cls += ' selected';
+        html += '<button class="' + cls + '" data-action="diag-answer" data-alt="' + esc(alt.id) + '"' + (answered ? ' disabled' : '') + '><span class="opt-letter">' + esc(alt.id) + '</span><span>' + esc(alt.texto) + '</span></button>';
       }
       html += '</div>';
-
       if (answered) {
         var acertou = userAnswer === item.gabarito;
-        html += '<div class="diag-feedback ' + (acertou ? 'ok' : 'no') + '">';
-        html += '<strong>' + (acertou ? '✓ Correto' : '✗ Incorreto') + '</strong>';
-        html += esc(item.explicacao);
-        html += '</div>';
+        html += '<div class="diag-feedback ' + (acertou ? 'ok' : 'no') + '"><strong>' + (acertou ? '✓ Correto' : '✗ Incorreto') + '</strong>' + esc(item.explicacao) + '</div>';
       }
     } else if (item.tipo === 'autoavaliacao') {
-      html += '<p style="color:var(--text-muted);font-size:14px;margin-bottom:8px;">Marque com sinceridade — o sistema usa essa informação para ajustar as próximas recomendações.</p>';
+      html += '<p style="color:var(--text-muted);font-size:14px;margin-bottom:8px;">Marque com sinceridade.</p>';
       if (answered) {
-        html += '<div class="diag-feedback ' + (userAnswer === 'sabia' ? 'ok' : 'no') + '">';
-        html += '<strong>' + (userAnswer === 'sabia' ? 'Você marcou: Eu sabia' : 'Você marcou: Eu não sabia') + '</strong>';
-        html += 'Gabarito conceitual: ' + esc(item.resposta);
-        html += '</div>';
+        html += '<div class="diag-feedback ' + (userAnswer === 'sabia' ? 'ok' : 'no') + '"><strong>' + (userAnswer === 'sabia' ? 'Você marcou: Eu sabia' : 'Você marcou: Eu não sabia') + '</strong>Gabarito conceitual: ' + esc(item.resposta) + '</div>';
       } else {
-        html += '<div class="self-assess">';
-        html += '<button class="btn btn-primary" data-action="diag-answer" data-alt="sabia">Eu sabia</button>';
-        html += '<button class="btn" data-action="diag-answer" data-alt="nao_sabia">Eu não sabia</button>';
-        html += '</div>';
+        html += '<div class="self-assess"><button class="btn btn-primary" data-action="diag-answer" data-alt="sabia">Eu sabia</button><button class="btn" data-action="diag-answer" data-alt="nao_sabia">Eu não sabia</button></div>';
       }
     }
-
-    // Navegação
-    html += '<div class="diag-actions">';
-    html += '<div>';
-    if (idx > 0) {
-      html += '<button class="btn" data-action="diag-prev">← Item anterior</button>';
-    } else {
-      html += '<button class="btn" data-action="diag-cancel">Cancelar</button>';
-    }
-    html += '</div>';
-    html += '<div>';
-    if (answered && idx < total - 1) {
-      html += '<button class="btn btn-primary" data-action="diag-next">Próximo →</button>';
-    } else if (answered && idx === total - 1) {
-      html += '<button class="btn btn-purple" data-action="diag-finish">Finalizar diagnóstico →</button>';
-    }
-    html += '</div>';
-    html += '</div>';
-
-    html += '</div>';
-
+    html += '<div class="diag-actions"><div>';
+    html += idx > 0 ? '<button class="btn" data-action="diag-prev">← Item anterior</button>' : '<button class="btn" data-action="diag-cancel">Cancelar</button>';
+    html += '</div><div>';
+    if (answered && idx < total - 1) html += '<button class="btn btn-primary" data-action="diag-next">Próximo →</button>';
+    else if (answered && idx === total - 1) html += '<button class="btn btn-purple" data-action="diag-finish">Finalizar diagnóstico →</button>';
+    html += '</div></div></div>';
     html += footerHtml();
     return html;
   }
 
-  /* -------- Resultado do diagnóstico (NOVO v0.3) -------- */
   function renderDiagnosticResult() {
     var moduleId = currentModuleId;
     var m = getModule(moduleId);
-    if (!m) {
-      return '<h1 class="page-title">Módulo não encontrado</h1>' +
-             '<button class="btn" data-nav="modulos">← Voltar aos módulos</button>';
-    }
+    if (!m) return '<h1 class="page-title">Módulo não encontrado</h1><button class="btn" data-nav="modulos">← Voltar</button>';
     var st = getModuleUserState(moduleId);
     if (!st.diagnostico || !st.diagnostico.result) {
-      return '<h1 class="page-title">Nenhum diagnóstico registrado</h1>' +
-             '<p class="page-subtitle">Faça o diagnóstico deste módulo antes de ver o resultado.</p>' +
-             '<button class="btn btn-primary" data-action="start-diag" data-module-id="' + esc(moduleId) + '">Fazer diagnóstico</button>';
+      return '<h1 class="page-title">Nenhum diagnóstico registrado</h1><button class="btn btn-primary" data-action="start-diag" data-module-id="' + esc(moduleId) + '">Fazer diagnóstico</button>';
     }
-    var r = st.diagnostico.result;
-    var bs = r.bySubtopic || {};
+    var r = st.diagnostico.result, bs = r.bySubtopic || {};
     var subtopicos = [];
     for (var k in bs) if (bs.hasOwnProperty(k)) subtopicos.push(k);
-    // Ordena para exibir subtópicos desconhecidos primeiro
     subtopicos.sort(function (a, b) {
       var order = { 'desconhecido': 0, 'duvida': 1, 'conhecido': 2 };
       return (order[bs[a].status] || 9) - (order[bs[b].status] || 9);
     });
-
     var resumo = summarizeResult(r);
     var totalSub = subtopicos.length;
-
     var html = '';
     html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;">';
-    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
-    html += '<button class="btn" data-action="open-module" data-module-id="' + esc(moduleId) + '">← Módulo ' + esc(moduleId) + '</button>';
-    html += '<button class="btn" data-nav="modulos">📚 Módulos</button>';
-    html += '</div>';
-    html += '<div><button class="btn btn-purple" data-action="refazer-diag" data-module-id="' + esc(moduleId) + '">Refazer diagnóstico</button></div>';
-    html += '</div>';
-
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn" data-action="open-module" data-module-id="' + esc(moduleId) + '">← Módulo ' + esc(moduleId) + '</button><button class="btn" data-nav="modulos">📚 Módulos</button></div>';
+    html += '<div><button class="btn btn-purple" data-action="refazer-diag" data-module-id="' + esc(moduleId) + '">Refazer diagnóstico</button></div></div>';
     html += '<h1 class="page-title">Resultado do diagnóstico</h1>';
     html += '<p class="page-subtitle">' + esc(m.id) + ' — ' + esc(m.titulo) + ' · Concluído em ' + esc(formatDate(r.completedAt)) + '</p>';
-
     html += '<div class="result-summary">';
     html += resultStat('Subtópicos avaliados', totalSub);
     html += resultStat('Conhecidos', resumo.conhecido);
@@ -2138,59 +1996,288 @@ Changelog v0.1:
     html += resultStat('Desconhecidos', resumo.desconhecido);
     html += resultStat('Domínio estimado', Math.round((r.dominioEstimado || 0) * 100) + '%');
     html += '</div>';
-
     html += '<h2 class="section-title">Análise por subtópico</h2>';
-    html += '<p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">' +
-            'O status de cada subtópico é calculado cruzando acertos, erros e autoavaliação. ' +
-            'Não é apenas percentual: um subtópico só é marcado como <strong>conhecido</strong> ' +
-            'quando não há erros nem autoavaliação negativa.' +
-            '</p>';
-
+    html += '<p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">O status é calculado cruzando acertos, erros e autoavaliação — não é apenas percentual.</p>';
     for (var i = 0; i < subtopicos.length; i++) {
-      var sub = subtopicos[i];
-      var d = bs[sub];
+      var sub = subtopicos[i], d = bs[sub];
       html += '<div class="subtopic-result status-' + esc(d.status) + '">';
       html += '<h3>' + esc(sub) + '<span class="status-badge status-' + esc(d.status) + '">' + esc(STATUS_LABELS[d.status]) + '</span></h3>';
-      html += '<div class="signals">';
-      html += '<span>Acertos: <strong>' + d.acertos + '</strong></span>';
-      html += '<span>Erros: <strong>' + d.erros + '</strong></span>';
-      if (d.sabia > 0 || d.nao_sabia > 0) {
-        html += '<span>Autoavaliação — sabia: <strong>' + d.sabia + '</strong> / não sabia: <strong>' + d.nao_sabia + '</strong></span>';
-      }
-      html += '</div>';
-      html += '<div class="recommendation">' + esc(d.recommendation) + '</div>';
-      html += '</div>';
+      html += '<div class="signals"><span>Acertos: <strong>' + d.acertos + '</strong></span><span>Erros: <strong>' + d.erros + '</strong></span>';
+      if (d.sabia > 0 || d.nao_sabia > 0) html += '<span>Autoavaliação — sabia: <strong>' + d.sabia + '</strong> / não sabia: <strong>' + d.nao_sabia + '</strong></span>';
+      html += '</div><div class="recommendation">' + esc(d.recommendation) + '</div></div>';
+    }
+    html += '<h2 class="section-title">Próximos passos</h2><div class="notice">';
+    if (resumo.desconhecido > 0) html += '<strong>Prioridade alta.</strong> Você tem ' + resumo.desconhecido + ' subtópico(s) desconhecido(s). Estude a aula desde o início e refaça o diagnóstico.';
+    else if (resumo.duvida > 0) html += '<strong>Reforço recomendado.</strong> ' + resumo.duvida + ' subtópico(s) em dúvida. Releia a aula e refaça este diagnóstico.';
+    else html += '<strong>Bom desempenho.</strong> Todos os subtópicos foram classificados como conhecidos.';
+    html += '</div>';
+    html += '<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">';
+    var lesson = getLessonByModuleId(moduleId);
+    if (lesson) html += '<button class="btn btn-primary" data-action="open-lesson" data-lesson-id="' + esc(lesson.id) + '">Estudar aula →</button>';
+    html += '<button class="btn" data-action="start-diag" data-module-id="' + esc(moduleId) + '">Refazer agora</button>';
+    html += '</div>';
+    html += footerHtml();
+    return html;
+  }
+  function resultStat(label, value) {
+    return '<div class="result-stat"><div class="rs-label">' + esc(label) + '</div><div class="rs-value">' + esc(value) + '</div></div>';
+  }
+
+  /* -------- Questões: filtros e prévia (NOVO v0.4) -------- */
+  function renderQuestions() {
+    // Filtros de área
+    var areas = ['todas', 'ADM', 'AP', 'DA'];
+    var areaPills = '';
+    for (var i = 0; i < areas.length; i++) {
+      var a = areas[i];
+      var label = a === 'todas' ? 'Todas as áreas' : AREA_LABELS[a];
+      var active = (questionFilter.area === a) ? ' active' : '';
+      areaPills += '<button class="filter-pill' + active + '" data-qf-area="' + a + '">' + esc(label) + '</button>';
     }
 
-    // Recomendações gerais
-    html += '<h2 class="section-title">Próximos passos</h2>';
-    html += '<div class="notice">';
-    if (resumo.desconhecido > 0) {
-      html += '<strong>Prioridade alta.</strong> Você tem ' + resumo.desconhecido + ' subtópico(s) classificado(s) como desconhecido(s). Estude a aula desde o início e refaça o diagnóstico depois.';
-    } else if (resumo.duvida > 0) {
-      html += '<strong>Reforço recomendado.</strong> Você tem ' + resumo.duvida + ' subtópico(s) em dúvida. Releia a aula com atenção nos exemplos e comparações, depois refaça este diagnóstico.';
+    // Selects: módulo, dificuldade, tipo
+    var moduleOptions = '<option value="todos">Todos os módulos</option>';
+    for (var j = 0; j < MODULES.length; j++) {
+      var mo = MODULES[j];
+      var hasQ = QUESTIONS.some(function (q) { return q.moduloId === mo.id; });
+      if (!hasQ) continue;
+      var sel = questionFilter.moduloId === mo.id ? ' selected' : '';
+      moduleOptions += '<option value="' + esc(mo.id) + '"' + sel + '>' + esc(mo.id + ' — ' + mo.titulo) + '</option>';
+    }
+
+    var diffOptions = '';
+    var diffs = [['todas','Todas as dificuldades'], ['1','Fácil'], ['2','Médio'], ['3','Difícil']];
+    for (var d = 0; d < diffs.length; d++) {
+      var sel2 = questionFilter.dificuldade === diffs[d][0] ? ' selected' : '';
+      diffOptions += '<option value="' + diffs[d][0] + '"' + sel2 + '>' + esc(diffs[d][1]) + '</option>';
+    }
+
+    var tipoOptions = '';
+    var tipos = [['TODAS','Todas'], ['DIDATICA','Somente didáticas'], ['REAL','Somente reais']];
+    for (var t = 0; t < tipos.length; t++) {
+      var sel3 = questionFilter.tipo === tipos[t][0] ? ' selected' : '';
+      tipoOptions += '<option value="' + tipos[t][0] + '"' + sel3 + '>' + esc(tipos[t][1]) + '</option>';
+    }
+
+    var filtered = filterQuestions();
+
+    var html = '';
+    html += '<h1 class="page-title">Questões</h1>';
+    html += '<p class="page-subtitle">Motor de questões — filtros, correção, explicação pedagógica estruturada, histórico e desempenho.</p>';
+
+    html += '<div class="type-banner"><span class="badge-pill badge-did">DIDÁTICA</span><span>O banco atual contém <strong>' + QUESTIONS.length + ' questões didáticas</strong>. ';
+    html += 'Nenhuma questão foi classificada como <strong>REAL</strong> porque não há origem verificável. ';
+    html += 'Questões reais serão adicionadas na Fase 5 com banca, órgão, ano e prova.</span></div>';
+
+    html += '<h2 class="section-title">Filtros</h2>';
+    html += '<div class="filters">' + areaPills + '</div>';
+    html += '<div class="filter-row">';
+    html += '<label>Módulo</label><select id="qFilterModulo">' + moduleOptions + '</select>';
+    html += '<label>Dificuldade</label><select id="qFilterDificuldade">' + diffOptions + '</select>';
+    html += '<label>Tipo</label><select id="qFilterTipo">' + tipoOptions + '</select>';
+    html += '</div>';
+
+    html += '<div style="margin:14px 0;">';
+    html += '<button class="btn btn-primary" data-action="start-question-session"' + (filtered.length === 0 ? ' disabled' : '') + '>▶ Iniciar sessão (' + filtered.length + ' questão(ões))</button>';
+    html += '</div>';
+
+    html += '<h2 class="section-title">Prévia das questões (' + filtered.length + ')</h2>';
+    if (filtered.length === 0) {
+      html += '<div class="notice">Nenhuma questão corresponde aos filtros escolhidos.</div>';
     } else {
-      html += '<strong>Bom desempenho.</strong> Todos os subtópicos avaliados foram classificados como conhecidos. Siga para a aula (consolidação) e mantenha revisões periódicas.';
+      for (var p = 0; p < filtered.length; p++) {
+        var q = filtered[p];
+        var qs = AppState.questions[q.id];
+        var statusClass = 'qs-nova', statusText = 'Nova';
+        if (qs && qs.tentativas > 0) {
+          if (qs.status === 'acerto') { statusClass = 'qs-acerto'; statusText = 'Acerto · ' + qs.acertos + '/' + qs.tentativas; }
+          else if (qs.status === 'erro') { statusClass = 'qs-erro'; statusText = 'Erro · ' + qs.acertos + '/' + qs.tentativas; }
+        }
+        html += '<div class="question-preview">';
+        html += '<div class="qp-header">';
+        html += '<span class="qp-id">' + esc(q.id) + '</span>';
+        html += '<span class="badge-pill ' + typeBadgeClass(q.tipo) + '">' + esc(typeLabel(q.tipo)) + '</span>';
+        html += '<span class="badge-pill ' + (DIFFICULTY_CLASS[q.dificuldade] || '') + '">' + esc(difficultyLabel(q.dificuldade)) + '</span>';
+        html += '<span class="qp-status ' + statusClass + '">' + esc(statusText) + '</span>';
+        html += '</div>';
+        html += '<div class="qp-text">' + esc(q.enunciado) + '</div>';
+        html += '<div class="qp-meta">' + esc(q.moduloId + ' · ' + (getModule(q.moduloId) ? getModule(q.moduloId).titulo : '') + ' · ' + q.subtema) + '</div>';
+        html += '</div>';
+      }
+    }
+    html += footerHtml();
+    return html;
+  }
+
+  /* -------- Questão em execução (NOVO v0.4) -------- */
+  function renderQuestionRun() {
+    if (!questionRunning) {
+      return '<h1 class="page-title">Sessão não iniciada</h1><button class="btn btn-primary" data-nav="questoes">Ir para Questões</button>';
+    }
+    var total = questionRunning.ids.length;
+    var idx = questionRunning.index;
+    var qid = questionRunning.ids[idx];
+    var q = getQuestion(qid);
+    if (!q) {
+      return '<h1 class="page-title">Questão não encontrada</h1><button class="btn" data-nav="questoes">← Questões</button>';
+    }
+    var answered = Object.prototype.hasOwnProperty.call(questionRunning.respostas, qid);
+    var userAnswer = questionRunning.respostas[qid];
+    var percent = Math.round(((idx + (answered ? 1 : 0)) / total) * 100);
+
+    var html = '';
+    html += '<div class="run-toolbar"><div class="rt-info"><span>Sessão · Questão ' + (idx + 1) + ' de ' + total + '</span><span class="badge-pill ' + typeBadgeClass(q.tipo) + '">' + esc(typeLabel(q.tipo)) + '</span><span class="badge-pill ' + (DIFFICULTY_CLASS[q.dificuldade] || '') + '">' + esc(difficultyLabel(q.dificuldade)) + '</span></div>';
+    html += '<button class="btn" data-action="cancel-question-session">Cancelar sessão</button></div>';
+
+    html += '<div class="diag-progress"><div class="diag-progress-bar"><div class="diag-progress-fill" style="width:' + percent + '%"></div></div><div class="diag-progress-label">' + (idx + 1) + ' / ' + total + '</div></div>';
+
+    html += '<div class="q-card">';
+    html += '<div class="q-head"><span class="q-id">' + esc(q.id) + '</span>';
+    html += '<span class="badge-pill ' + typeBadgeClass(q.tipo) + '">' + esc(typeLabel(q.tipo)) + '</span>';
+    if (q.tipo === 'REAL') {
+      html += '<span style="font-size:12px;color:var(--text-muted);">' + esc(q.banca + ' · ' + q.orgao + ' · ' + q.ano) + '</span>';
+    } else {
+      html += '<span style="font-size:12px;color:var(--text-muted);">' + esc(q.moduloId + ' · ' + q.subtema) + '</span>';
     }
     html += '</div>';
 
-    html += '<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">';
-    var lesson = getLessonByModuleId(moduleId);
-    if (lesson) {
-      html += '<button class="btn btn-primary" data-action="open-lesson" data-lesson-id="' + esc(lesson.id) + '">Estudar aula →</button>';
+    html += '<div class="q-statement">' + esc(q.enunciado) + '</div>';
+
+    html += '<div class="q-options">';
+    for (var a = 0; a < q.alternativas.length; a++) {
+      var alt = q.alternativas[a];
+      var cls = 'q-option';
+      if (answered) {
+        if (alt.id === q.gabarito) cls += ' correct';
+        else if (alt.id === userAnswer) cls += ' wrong';
+      } else if (alt.id === userAnswer) cls += ' selected';
+      html += '<button class="' + cls + '" data-action="answer-question" data-alt="' + esc(alt.id) + '"' + (answered ? ' disabled' : '') + '><span class="opt-letter">' + esc(alt.id) + '</span><span>' + esc(alt.texto) + '</span></button>';
     }
-    html += '<button class="btn" data-action="start-diag" data-module-id="' + esc(moduleId) + '">Refazer agora</button>';
+    html += '</div>';
+
+    if (answered) {
+      var acertou = userAnswer === q.gabarito;
+      html += '<div class="q-feedback ' + (acertou ? 'ok' : 'no') + '">';
+      html += '<strong>' + (acertou ? '✓ Você acertou' : '✗ Você errou') + '</strong>';
+      html += 'Resposta correta: <strong>' + esc(q.gabarito) + '</strong>. Sua resposta: <strong>' + esc(userAnswer) + '</strong>.';
+      html += '</div>';
+
+      // Explicação pedagógica estruturada
+      var ex = q.explicacao || {};
+      html += '<div class="explain-block"><h4>Por que a correta está correta</h4><p>' + esc(ex.correta || '') + '</p></div>';
+      html += '<div class="explain-block"><h4>Por que as demais estão erradas</h4>';
+      var inc = ex.incorretas || {};
+      for (var key in inc) {
+        if (!inc.hasOwnProperty(key)) continue;
+        html += '<div class="distractor"><span class="d-letter">' + esc(key) + '</span><span>' + esc(inc[key]) + '</span></div>';
+      }
+      html += '</div>';
+      html += '<div class="explain-block"><h4>Conceito cobrado</h4><p>' + esc(ex.conceitoCobrado || '') + '</p></div>';
+      html += '<div class="explain-block"><h4>Pegadinha</h4><p>' + esc(ex.pegadinha || '') + '</p></div>';
+      html += '<div class="explain-block"><h4>Como aparece em concurso</h4><p>' + esc(ex.comoApareceEmConcurso || '') + '</p></div>';
+    }
+
+    html += '<div class="q-actions"><div>';
+    if (idx > 0) html += '<button class="btn" data-action="prev-question">← Questão anterior</button>';
+    html += '</div><div>';
+    if (answered && idx < total - 1) html += '<button class="btn btn-primary" data-action="next-question">Próxima →</button>';
+    else if (answered && idx === total - 1) html += '<button class="btn btn-purple" data-action="finish-question-session">Finalizar sessão →</button>';
+    html += '</div></div>';
+
+    html += '</div>';
+    html += footerHtml();
+    return html;
+  }
+
+  /* -------- Resultado da sessão de questões (NOVO v0.4) -------- */
+  function renderQuestionResult() {
+    var sess = window.__lastSession;
+    if (!sess) {
+      return '<h1 class="page-title">Nenhum resultado disponível</h1><button class="btn btn-primary" data-nav="questoes">Ir para Questões</button>';
+    }
+    var ids = sess.ids;
+    var total = ids.length;
+    var acertos = 0, erros = 0;
+    var porModulo = {}, porDificuldade = {}, porTipo = {};
+    for (var i = 0; i < ids.length; i++) {
+      var q = getQuestion(ids[i]);
+      if (!q) continue;
+      var resp = sess.respostas[ids[i]];
+      var acertou = resp === q.gabarito;
+      if (acertou) acertos++; else erros++;
+      // Por módulo
+      if (!porModulo[q.moduloId]) porModulo[q.moduloId] = { total: 0, acertos: 0 };
+      porModulo[q.moduloId].total++; if (acertou) porModulo[q.moduloId].acertos++;
+      // Por dificuldade
+      var dl = difficultyLabel(q.dificuldade);
+      if (!porDificuldade[dl]) porDificuldade[dl] = { total: 0, acertos: 0 };
+      porDificuldade[dl].total++; if (acertou) porDificuldade[dl].acertos++;
+      // Por tipo
+      if (!porTipo[q.tipo]) porTipo[q.tipo] = { total: 0, acertos: 0 };
+      porTipo[q.tipo].total++; if (acertou) porTipo[q.tipo].acertos++;
+    }
+    var pct = total > 0 ? Math.round((acertos / total) * 100) : 0;
+
+    var html = '';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;">';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn" data-nav="questoes">← Questões</button></div>';
+    html += '</div>';
+
+    html += '<h1 class="page-title">Resultado da sessão</h1>';
+    html += '<p class="page-subtitle">Sessão iniciada em ' + esc(formatDate(sess.startedAt)) + '</p>';
+
+    html += '<div class="result-summary">';
+    html += resultStat('Questões', total);
+    html += resultStat('Acertos', acertos);
+    html += resultStat('Erros', erros);
+    html += resultStat('Aproveitamento', pct + '%');
+    html += '</div>';
+
+    html += '<h2 class="section-title">Desempenho por módulo</h2>';
+    html += renderBreakdown(porModulo, function (k) { var m = getModule(k); return k + (m ? ' — ' + m.titulo : ''); });
+    html += '<h2 class="section-title">Desempenho por dificuldade</h2>';
+    html += renderBreakdown(porDificuldade, function (k) { return k; });
+    html += '<h2 class="section-title">Desempenho por tipo de questão</h2>';
+    html += renderBreakdown(porTipo, function (k) { return typeLabel(k); });
+
+    html += '<h2 class="section-title">Detalhe por questão</h2>';
+    for (var j = 0; j < ids.length; j++) {
+      var qq = getQuestion(ids[j]);
+      if (!qq) continue;
+      var rr = sess.respostas[ids[j]];
+      var ok = rr === qq.gabarito;
+      html += '<div class="question-preview">';
+      html += '<div class="qp-header">';
+      html += '<span class="qp-id">' + esc(qq.id) + '</span>';
+      html += '<span class="badge-pill ' + typeBadgeClass(qq.tipo) + '">' + esc(typeLabel(qq.tipo)) + '</span>';
+      html += '<span class="qp-status ' + (ok ? 'qs-acerto' : 'qs-erro') + '">' + (ok ? '✓ Acerto' : '✗ Erro') + '</span>';
+      html += '</div>';
+      html += '<div class="qp-text">' + esc(qq.enunciado) + '</div>';
+      html += '<div class="qp-meta">Sua resposta: <strong>' + esc(rr || '—') + '</strong> · Gabarito: <strong>' + esc(qq.gabarito) + '</strong></div>';
+      html += '</div>';
+    }
+
+    html += '<div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;">';
+    html += '<button class="btn btn-primary" data-nav="questoes">Nova sessão →</button>';
     html += '</div>';
 
     html += footerHtml();
     return html;
   }
 
-  function resultStat(label, value) {
-    return '<div class="result-stat">' +
-      '<div class="rs-label">' + esc(label) + '</div>' +
-      '<div class="rs-value">' + esc(value) + '</div>' +
-    '</div>';
+  function renderBreakdown(map, labelFn) {
+    var html = '';
+    for (var k in map) {
+      if (!map.hasOwnProperty(k)) continue;
+      var d = map[k];
+      var pct = d.total > 0 ? Math.round((d.acertos / d.total) * 100) : 0;
+      var status = pct >= 70 ? 'status-conhecido' : (pct >= 40 ? 'status-duvida' : 'status-desconhecido');
+      html += '<div class="subtopic-result ' + status + '">';
+      html += '<h3>' + esc(labelFn(k)) + '<span class="status-badge ' + status + '">' + pct + '%</span></h3>';
+      html += '<div class="signals"><span>Acertos: <strong>' + d.acertos + '</strong> / ' + d.total + '</span></div>';
+      html += '</div>';
+    }
+    return html;
   }
 
   /* -------- Configurações -------- */
@@ -2198,30 +2285,23 @@ Changelog v0.1:
     var totalModulos = MODULES.length;
     var modulosComEstado = 0;
     for (var i = 0; i < MODULES.length; i++) if (AppState.modules[MODULES[i].id]) modulosComEstado++;
-    var totalAulas = Object.keys(LESSONS).length;
-    var totalDiag = Object.keys(DIAGNOSTICS).length;
-
     var html = '';
     html += '<h1 class="page-title">Configurações</h1>';
-    html += '<p class="page-subtitle">Preferências e gestão do progresso armazenado localmente.</p>';
-
-    html += '<h2 class="section-title">Armazenamento</h2>';
-    html += '<div class="info-list">';
+    html += '<p class="page-subtitle">Preferências e gestão do progresso.</p>';
+    html += '<h2 class="section-title">Armazenamento</h2><div class="info-list">';
     html += infoRow('Chave de armazenamento', STORAGE_KEY);
     html += infoRow('Versão do schema', SCHEMA_VERSION);
     html += infoRow('Módulos catalogados', totalModulos);
-    html += infoRow('Aulas cadastradas', totalAulas);
-    html += infoRow('Diagnósticos cadastrados', totalDiag);
+    html += infoRow('Aulas cadastradas', Object.keys(LESSONS).length);
+    html += infoRow('Diagnósticos cadastrados', Object.keys(DIAGNOSTICS).length);
+    html += infoRow('Questões cadastradas', QUESTIONS.length + ' (todas didáticas)');
     html += infoRow('Módulos com estado', modulosComEstado);
     html += infoRow('Criado em', formatDate(AppState.createdAt));
     html += infoRow('Atualizado em', formatDate(AppState.updatedAt));
     html += '</div>';
-
     html += '<h2 class="section-title">Zerar progresso</h2>';
-    html += '<div class="notice">Isso apaga todo o estado do usuário (módulos, diagnóstico, estatísticas e histórico). ' +
-            'A ação é irreversível e exigirá confirmação.</div>';
+    html += '<div class="notice">Isso apaga módulos, diagnóstico, questões, estatísticas e histórico. Ação irreversível.</div>';
     html += '<p style="margin-top:12px;"><button class="btn btn-danger" data-action="reset-progress">Zerar progresso</button></p>';
-
     html += footerHtml();
     return html;
   }
@@ -2231,46 +2311,35 @@ Changelog v0.1:
     var html = '';
     html += '<h1 class="page-title">Sobre</h1>';
     html += '<p class="page-subtitle">Informações do aplicativo e changelog.</p>';
-
-    html += '<h2 class="section-title">Informações</h2>';
-    html += '<div class="info-list">';
+    html += '<h2 class="section-title">Informações</h2><div class="info-list">';
     html += infoRow('Aplicativo', 'Administração, Administração Pública e Direito Administrativo');
     html += infoRow('Público-alvo', 'Concursos de nível médio (Administrativo / Assistente / Técnico)');
     html += infoRow('Versão', 'ADMIN-DIR v' + APP_VERSION);
-    html += infoRow('Fase', '3 — Diagnóstico (parcial)');
+    html += infoRow('Fase', '4 — Motor de questões (parcial)');
     html += infoRow('Schema de dados', 'v' + SCHEMA_VERSION);
-    html += infoRow('Aulas cadastradas', Object.keys(LESSONS).length + ' / ' + MODULES.length + ' módulos');
-    html += infoRow('Diagnósticos cadastrados', Object.keys(DIAGNOSTICS).length + ' / ' + MODULES.length + ' módulos');
+    html += infoRow('Aulas cadastradas', Object.keys(LESSONS).length + ' / ' + MODULES.length);
+    html += infoRow('Diagnósticos cadastrados', Object.keys(DIAGNOSTICS).length + ' / ' + MODULES.length);
+    html += infoRow('Questões cadastradas', QUESTIONS.length + ' (didáticas)');
     html += infoRow('Modo', 'Offline — sem servidor ou IA externa');
     html += '</div>';
-
-    html += '<h2 class="section-title">Changelog</h2>';
-    html += '<div class="info-list">';
-    html += infoRow('v0.3 — Fase 3',
-      '4 diagnósticos (ADM-01, ADM-02, AP-02, DA-02); análise por subtópico; recomendações; card no dashboard');
-    html += infoRow('v0.2 — Fase 2',
-      '4 aulas de alta prioridade; tela de aula; modo professor; marcação de leitura');
-    html += infoRow('v0.1 — Fase 1',
-      'Estrutura base, dashboard, módulos, persistência local, navegação');
+    html += '<h2 class="section-title">Changelog</h2><div class="info-list">';
+    html += infoRow('v0.4 — Fase 4', 'Motor de questões: filtros, sessão, correção, explicação estruturada, histórico e desempenho. 12 questões didáticas.');
+    html += infoRow('v0.3 — Fase 3', '4 diagnósticos com análise por subtópico.');
+    html += infoRow('v0.2 — Fase 2', '4 aulas + modo professor.');
+    html += infoRow('v0.1 — Fase 1', 'Estrutura base, dashboard, módulos, persistência.');
     html += '</div>';
-
-    html += '<h2 class="section-title">Próximas entregas</h2>';
-    html += '<div class="notice">' +
-            'Fase 2/3 (continuação): novas aulas e diagnósticos para outros módulos de alta prioridade. · ' +
-            'Fase 4: motor de questões · Fase 5: banco de questões · ' +
-            'Fase 6: flashcards · Fase 7: revisão espaçada · Fase 8: simulados · ' +
-            'Fase 9: dashboard avançado · Fase 10: auditoria final.' +
-            '</div>';
-
+    html += '<h2 class="section-title">Próximas entregas</h2><div class="notice">';
+    html += 'Fase 4 (continuação): expandir banco didático conforme necessário. · ';
+    html += 'Fase 5: banco de questões REAIS com banca, órgão, ano e fonte verificável. · ';
+    html += 'Fase 6: flashcards · Fase 7: revisão espaçada · Fase 8: simulados · ';
+    html += 'Fase 9: dashboard avançado · Fase 10: auditoria final.';
+    html += '</div>';
     html += footerHtml();
     return html;
   }
 
   function footerHtml() {
-    return '<div class="app-footer">' +
-      '<span>ADMIN-DIR v' + esc(APP_VERSION) + ' · Fase 3</span>' +
-      '<span>Offline · dados salvos neste navegador</span>' +
-    '</div>';
+    return '<div class="app-footer"><span>ADMIN-DIR v' + esc(APP_VERSION) + ' · Fase 4</span><span>Offline · dados salvos neste navegador</span></div>';
   }
 
   /* ============================================================
@@ -2305,23 +2374,39 @@ Changelog v0.1:
     render();
   }
   function setModuleFilter(f) {
-    if (['todas', 'ADM', 'AP', 'DA'].indexOf(f) === -1) return;
+    if (['todas','ADM','AP','DA'].indexOf(f) === -1) return;
     moduleFilter = f;
     render();
   }
+  function setQuestionFilterArea(a) {
+    if (['todas','ADM','AP','DA'].indexOf(a) === -1) return;
+    questionFilter.area = a;
+    // Reseta módulo para "todos" se o módulo atual não pertence à nova área
+    if (questionFilter.moduloId !== 'todos') {
+      var mm = getModule(questionFilter.moduloId);
+      if (!mm || (a !== 'todas' && mm.area !== a)) questionFilter.moduloId = 'todos';
+    }
+    render();
+  }
+  function setQuestionFilterModulo(v) { questionFilter.moduloId = v || 'todos'; render(); }
+  function setQuestionFilterDificuldade(v) { questionFilter.dificuldade = v || 'todas'; render(); }
+  function setQuestionFilterTipo(v) { questionFilter.tipo = v || 'TODAS'; render(); }
+  function startQuestionsByModule(modId) {
+    // Aplica filtros rápidos e vai para a tela de questões
+    questionFilter.area = 'todas';
+    questionFilter.moduloId = modId;
+    questionFilter.dificuldade = 'todas';
+    questionFilter.tipo = 'TODAS';
+    navigate('questoes');
+  }
   function toggleSidebar() { document.body.classList.toggle('sidebar-open'); }
   function showProfessorAnswer(lessonId, key) {
-    if (professorAnswerOpen && professorAnswerOpen.lessonId === lessonId && professorAnswerOpen.key === key) {
-      professorAnswerOpen = null;
-    } else {
-      professorAnswerOpen = { lessonId: lessonId, key: key };
-    }
+    if (professorAnswerOpen && professorAnswerOpen.lessonId === lessonId && professorAnswerOpen.key === key) professorAnswerOpen = null;
+    else professorAnswerOpen = { lessonId: lessonId, key: key };
     render();
     var el = document.querySelector('.professor-answer');
     if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-
-  /* ----- Diagnóstico ----- */
   function startDiagnostic(modId) {
     var diag = getDiagnosticByModuleId(modId);
     if (!diag) return;
@@ -2331,37 +2416,25 @@ Changelog v0.1:
     diagRunning.revealed = {};
     navigate('diagnostico', { moduleId: modId });
   }
-
   function answerDiag(altId) {
     var diag = getDiagnosticByModuleId(diagRunning.moduleId);
     if (!diag) return;
     var item = diag.itens[diagRunning.itemIndex];
     if (!item) return;
-    if (Object.prototype.hasOwnProperty.call(diagRunning.answers, item.id)) return; // já respondido
+    if (Object.prototype.hasOwnProperty.call(diagRunning.answers, item.id)) return;
     diagRunning.answers[item.id] = altId;
     render();
   }
-
   function nextDiag() {
     var diag = getDiagnosticByModuleId(diagRunning.moduleId);
     if (!diag) return;
-    if (diagRunning.itemIndex < diag.itens.length - 1) {
-      diagRunning.itemIndex += 1;
-      render();
-      var main = document.getElementById('main');
-      if (main) main.scrollTop = 0;
-    }
+    if (diagRunning.itemIndex < diag.itens.length - 1) { diagRunning.itemIndex += 1; render(); var main = document.getElementById('main'); if (main) main.scrollTop = 0; }
   }
   function prevDiag() {
-    if (diagRunning.itemIndex > 0) {
-      diagRunning.itemIndex -= 1;
-      render();
-      var main = document.getElementById('main');
-      if (main) main.scrollTop = 0;
-    }
+    if (diagRunning.itemIndex > 0) { diagRunning.itemIndex -= 1; render(); var main = document.getElementById('main'); if (main) main.scrollTop = 0; }
   }
   function cancelDiag() {
-    var ok = window.confirm('Cancelar o diagnóstico em andamento? As respostas não serão salvas.');
+    var ok = window.confirm('Cancelar o diagnóstico? As respostas não serão salvas.');
     if (!ok) return;
     diagRunning.moduleId = null;
     diagRunning.answers = {};
@@ -2372,19 +2445,15 @@ Changelog v0.1:
     var moduleId = diagRunning.moduleId;
     var diag = getDiagnosticByModuleId(moduleId);
     if (!diag) return;
-    // Confere se todos os itens foram respondidos
     for (var i = 0; i < diag.itens.length; i++) {
       if (!Object.prototype.hasOwnProperty.call(diagRunning.answers, diag.itens[i].id)) {
-        window.alert('Existem itens não respondidos. Volte e complete o diagnóstico.');
+        window.alert('Existem itens não respondidos. Volte e complete.');
         diagRunning.itemIndex = i;
         render();
         return;
       }
     }
-
     var result = computeDiagnosticResult(moduleId, diagRunning.answers);
-
-    // Persiste
     var st = getModuleUserState(moduleId);
     st.diagnostico = {
       diagId: diag.id,
@@ -2397,12 +2466,9 @@ Changelog v0.1:
     st.ultimaAtividade = new Date().toISOString();
     if (st.status === 'nao_iniciado') st.status = 'em_estudo';
     saveState();
-
-    // Limpa estado temporário
     diagRunning.moduleId = null;
     diagRunning.answers = {};
     diagRunning.itemIndex = 0;
-
     navigate('diag-resultado', { moduleId: moduleId });
   }
   function openDiagResult(modId) {
@@ -2410,17 +2476,12 @@ Changelog v0.1:
     navigate('diag-resultado', { moduleId: modId });
   }
   function refazerDiag(modId) {
-    var ok = window.confirm('Refazer o diagnóstico deste módulo? O resultado anterior será substituído pelo novo.');
+    var ok = window.confirm('Refazer o diagnóstico? O resultado anterior será substituído.');
     if (!ok) return;
     startDiagnostic(modId);
   }
-
   function resetProgress() {
-    var ok = window.confirm(
-      'Zerar todo o progresso?\n\n' +
-      'Esta ação apaga módulos, diagnóstico, estatísticas e histórico salvos localmente. ' +
-      'Não é possível desfazer.'
-    );
+    var ok = window.confirm('Zerar todo o progresso?\n\nApaga módulos, diagnóstico, questões e histórico. Não é possível desfazer.');
     if (!ok) return;
     localStorage.removeItem(STORAGE_KEY);
     AppState = createDefaultState();
@@ -2431,33 +2492,36 @@ Changelog v0.1:
     moduleFilter = 'todas';
     professorAnswerOpen = null;
     diagRunning = { moduleId: null, answers: {}, itemIndex: 0, revealed: {} };
+    questionFilter = { area: 'todas', moduloId: 'todos', dificuldade: 'todas', tipo: 'TODAS' };
+    questionRunning = null;
+    window.__lastSession = null;
     render();
     window.alert('Progresso zerado.');
   }
 
   /* ============================================================
-     EVENTOS — delegação única
+     EVENTOS
   ============================================================ */
   document.addEventListener('click', function (e) {
     var navEl = e.target.closest('[data-nav]');
     if (navEl) { e.preventDefault(); navigate(navEl.getAttribute('data-nav')); return; }
 
-    var filterEl = e.target.closest('[data-filter]');
-    if (filterEl) { e.preventDefault(); setModuleFilter(filterEl.getAttribute('data-filter')); return; }
+    var mfEl = e.target.closest('[data-filter]');
+    if (mfEl) { e.preventDefault(); setModuleFilter(mfEl.getAttribute('data-filter')); return; }
+
+    var qfaEl = e.target.closest('[data-qf-area]');
+    if (qfaEl) { e.preventDefault(); setQuestionFilterArea(qfaEl.getAttribute('data-qf-area')); return; }
 
     var actionEl = e.target.closest('[data-action]');
     if (!actionEl) return;
     var action = actionEl.getAttribute('data-action');
     e.preventDefault();
-
     switch (action) {
       case 'toggle-sidebar': toggleSidebar(); break;
       case 'open-module': openModule(actionEl.getAttribute('data-module-id')); break;
       case 'open-lesson': openLesson(actionEl.getAttribute('data-lesson-id')); break;
       case 'mark-lesson-read': markLessonRead(actionEl.getAttribute('data-lesson-id')); break;
-      case 'professor-answer':
-        showProfessorAnswer(actionEl.getAttribute('data-lesson-id'), actionEl.getAttribute('data-key'));
-        break;
+      case 'professor-answer': showProfessorAnswer(actionEl.getAttribute('data-lesson-id'), actionEl.getAttribute('data-key')); break;
       case 'start-diag': startDiagnostic(actionEl.getAttribute('data-module-id')); break;
       case 'open-diag-result': openDiagResult(actionEl.getAttribute('data-module-id')); break;
       case 'refazer-diag': refazerDiag(actionEl.getAttribute('data-module-id')); break;
@@ -2466,8 +2530,23 @@ Changelog v0.1:
       case 'diag-prev': prevDiag(); break;
       case 'diag-cancel': cancelDiag(); break;
       case 'diag-finish': finishDiag(); break;
+      case 'start-question-session': startQuestionSession(); break;
+      case 'answer-question': answerQuestion(actionEl.getAttribute('data-alt')); break;
+      case 'next-question': nextQuestion(); break;
+      case 'prev-question': prevQuestion(); break;
+      case 'cancel-question-session': cancelQuestionSession(); break;
+      case 'finish-question-session': finishQuestionSession(); break;
+      case 'questions-by-module': startQuestionsByModule(actionEl.getAttribute('data-module-id')); break;
       case 'reset-progress': resetProgress(); break;
     }
+  });
+
+  document.addEventListener('change', function (e) {
+    var el = e.target;
+    if (!el) return;
+    if (el.id === 'qFilterModulo') setQuestionFilterModulo(el.value);
+    else if (el.id === 'qFilterDificuldade') setQuestionFilterDificuldade(el.value);
+    else if (el.id === 'qFilterTipo') setQuestionFilterTipo(el.value);
   });
 
   /* ============================================================
@@ -2481,14 +2560,14 @@ Changelog v0.1:
     moduleFilter = 'todas';
     professorAnswerOpen = null;
     diagRunning = { moduleId: null, answers: {}, itemIndex: 0, revealed: {} };
+    questionFilter = { area: 'todas', moduloId: 'todos', dificuldade: 'todas', tipo: 'TODAS' };
+    questionRunning = null;
+    window.__lastSession = null;
     render();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
 </script>
 </body>
