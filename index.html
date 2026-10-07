@@ -1,29 +1,32 @@
 <!DOCTYPE html>
 <!--
 Aplicativo: Administração e Direito Administrativo para Concursos
-Versão: 0.2
-Fase: 2
+Versão: 0.3
+Fase: 3
 Status: funcional
+Changelog v0.3:
+- Novo objeto estatico DIAGNOSTICS com 4 diagnosticos
+  (ADM-01, ADM-02, AP-02, DA-02), 5 itens cada
+- Novas telas "diagnostico" (execucao) e "diag-resultado" (analise)
+- Botao "Fazer diagnostico" no detalhe do modulo
+- Botao "Refazer diagnostico" no resultado
+- Analise por subtopico com 3 estados: conhecido / duvida / desconhecido
+- Recomendacoes por subtopico e dominio estimado gravado no estado
+- Card "Diagnosticos feitos" no dashboard
+- Compatibilidade total com v0.2 (mesmo schema)
 Changelog v0.2:
-- Novo objeto estatico LESSONS com 4 aulas de alta prioridade
-  (ADM-01, ADM-02, AP-02, DA-02)
-- Nova tela "licao" no roteador
-- Botao "Estudar aula" no detalhe do modulo quando houver aula
-- Marcacao de aula lida no estado do usuario (aulasLidas)
-- Modo professor programado com 6 acoes pre-cadastradas
-- Nenhuma funcionalidade da v0.1 foi removida ou alterada
+- 4 aulas de alta prioridade (ADM-01, ADM-02, AP-02, DA-02)
+- Tela "licao" com estrutura pedagogica completa
+- Modo professor programado
+- Marcacao de aula lida
 Changelog v0.1:
-- Estrutura base HTML/CSS/JS em arquivo unico
-- Fonte unica de verdade (AppState) + persistencia localStorage
-- Navegacao por telas (Dashboard, Modulos, Detalhe, Config, Sobre)
-- Catalogo estatico de modulos ADM/AP/DA com IDs permanentes
-- Painel inicial, filtros por area, prioridade e versao
+- Estrutura base, dashboard, modulos, persistencia local, navegacao
 -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ADMIN-DIR v0.2 — Administração e Direito Administrativo</title>
+<title>ADMIN-DIR v0.3 — Administração e Direito Administrativo</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -43,6 +46,8 @@ Changelog v0.1:
     --warning-soft: #fef3c7;
     --danger: #dc2626;
     --danger-soft: #fee2e2;
+    --purple: #7c3aed;
+    --purple-soft: #f5f3ff;
     --radius: 10px;
     --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
     --shadow-lg: 0 6px 20px rgba(15,23,42,.10);
@@ -290,16 +295,16 @@ Changelog v0.1:
   .priority-media { background: #fed7aa; color: #c2410c; }
   .priority-baixa { background: #e2e8f0; color: #475569; }
 
-  .lesson-badge {
+  .badge-pill {
     font-size: 10px;
     font-weight: 700;
     padding: 3px 8px;
     border-radius: 4px;
-    background: var(--success-soft);
-    color: var(--success);
     text-transform: uppercase;
     letter-spacing: .4px;
   }
+  .badge-aula { background: var(--success-soft); color: var(--success); }
+  .badge-diag { background: var(--purple-soft); color: var(--purple); }
 
   .btn {
     display: inline-flex;
@@ -319,9 +324,12 @@ Changelog v0.1:
   .btn:hover { background: var(--surface-alt); }
   .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
   .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+  .btn-purple { background: var(--purple); color: #fff; border-color: var(--purple); }
+  .btn-purple:hover { filter: brightness(.94); }
   .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
   .btn-danger:hover { filter: brightness(.94); }
   .btn-ghost { background: transparent; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
 
   .notice {
     background: var(--surface);
@@ -366,7 +374,6 @@ Changelog v0.1:
     color: var(--text-muted);
   }
 
-  /* ===== Conteúdo de aula ===== */
   .lesson-block {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -392,7 +399,7 @@ Changelog v0.1:
   .lesson-block.block-pegadinha { border-left: 4px solid var(--warning); background: #fffbeb; }
   .lesson-block.block-erros { border-left: 4px solid var(--danger); background: #fef2f2; }
   .lesson-block.block-resumo { border-left: 4px solid var(--success); background: #f0fdf4; }
-  .lesson-block.block-aplicacao { border-left: 4px solid #7c3aed; background: #f5f3ff; }
+  .lesson-block.block-aplicacao { border-left: 4px solid var(--purple); background: var(--purple-soft); }
 
   .compare-table {
     width: 100%;
@@ -416,12 +423,7 @@ Changelog v0.1:
   }
   .compare-table tr:last-child td { border-bottom: none; }
 
-  .prereq-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 4px;
-  }
+  .prereq-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
   .prereq-tag {
     background: var(--primary-soft);
     color: var(--primary);
@@ -432,12 +434,7 @@ Changelog v0.1:
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   }
 
-  .professor-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 6px;
-  }
+  .professor-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
   .professor-answer {
     margin-top: 14px;
     padding: 14px 16px;
@@ -470,6 +467,208 @@ Changelog v0.1:
     background: var(--warning-soft);
     color: var(--warning);
   }
+
+  /* ===== Diagnóstico ===== */
+  .diag-progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .diag-progress-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .diag-progress-fill {
+    height: 100%;
+    background: var(--purple);
+    transition: width .25s ease;
+  }
+  .diag-progress-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    min-width: 70px;
+    text-align: right;
+  }
+  .diag-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .diag-meta .tag {
+    background: var(--purple-soft);
+    color: var(--purple);
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: .3px;
+  }
+  .diag-question {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 12px;
+  }
+  .diag-question h2 {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.45;
+    margin-bottom: 18px;
+    letter-spacing: -.1px;
+  }
+  .diag-options {
+    display: grid;
+    gap: 8px;
+  }
+  .diag-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    font-size: 14.5px;
+    color: var(--text);
+    transition: border-color .12s ease, background .12s ease;
+    line-height: 1.45;
+  }
+  .diag-option:hover:not(:disabled) {
+    border-color: var(--purple);
+    background: var(--purple-soft);
+  }
+  .diag-option:disabled { cursor: default; }
+  .diag-option .opt-letter {
+    font-weight: 700;
+    min-width: 18px;
+    color: var(--text-muted);
+  }
+  .diag-option.selected {
+    border-color: var(--purple);
+    background: var(--purple-soft);
+  }
+  .diag-option.correct {
+    border-color: var(--success);
+    background: var(--success-soft);
+  }
+  .diag-option.wrong {
+    border-color: var(--danger);
+    background: var(--danger-soft);
+  }
+  .diag-option.correct .opt-letter,
+  .diag-option.wrong .opt-letter { color: var(--text); }
+
+  .diag-feedback {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .diag-feedback.ok { background: var(--success-soft); border-left: 4px solid var(--success); }
+  .diag-feedback.no { background: var(--danger-soft); border-left: 4px solid var(--danger); }
+  .diag-feedback strong { display: block; margin-bottom: 6px; }
+
+  .diag-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  /* Autoavaliação */
+  .self-assess {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .self-assess .btn { padding: 12px 20px; font-size: 14.5px; }
+
+  /* Resultado */
+  .result-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .result-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .result-stat .rs-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    font-weight: 600;
+  }
+  .result-stat .rs-value {
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  .subtopic-result {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    border-left-width: 4px;
+    border-left-style: solid;
+  }
+  .subtopic-result.status-conhecido { border-left-color: var(--success); }
+  .subtopic-result.status-duvida { border-left-color: var(--warning); }
+  .subtopic-result.status-desconhecido { border-left-color: var(--danger); }
+  .subtopic-result h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .status-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  .status-badge.status-conhecido { background: var(--success-soft); color: var(--success); }
+  .status-badge.status-duvida { background: var(--warning-soft); color: var(--warning); }
+  .status-badge.status-desconhecido { background: var(--danger-soft); color: var(--danger); }
+  .subtopic-result .signals {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 6px 0 10px;
+  }
+  .subtopic-result .signals span strong { color: var(--text); }
+  .subtopic-result .recommendation {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .subtopic-result .recommendation strong { color: var(--text); }
 
   .app-footer {
     margin-top: 32px;
@@ -505,6 +704,8 @@ Changelog v0.1:
     .page-title { font-size: 20px; }
     .compare-table { font-size: 13px; }
     .compare-table th, .compare-table td { padding: 7px 8px; }
+    .diag-question { padding: 18px; }
+    .diag-question h2 { font-size: 16px; }
   }
 </style>
 </head>
@@ -517,7 +718,7 @@ Changelog v0.1:
         <span class="brand-sub">Administração &amp; Direito Administrativo</span>
       </div>
       <div class="header-spacer"></div>
-      <span class="version-badge" id="appVersionBadge">v0.2</span>
+      <span class="version-badge" id="appVersionBadge">v0.3</span>
     </header>
 
     <aside class="sidebar" id="sidebar">
@@ -548,21 +749,22 @@ Changelog v0.1:
   /* ============================================================
      CONSTANTES
   ============================================================ */
-  var APP_VERSION = '0.2';                       // <-- alterado
-  var SCHEMA_VERSION = 1;                        // schema inalterado
+  var APP_VERSION = '0.3';                       // <-- alterado
+  var SCHEMA_VERSION = 1;                        // inalterado
   var STORAGE_KEY = 'adminDir.state';
 
-  var AREA_LABELS = {
-    ADM: 'Administração',
-    AP: 'Administração Pública',
-    DA: 'Direito Administrativo'
+  var AREA_LABELS = { ADM: 'Administração', AP: 'Administração Pública', DA: 'Direito Administrativo' };
+  var PRIORITY_LABELS = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
+  var STATUS_LABELS = { 'conhecido': 'Conhecido', 'duvida': 'Em dúvida', 'desconhecido': 'Desconhecido' };
+  var DIAG_TYPE_LABELS = {
+    'multipla_escolha': 'Múltipla escolha',
+    'verdadeiro_falso': 'Verdadeiro ou falso',
+    'situacao': 'Situação prática',
+    'autoavaliacao': 'Autoavaliação'
   };
 
-  var PRIORITY_LABELS = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
-
   /* ============================================================
-     CATÁLOGO ESTÁTICO DE MÓDULOS  (inalterado desde v0.1)
-     IDs permanentes — nunca alterar.
+     MÓDULOS — inalterado desde v0.1
   ============================================================ */
   var MODULES = [
     { id: 'ADM-01', area: 'ADM', titulo: 'Fundamentos da Administração', prioridade: 'alta',
@@ -634,8 +836,7 @@ Changelog v0.1:
   ];
 
   /* ============================================================
-     AULAS  —  NOVO NA v0.2
-     Estrutura pedagógica padronizada. IDs permanentes "L-<MOD>".
+     AULAS — inalterado desde v0.2
   ============================================================ */
   var LESSONS = {
     'ADM-01': {
@@ -859,14 +1060,300 @@ Changelog v0.1:
   };
 
   /* ============================================================
-     ESTADO — fonte única de verdade
+     DIAGNÓSTICOS — NOVO NA v0.3
+     Estrutura estática. IDs permanentes "D-<MOD>-NN".
+  ============================================================ */
+  var DIAGNOSTICS = {
+    'ADM-01': {
+      id: 'D-ADM-01',
+      moduloId: 'ADM-01',
+      itens: [
+        {
+          id: 'D-ADM-01-01',
+          tipo: 'multipla_escolha',
+          subtopico: 'Eficiência, eficácia e efetividade',
+          pergunta: 'Um setor público cumpriu integralmente todas as metas pactuadas no ano, mas gastou o dobro do orçamento previsto. Em relação a esse resultado, é correto afirmar que o setor foi:',
+          alternativas: [
+            { id: 'A', texto: 'Eficiente, porque cumpriu as metas.' },
+            { id: 'B', texto: 'Eficaz, mas não eficiente.' },
+            { id: 'C', texto: 'Efetivo, porque houve impacto social.' },
+            { id: 'D', texto: 'Ineficaz e ineficiente, porque gastou mais que o previsto.' }
+          ],
+          gabarito: 'B',
+          explicacao: 'Eficácia é atingir o objetivo/meta. Eficiência é fazer bem, com o mínimo de recursos e sem desperdício. Quem atinge a meta gastando o dobro é EFICAZ (cumpriu) mas INEFICIENTE (desperdiçou recursos). A letra A troca os conceitos; a C fala de efetividade, que exige impacto real e duradouro (não mencionado); a D inverte tudo — o setor foi eficaz, não ineficaz.'
+        },
+        {
+          id: 'D-ADM-01-02',
+          tipo: 'verdadeiro_falso',
+          subtopico: 'Conceito de Administração',
+          pergunta: 'Administrar consiste exclusivamente em executar tarefas operacionais, não envolvendo decisões sobre recursos ou objetivos organizacionais.',
+          alternativas: [
+            { id: 'V', texto: 'Verdadeiro' },
+            { id: 'F', texto: 'Falso' }
+          ],
+          gabarito: 'F',
+          explicacao: 'Falso. Administrar é um processo amplo de tomada de decisões sobre recursos para alcançar objetivos. Envolve planejamento, organização, direção e controle. Executar tarefas operacionais é apenas uma parte do nível operacional — não define a Administração como um todo.'
+        },
+        {
+          id: 'D-ADM-01-03',
+          tipo: 'situacao',
+          subtopico: 'Funções administrativas',
+          pergunta: 'A Secretaria de Saúde de um município definiu que reduzirá em 20% o tempo médio de espera por consultas e, para isso, alocou equipes, equipamentos e orçamento. Nesse momento, qual função administrativa está sendo exercida de forma predominante?',
+          alternativas: [
+            { id: 'A', texto: 'Controle.' },
+            { id: 'B', texto: 'Direção.' },
+            { id: 'C', texto: 'Planejamento.' },
+            { id: 'D', texto: 'Organização.' }
+          ],
+          gabarito: 'C',
+          explicacao: 'Definir objetivos e alocar recursos para alcançá-los é PLANEJAMENTO. O controle viria depois (medir se a meta está sendo cumprida); a direção lidaria com pessoas; a organização estruturaria cargos e setores. A descrição do enunciado é típica de planejamento estratégico.'
+        },
+        {
+          id: 'D-ADM-01-04',
+          tipo: 'autoavaliacao',
+          subtopico: 'Níveis organizacionais',
+          pergunta: 'Você sabe diferenciar os níveis estratégico, tático e operacional na Administração?',
+          resposta: 'Estratégico: nível institucional, define missão, visão e objetivos de longo prazo (alta direção). Tático: nível gerencial/intermediário, traduz o estratégico em planos por área. Operacional: nível de execução, tarefas do dia a dia.'
+        },
+        {
+          id: 'D-ADM-01-05',
+          tipo: 'multipla_escolha',
+          subtopico: 'Recursos organizacionais',
+          pergunta: 'Sobre os recursos organizacionais, assinale a alternativa que NÃO corresponde a uma categoria tradicionalmente reconhecida:',
+          alternativas: [
+            { id: 'A', texto: 'Recursos humanos.' },
+            { id: 'B', texto: 'Recursos materiais e financeiros.' },
+            { id: 'C', texto: 'Recursos informacionais e tecnológicos.' },
+            { id: 'D', texto: 'Recursos sobrenaturais.' }
+          ],
+          gabarito: 'D',
+          explicacao: 'As categorias clássicas de recursos organizacionais são: humanos, materiais, financeiros, informacionais e tecnológicos. "Recursos sobrenaturais" não existe na literatura administrativa — é distrator absurdo.'
+        }
+      ]
+    },
+
+    'ADM-02': {
+      id: 'D-ADM-02',
+      moduloId: 'ADM-02',
+      itens: [
+        {
+          id: 'D-ADM-02-01',
+          tipo: 'multipla_escolha',
+          subtopico: 'Integração das funções',
+          pergunta: 'Segundo a formulação clássica de Fayol, a ordem do ciclo administrativo é:',
+          alternativas: [
+            { id: 'A', texto: 'Organização → Planejamento → Controle → Direção.' },
+            { id: 'B', texto: 'Controle → Planejamento → Organização → Direção.' },
+            { id: 'C', texto: 'Planejamento → Organização → Direção → Controle.' },
+            { id: 'D', texto: 'Direção → Planejamento → Organização → Controle.' }
+          ],
+          gabarito: 'C',
+          explicacao: 'O ciclo clássico PODC é: Planejamento (o que e como fazer), Organização (estruturar recursos), Direção (conduzir pessoas) e Controle (verificar e corrigir). A opção A inverte planejamento e organização; a B começa pelo controle, o que é impossível (não há padrão sem planejamento); a D começa pela direção, sem qualquer plano prévio.'
+        },
+        {
+          id: 'D-ADM-02-02',
+          tipo: 'verdadeiro_falso',
+          subtopico: 'Controle',
+          pergunta: 'O controle é uma etapa estanque, aplicada apenas ao final do processo administrativo, sem retorno às fases anteriores.',
+          alternativas: [
+            { id: 'V', texto: 'Verdadeiro' },
+            { id: 'F', texto: 'Falso' }
+          ],
+          gabarito: 'F',
+          explicacao: 'Falso. O controle é contínuo e retroalimenta o planejamento. Ao detectar desvios, ele alimenta a revisão de planos e metas. É ciclo, não linha reta. Bancas adoram cobrar essa característica cíclica.'
+        },
+        {
+          id: 'D-ADM-02-03',
+          tipo: 'situacao',
+          subtopico: 'Direção',
+          pergunta: 'O gerente de um setor reúne a equipe semanalmente, delega responsabilidades, orienta individualmente os servidores e procura manter o grupo motivado. Qual função administrativa está sendo exercida de forma predominante?',
+          alternativas: [
+            { id: 'A', texto: 'Planejamento.' },
+            { id: 'B', texto: 'Organização.' },
+            { id: 'C', texto: 'Direção.' },
+            { id: 'D', texto: 'Controle.' }
+          ],
+          gabarito: 'C',
+          explicacao: 'Liderar, motivar, comunicar e orientar pessoas é DIREÇÃO. Organização é estrutural (cargos, hierarquia); planejamento define objetivos; controle compara com padrões. O foco comportamental do enunciado indica direção.'
+        },
+        {
+          id: 'D-ADM-02-04',
+          tipo: 'autoavaliacao',
+          subtopico: 'Integração das funções',
+          pergunta: 'Você sabe diferenciar PODC (ciclo administrativo) de PDCA (ciclo da qualidade)?',
+          resposta: 'PODC: Planejamento, Organização, Direção e Controle — ciclo administrativo clássico de Fayol. PDCA: Plan, Do, Check, Act — ferramenta de melhoria contínua da qualidade (Deming). São conceitos próximos, mas pertencem a contextos distintos: PODC é administração geral; PDCA, gestão da qualidade (ADM-10).'
+        },
+        {
+          id: 'D-ADM-02-05',
+          tipo: 'multipla_escolha',
+          subtopico: 'Organização',
+          pergunta: 'Sobre a função administrativa de organização, é correto afirmar que:',
+          alternativas: [
+            { id: 'A', texto: 'Ela define os objetivos de longo prazo da instituição.' },
+            { id: 'B', texto: 'Ela estrutura recursos, define autoridade, responsabilidade e agrupamentos (departamentalização).' },
+            { id: 'C', texto: 'Ela mede o desempenho e corrige desvios em relação ao padrão.' },
+            { id: 'D', texto: 'Ela lida exclusivamente com a motivação da equipe.' }
+          ],
+          gabarito: 'B',
+          explicacao: 'A função organização é estrutural: define órgãos, cargos, hierarquia, autoridade, responsabilidade e departamentalização. A letra A trata de planejamento; a C, de controle; a D, de direção (e parcialmente, porque direção também abrange liderança e comunicação, não só motivação).'
+        }
+      ]
+    },
+
+    'AP-02': {
+      id: 'D-AP-02',
+      moduloId: 'AP-02',
+      itens: [
+        {
+          id: 'D-AP-02-01',
+          tipo: 'multipla_escolha',
+          subtopico: 'Patrimonialismo',
+          pergunta: 'A confusão entre o patrimônio público e o privado, o nepotismo e a pessoalidade no tratamento da coisa pública são características típicas do modelo:',
+          alternativas: [
+            { id: 'A', texto: 'Burocrático.' },
+            { id: 'B', texto: 'Gerencial.' },
+            { id: 'C', texto: 'Patrimonialista.' },
+            { id: 'D', texto: 'Nova Gestão Pública.' }
+          ],
+          gabarito: 'C',
+          explicacao: 'Patrimonialismo é o modelo em que não há distinção clara entre público e privado — o governante trata o Estado como extensão de seu patrimônio pessoal. O burocrático surge justamente para combater esse cenário (via impessoalidade e meritocracia). O gerencial e a NGP são modelos posteriores, focados em resultado.'
+        },
+        {
+          id: 'D-AP-02-02',
+          tipo: 'verdadeiro_falso',
+          subtopico: 'Administração gerencial',
+          pergunta: 'A Reforma Gerencial brasileira foi consolidada pela EC 19/1998, tendo como um dos nomes centrais Bresser-Pereira e como marco o Plano Diretor da Reforma do Aparelho do Estado (1995).',
+          alternativas: [
+            { id: 'V', texto: 'Verdadeiro' },
+            { id: 'F', texto: 'Falso' }
+          ],
+          gabarito: 'V',
+          explicacao: 'Verdadeiro. A EC 19/1998 é o marco legal da Reforma Gerencial no Brasil, inserindo a eficiência como princípio expresso no art. 37 da CF. O Plano Diretor de 1995, sob coordenação de Bresser-Pereira no governo FHC, foi o documento orientador.'
+        },
+        {
+          id: 'D-AP-02-03',
+          tipo: 'situacao',
+          subtopico: 'Administração gerencial',
+          pergunta: 'Um hospital público firma contrato de gestão com o Estado, no qual se compromete a cumprir metas quantitativas de atendimento, com avaliação periódica de desempenho e possibilidade de bônus. Essa prática é característica predominante do modelo:',
+          alternativas: [
+            { id: 'A', texto: 'Patrimonialista.' },
+            { id: 'B', texto: 'Burocrático.' },
+            { id: 'C', texto: 'Gerencial.' },
+            { id: 'D', texto: 'Pré-burocrático.' }
+          ],
+          gabarito: 'C',
+          explicacao: 'Contrato de gestão, metas, avaliação de desempenho e incentivo por resultado são instrumentos típicos da administração gerencial, introduzidos no Brasil pela Reforma Gerencial (EC 19/1998). No patrimonialismo, não há sequer separação público/privado; no burocrático, o foco é processo e norma, não resultado.'
+        },
+        {
+          id: 'D-AP-02-04',
+          tipo: 'autoavaliacao',
+          subtopico: 'Burocracia',
+          pergunta: 'Você sabe identificar as principais características do modelo burocrático weberiano?',
+          resposta: 'Impessoalidade, formalismo, hierarquia, meritocracia, regras escritas, divisão racional do trabalho, competência técnica e separação entre público e privado. Weber é o autor de referência. No Brasil, consolidou-se com a reforma de 1936–1938 (Vargas, DASP).'
+        },
+        {
+          id: 'D-AP-02-05',
+          tipo: 'multipla_escolha',
+          subtopico: 'Burocracia',
+          pergunta: 'Sobre o modelo burocrático de Administração Pública, assinale a alternativa INCORRETA:',
+          alternativas: [
+            { id: 'A', texto: 'Tem em Max Weber um de seus principais teóricos.' },
+            { id: 'B', texto: 'No Brasil, consolidou-se a partir da Reforma de 1936 e da criação do DASP em 1938.' },
+            { id: 'C', texto: 'Tem como marca a impessoalidade e a meritocracia no provimento de cargos.' },
+            { id: 'D', texto: 'Foi introduzido no Brasil pela Reforma Gerencial de 1995.' }
+          ],
+          gabarito: 'D',
+          explicacao: 'A alternativa D está incorreta: a reforma de 1995 foi GERENCIAL, não burocrática. A reforma BUROCRÁTICA brasileira foi a de 1936–1938, no governo Vargas. As demais alternativas (A, B, C) estão corretas.'
+        }
+      ]
+    },
+
+    'DA-02': {
+      id: 'D-DA-02',
+      moduloId: 'DA-02',
+      itens: [
+        {
+          id: 'D-DA-02-01',
+          tipo: 'multipla_escolha',
+          subtopico: 'Princípios expressos',
+          pergunta: 'São princípios expressos da Administração Pública no caput do art. 37 da CF/88:',
+          alternativas: [
+            { id: 'A', texto: 'Legalidade, impessoalidade, moralidade, publicidade e eficiência.' },
+            { id: 'B', texto: 'Legalidade, imparcialidade, moralidade, publicidade e eficiência.' },
+            { id: 'C', texto: 'Legalidade, impessoalidade, moralidade, transparência e economicidade.' },
+            { id: 'D', texto: 'Razoabilidade, proporcionalidade, moralidade, publicidade e eficiência.' }
+          ],
+          gabarito: 'A',
+          explicacao: 'LIMPE (art. 37, caput, CF/88) = Legalidade, Impessoalidade, Moralidade, Publicidade, Eficiência. A letra B troca "impessoalidade" por "imparcialidade" — que é dever do agente, não princípio constitucional expresso. A C troca publicidade por "transparência" e inclui "economicidade" (princípio da licitação, não do art. 37). A D inclui razoabilidade e proporcionalidade, que são IMPLÍCITOS.'
+        },
+        {
+          id: 'D-DA-02-02',
+          tipo: 'verdadeiro_falso',
+          subtopico: 'Princípios expressos',
+          pergunta: 'O princípio da eficiência foi inserido no caput do art. 37 da Constituição Federal pela EC 19/1998.',
+          alternativas: [
+            { id: 'V', texto: 'Verdadeiro' },
+            { id: 'F', texto: 'Falso' }
+          ],
+          gabarito: 'V',
+          explicacao: 'Verdadeiro. A eficiência foi incluída pela EC 19/1998, como parte da Reforma Gerencial. Antes disso, o art. 37 já trazia legalidade, impessoalidade, moralidade e publicidade. A EC 45/2004 (Reforma do Judiciário) NÃO tem relação com isso — pegadinha clássica.'
+        },
+        {
+          id: 'D-DA-02-03',
+          tipo: 'situacao',
+          subtopico: 'Princípios expressos',
+          pergunta: 'Um prefeito manda afixar, em outdoors pagos com verba pública, sua foto e seu nome ao lado de obras municipais recém-concluídas. Essa conduta viola frontalmente o princípio da:',
+          alternativas: [
+            { id: 'A', texto: 'Legalidade.' },
+            { id: 'B', texto: 'Impessoalidade.' },
+            { id: 'C', texto: 'Publicidade.' },
+            { id: 'D', texto: 'Continuidade do serviço público.' }
+          ],
+          gabarito: 'B',
+          explicacao: 'A promoção pessoal de agentes públicos em obras, serviços e campanhas é vedada pelo art. 37, §1º, CF — isso é violação direta da IMPESSOALIDADE. A publicidade obriga a divulgar atos, mas não para promover pessoas. Bancas costumam ainda aceitar "moralidade" como violação secundária.'
+        },
+        {
+          id: 'D-DA-02-04',
+          tipo: 'autoavaliacao',
+          subtopico: 'Princípios expressos',
+          pergunta: 'Você sabe explicar por que a legalidade administrativa é diferente da legalidade aplicada ao particular?',
+          resposta: 'Para o particular, vale a autonomia: pode fazer tudo que a lei NÃO PROÍBE. Para a Administração Pública, vale a legalidade estrita: só pode fazer o que a lei AUTORIZA ou DETERMINA. Isso decorre do princípio da indisponibilidade do interesse público — o administrador é mero gestor, não dono da coisa pública.'
+        },
+        {
+          id: 'D-DA-02-05',
+          tipo: 'multipla_escolha',
+          subtopico: 'Princípios implícitos',
+          pergunta: 'São exemplos de princípios IMPLÍCITOS da Administração Pública:',
+          alternativas: [
+            { id: 'A', texto: 'Legalidade e impessoalidade.' },
+            { id: 'B', texto: 'Supremacia do interesse público, indisponibilidade do interesse público e autotutela.' },
+            { id: 'C', texto: 'Moralidade e publicidade.' },
+            { id: 'D', texto: 'Eficiência e publicidade.' }
+          ],
+          gabarito: 'B',
+          explicacao: 'Supremacia do interesse público, indisponibilidade do interesse público e autotutela (Súmulas 346 e 473/STF) são princípios implícitos, decorrentes do sistema constitucional. As demais opções listam princípios EXPRESSOS (legalidade, impessoalidade, moralidade, publicidade e eficiência).'
+        }
+      ]
+    }
+  };
+
+  /* ============================================================
+     ESTADO
   ============================================================ */
   var AppState = null;
   var currentScreen = 'dashboard';
   var currentModuleId = null;
   var currentLessonId = null;
   var moduleFilter = 'todas';
-  var professorAnswerOpen = null;   // <-- novo na v0.2
+  var professorAnswerOpen = null;
+
+  // Estado temporário do diagnóstico em execução (NÃO persistido até finalizar)
+  var diagRunning = {
+    moduleId: null,
+    answers: {},          // { itemId: 'A'|'V'|'F'|'sabia'|'nao_sabia' }
+    itemIndex: 0,         // item atual
+    revealed: {}          // { itemId: true } — item já respondido/feedback exibido
+  };
 
   function createDefaultState() {
     var now = new Date().toISOString();
@@ -926,12 +1413,16 @@ Changelog v0.1:
       AppState.modules[modId] = {
         status: 'nao_iniciado',
         aulasLidas: [],
+        diagnostico: null,     // <-- NOVO v0.3
         dominioEstimado: 0,
         ultimaAtividade: null
       };
     }
     if (!Array.isArray(AppState.modules[modId].aulasLidas)) {
       AppState.modules[modId].aulasLidas = [];
+    }
+    if (AppState.modules[modId].diagnostico === undefined) {
+      AppState.modules[modId].diagnostico = null;
     }
     return AppState.modules[modId];
   }
@@ -941,39 +1432,136 @@ Changelog v0.1:
   ============================================================ */
   function esc(s) {
     return String(s == null ? '' : s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
   function getModule(modId) {
-    for (var i = 0; i < MODULES.length; i++) {
-      if (MODULES[i].id === modId) return MODULES[i];
-    }
+    for (var i = 0; i < MODULES.length; i++) if (MODULES[i].id === modId) return MODULES[i];
     return null;
   }
-  function getLessonByModuleId(modId) {
-    return LESSONS[modId] || null;
-  }
+  function getLessonByModuleId(modId) { return LESSONS[modId] || null; }
   function getLessonById(lessonId) {
-    for (var k in LESSONS) {
-      if (LESSONS.hasOwnProperty(k) && LESSONS[k].id === lessonId) return LESSONS[k];
-    }
+    for (var k in LESSONS) if (LESSONS.hasOwnProperty(k) && LESSONS[k].id === lessonId) return LESSONS[k];
     return null;
   }
+  function getDiagnosticByModuleId(modId) { return DIAGNOSTICS[modId] || null; }
   function formatDate(iso) {
     if (!iso) return '—';
-    try {
-      var d = new Date(iso);
-      return d.toLocaleString('pt-BR');
-    } catch (e) { return iso; }
+    try { return new Date(iso).toLocaleString('pt-BR'); } catch (e) { return iso; }
+  }
+  function isObjective(item) {
+    return item.tipo === 'multipla_escolha' || item.tipo === 'verdadeiro_falso' || item.tipo === 'situacao';
+  }
+
+  /* ============================================================
+     ANÁLISE DO DIAGNÓSTICO
+  ============================================================ */
+  function computeDiagnosticResult(moduleId, answers) {
+    var diag = getDiagnosticByModuleId(moduleId);
+    if (!diag) return null;
+
+    var bySubtopic = {};
+    var totalPontos = 0;
+    var totalSinais = 0;
+
+    for (var i = 0; i < diag.itens.length; i++) {
+      var item = diag.itens[i];
+      var sub = item.subtopico;
+      if (!bySubtopic[sub]) {
+        bySubtopic[sub] = { acertos: 0, erros: 0, sabia: 0, nao_sabia: 0, total: 0 };
+      }
+      var resp = answers[item.id];
+      bySubtopic[sub].total += 1;
+
+      if (isObjective(item)) {
+        if (resp === item.gabarito) {
+          bySubtopic[sub].acertos += 1;
+          totalPontos += 1;
+        } else {
+          bySubtopic[sub].erros += 1;
+        }
+        totalSinais += 1;
+      } else if (item.tipo === 'autoavaliacao') {
+        if (resp === 'sabia') {
+          bySubtopic[sub].sabia += 1;
+          totalPontos += 1;
+        } else if (resp === 'nao_sabia') {
+          bySubtopic[sub].nao_sabia += 1;
+        }
+        totalSinais += 1;
+      }
+    }
+
+    // Classificação por subtópico — cruzando sinais, NÃO apenas percentual.
+    var result = { bySubtopic: {} };
+    for (var subName in bySubtopic) {
+      if (!bySubtopic.hasOwnProperty(subName)) continue;
+      var s = bySubtopic[subName];
+      var positivos = s.acertos + s.sabia;
+      var negativos = s.erros + s.nao_sabia;
+      var total = positivos + negativos;
+
+      // Regras explícitas (cross-signals):
+      // - Conhecido: sem erros E sem autoavaliação negativa, com pelo menos 1 sinal positivo.
+      // - Desconhecido: todos os sinais negativos, ou zero positivos com pelo menos 1 negativo.
+      // - Dúvida: sinal misto.
+      var status;
+      if (s.erros === 0 && s.nao_sabia === 0 && positivos >= 1) {
+        status = 'conhecido';
+      } else if (positivos === 0 && negativos >= 1) {
+        status = 'desconhecido';
+      } else {
+        status = 'duvida';
+      }
+
+      // Recomendações textuais por subtópico
+      var rec;
+      if (status === 'conhecido') {
+        rec = 'Você demonstra bom domínio neste subtópico. Siga para a aula (revisão do conteúdo) e mantenha revisões periódicas.';
+      } else if (status === 'duvida') {
+        rec = 'Há base, mas o domínio é parcial. Estude a aula com atenção, foque nos exemplos e nas comparações, e refaça este diagnóstico depois de revisar.';
+      } else {
+        rec = 'Trate este subtópico como prioridade. Estude a aula desde o início, sem pular a explicação simples. Refaça o diagnóstico em seguida para medir evolução.';
+      }
+
+      result.bySubtopic[subName] = {
+        status: status,
+        acertos: s.acertos,
+        erros: s.erros,
+        sabia: s.sabia,
+        nao_sabia: s.nao_sabia,
+        total: s.total,
+        recommendation: rec
+      };
+    }
+
+    // Domínio estimado (usado no painel) — proporção de sinais positivos,
+    // com peso reduzido quando há muitos sinais negativos.
+    var dominio = 0;
+    if (totalSinais > 0) {
+      dominio = totalPontos / totalSinais;
+      if (negativosNoTotal(bySubtopic) > 0) {
+        dominio = dominio * 0.9; // leve penalização por erros/desconhecimento
+      }
+      dominio = Math.max(0, Math.min(1, dominio));
+    }
+    result.dominioEstimado = Math.round(dominio * 100) / 100;
+    result.completedAt = new Date().toISOString();
+    return result;
+  }
+
+  function negativosNoTotal(bySubtopic) {
+    var n = 0;
+    for (var k in bySubtopic) if (bySubtopic.hasOwnProperty(k)) {
+      n += bySubtopic[k].erros + bySubtopic[k].nao_sabia;
+    }
+    return n;
   }
 
   /* ============================================================
      NAVEGAÇÃO
   ============================================================ */
-  var VALID_SCREENS = ['dashboard', 'modulos', 'modulo-detalhe', 'licao', 'configuracoes', 'sobre'];
+  var VALID_SCREENS = ['dashboard', 'modulos', 'modulo-detalhe', 'licao', 'diagnostico', 'diag-resultado', 'configuracoes', 'sobre'];
 
   function navigate(screen, opts) {
     opts = opts || {};
@@ -988,6 +1576,9 @@ Changelog v0.1:
         var lesson = getLessonById(currentLessonId);
         if (lesson) currentModuleId = lesson.moduloId;
       }
+    }
+    if (screen === 'diagnostico' || screen === 'diag-resultado') {
+      if (opts.moduleId) currentModuleId = opts.moduleId;
     }
     AppState.lastScreen = screen;
     saveState();
@@ -1014,7 +1605,9 @@ Changelog v0.1:
       var target = items[i].getAttribute('data-nav');
       var active = (target === currentScreen) ||
                    (currentScreen === 'modulo-detalhe' && target === 'modulos') ||
-                   (currentScreen === 'licao' && target === 'modulos');
+                   (currentScreen === 'licao' && target === 'modulos') ||
+                   (currentScreen === 'diagnostico' && target === 'modulos') ||
+                   (currentScreen === 'diag-resultado' && target === 'modulos');
       items[i].classList.toggle('active', active);
     }
   }
@@ -1028,6 +1621,8 @@ Changelog v0.1:
       case 'modulos':        html = renderModules(); break;
       case 'modulo-detalhe': html = renderModuleDetail(); break;
       case 'licao':          html = renderLesson(); break;
+      case 'diagnostico':    html = renderDiagnosticRunning(); break;
+      case 'diag-resultado': html = renderDiagnosticResult(); break;
       case 'configuracoes':  html = renderSettings(); break;
       case 'sobre':          html = renderAbout(); break;
       default:               html = renderDashboard();
@@ -1039,8 +1634,7 @@ Changelog v0.1:
   function renderDashboard() {
     var stats = AppState.stats;
     var taxa = stats.questoesRespondidas > 0
-      ? Math.round((stats.acertos / stats.questoesRespondidas) * 100)
-      : 0;
+      ? Math.round((stats.acertos / stats.questoesRespondidas) * 100) : 0;
 
     var totalModulos = MODULES.length;
     var emEstudo = 0, concluidos = 0;
@@ -1050,21 +1644,23 @@ Changelog v0.1:
       if (st.status === 'concluido') concluidos++;
     }
 
-    // Sugestão "O que estudar hoje?" — prioriza módulos de alta prioridade
-    // que possuem aula cadastrada e ainda não foram concluídos.
+    // Conta diagnósticos concluídos
+    var diagFeitos = 0;
+    for (var d = 0; d < MODULES.length; d++) {
+      var dst = AppState.modules[MODULES[d].id];
+      if (dst && dst.diagnostico) diagFeitos++;
+    }
+    var diagDisponiveis = Object.keys(DIAGNOSTICS).length;
+
+    // Sugestões — prioriza diagnósticos ainda não feitos e alta prioridade
     var sugestoes = [];
     for (var j = 0; j < MODULES.length && sugestoes.length < 3; j++) {
       var m = MODULES[j];
       if (m.prioridade !== 'alta') continue;
-      if (!getLessonByModuleId(m.id)) continue;
+      if (!getDiagnosticByModuleId(m.id) && !getLessonByModuleId(m.id)) continue;
       var ms = getModuleUserState(m.id);
       if (ms.status === 'concluido') continue;
       sugestoes.push(m);
-    }
-    if (sugestoes.length === 0) {
-      for (var k = 0; k < MODULES.length && sugestoes.length < 3; k++) {
-        if (getLessonByModuleId(MODULES[k].id)) sugestoes.push(MODULES[k]);
-      }
     }
 
     var html = '';
@@ -1072,30 +1668,29 @@ Changelog v0.1:
     html += '<p class="page-subtitle">Visão geral do seu progresso. Dados salvos localmente no navegador.</p>';
 
     html += '<div class="cards-grid">';
-    html += statCard('Questões respondidas', stats.questoesRespondidas, 'Disponível nas próximas fases');
-    html += statCard('Taxa de acerto', taxa + '%', 'Aguardando banco de questões');
     html += statCard('Módulos em estudo', emEstudo + ' / ' + totalModulos, concluidos + ' concluído(s)');
     html += statCard('Aulas disponíveis', Object.keys(LESSONS).length, 'Fase 2 — ' + MODULES.length + ' módulos catalogados');
+    html += statCard('Diagnósticos feitos', diagFeitos + ' / ' + diagDisponiveis, 'Fase 3 — análise por subtópico');
+    html += statCard('Questões respondidas', stats.questoesRespondidas, 'Disponível nas próximas fases');
     html += '</div>';
 
     html += '<h2 class="section-title">O que estudar hoje?</h2>';
     if (sugestoes.length === 0) {
-      html += '<div class="notice"><strong>Sem sugestões ainda.</strong> Nenhuma aula cadastrada.</div>';
+      html += '<div class="notice"><strong>Sem sugestões ainda.</strong> Nenhum conteúdo cadastrado.</div>';
     } else {
       html += '<div class="module-list">';
-      for (var s = 0; s < sugestoes.length; s++) {
-        html += moduleCardHtml(sugestoes[s]);
-      }
+      for (var s = 0; s < sugestoes.length; s++) html += moduleCardHtml(sugestoes[s]);
       html += '</div>';
     }
 
     html += '<h2 class="section-title">Aviso desta versão</h2>';
     html += '<div class="notice">' +
-            '<strong>Fase 2 — Conteúdo pedagógico (parcial).</strong> ' +
-            'Foram adicionadas 4 aulas de alta prioridade: ' +
-            'ADM-01, ADM-02, AP-02 e DA-02. ' +
-            'As demais aulas serão incluídas em entregas subsequentes, mediante aprovação. ' +
-            'Questões, diagnóstico, flashcards, revisão e simulados permanecem previstos para as fases seguintes.' +
+            '<strong>Fase 3 — Diagnóstico (parcial).</strong> ' +
+            'Foram adicionados diagnósticos para os 4 módulos que já possuem aula ' +
+            '(ADM-01, ADM-02, AP-02, DA-02), com 5 itens cada. ' +
+            'A análise cruza acertos, erros e autoavaliação por subtópico e ' +
+            'NÃO conclui domínio apenas por percentual. ' +
+            'Novos diagnósticos e o banco de questões virão nas próximas fases.' +
             '</div>';
 
     html += footerHtml();
@@ -1134,9 +1729,7 @@ Changelog v0.1:
       html += '<div class="notice">Nenhum módulo nesta área.</div>';
     } else {
       html += '<div class="module-list">';
-      for (var j = 0; j < filtered.length; j++) {
-        html += moduleCardHtml(filtered[j]);
-      }
+      for (var j = 0; j < filtered.length; j++) html += moduleCardHtml(filtered[j]);
       html += '</div>';
     }
 
@@ -1148,7 +1741,10 @@ Changelog v0.1:
     var areaLabel = AREA_LABELS[m.area] || m.area;
     var pLabel = PRIORITY_LABELS[m.prioridade] || m.prioridade;
     var hasLesson = !!getLessonByModuleId(m.id);
-    var badge = hasLesson ? '<span class="lesson-badge">Aula</span>' : '';
+    var hasDiag = !!getDiagnosticByModuleId(m.id);
+    var badges = '';
+    if (hasLesson) badges += '<span class="badge-pill badge-aula">Aula</span>';
+    if (hasDiag) badges += '<span class="badge-pill badge-diag">Diagnóstico</span>';
     return '<button class="module-card" data-action="open-module" data-module-id="' + esc(m.id) + '">' +
       '<span class="mod-id">' + esc(m.id) + '</span>' +
       '<span class="mod-info">' +
@@ -1156,7 +1752,7 @@ Changelog v0.1:
         '<span class="mod-area">' + esc(areaLabel) + '</span>' +
       '</span>' +
       '<span class="mod-badges">' +
-        badge +
+        badges +
         '<span class="mod-priority priority-' + esc(m.prioridade) + '">' + esc(pLabel) + '</span>' +
       '</span>' +
     '</button>';
@@ -1174,7 +1770,9 @@ Changelog v0.1:
     var areaLabel = AREA_LABELS[m.area] || m.area;
     var pLabel = PRIORITY_LABELS[m.prioridade] || m.prioridade;
     var lesson = getLessonByModuleId(m.id);
+    var diag = getDiagnosticByModuleId(m.id);
     var lessonRead = lesson && (st.aulasLidas || []).indexOf(lesson.id) !== -1;
+    var diagDone = !!st.diagnostico;
 
     var chips = '';
     for (var i = 0; i < m.subtopicos.length; i++) {
@@ -1191,15 +1789,23 @@ Changelog v0.1:
     html += infoRow('Domínio estimado', Math.round((st.dominioEstimado || 0) * 100) + '%');
     html += infoRow('Última atividade', st.ultimaAtividade ? formatDate(st.ultimaAtividade) : '—');
     html += infoRow('Aulas lidas', (st.aulasLidas || []).length + (lesson ? ' / 1' : ' / 0'));
+    if (diagDone) {
+      html += infoRow('Diagnóstico', 'Feito em ' + formatDate(st.diagnostico.completedAt));
+    } else if (diag) {
+      html += infoRow('Diagnóstico', 'Disponível');
+    } else {
+      html += infoRow('Diagnóstico', '—');
+    }
     html += '</div>';
 
     html += '<h2 class="section-title">Subtópicos</h2>';
     html += '<div class="subtopic-list">' + chips + '</div>';
 
     html += '<h2 class="section-title">Conteúdo pedagógico</h2>';
+
     if (lesson) {
       html += '<div class="lesson-block">';
-      html += '<h3><span class="lb-icon">📘</span> Aula disponível: ' + esc(lesson.id) + '</h3>';
+      html += '<h3><span class="lb-icon">📘</span> Aula: ' + esc(lesson.id) + '</h3>';
       html += '<p>' + esc(lesson.objetivo) + '</p>';
       html += '<div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">';
       html += '<button class="btn btn-primary" data-action="open-lesson" data-lesson-id="' + esc(lesson.id) + '">Estudar aula →</button>';
@@ -1209,12 +1815,50 @@ Changelog v0.1:
       html += '</div>';
       html += '</div>';
     } else {
-      html += '<div class="notice"><strong>Em construção — Fase 2.</strong> ' +
-              'Esta aula será adicionada em entrega subsequente da Fase 2, priorizando os módulos de maior prioridade.</div>';
+      html += '<div class="notice"><strong>Aula ainda não cadastrada.</strong> Será adicionada em entrega subsequente.</div>';
+    }
+
+    html += '<h2 class="section-title">Diagnóstico</h2>';
+    if (diag) {
+      html += '<div class="lesson-block" style="border-left:4px solid var(--purple);">';
+      html += '<h3><span class="lb-icon">🧪</span> Diagnóstico ' + esc(diag.id) + '</h3>';
+      html += '<p>' + diag.itens.length + ' itens (múltipla escolha, V/F, situação prática e autoavaliação). ' +
+              'A análise é por subtópico — não usa apenas percentual global.</p>';
+      if (diagDone) {
+        var lastResult = st.diagnostico.result || {};
+        var resumo = summarizeResult(lastResult);
+        html += '<p style="margin-top:6px;font-size:13px;color:var(--text-muted);">' +
+                'Conhecidos: ' + resumo.conhecido + ' · Em dúvida: ' + resumo.duvida + ' · Desconhecidos: ' + resumo.desconhecido +
+                '</p>';
+        html += '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">';
+        html += '<button class="btn btn-purple" data-action="open-diag-result" data-module-id="' + esc(m.id) + '">Ver resultado</button>';
+        html += '<button class="btn" data-action="refazer-diag" data-module-id="' + esc(m.id) + '">Refazer diagnóstico</button>';
+        html += '</div>';
+      } else {
+        html += '<div style="margin-top:12px;">';
+        html += '<button class="btn btn-purple" data-action="start-diag" data-module-id="' + esc(m.id) + '">Fazer diagnóstico →</button>';
+        html += '</div>';
+      }
+      html += '</div>';
+    } else {
+      html += '<div class="notice"><strong>Diagnóstico ainda não cadastrado.</strong> ' +
+              'Será adicionado para os módulos que já possuem aula (v0.3) e, nas próximas fases, para os demais.</div>';
     }
 
     html += footerHtml();
     return html;
+  }
+
+  function summarizeResult(result) {
+    var c = 0, d = 0, x = 0;
+    var bs = result.bySubtopic || {};
+    for (var k in bs) {
+      if (!bs.hasOwnProperty(k)) continue;
+      if (bs[k].status === 'conhecido') c++;
+      else if (bs[k].status === 'duvida') d++;
+      else if (bs[k].status === 'desconhecido') x++;
+    }
+    return { conhecido: c, duvida: d, desconhecido: x };
   }
 
   function infoRow(key, value) {
@@ -1223,17 +1867,12 @@ Changelog v0.1:
       '<span class="info-val">' + esc(value) + '</span>' +
     '</div>';
   }
-
   function statusLabel(s) {
-    var map = {
-      'nao_iniciado': 'Não iniciado',
-      'em_estudo': 'Em estudo',
-      'concluido': 'Concluído'
-    };
+    var map = { 'nao_iniciado': 'Não iniciado', 'em_estudo': 'Em estudo', 'concluido': 'Concluído' };
     return map[s] || s || 'Não iniciado';
   }
 
-  /* -------- Aula (NOVA v0.2) -------- */
+  /* -------- Aula (inalterado desde v0.2) -------- */
   function renderLesson() {
     var lesson = currentLessonId ? getLessonById(currentLessonId) : null;
     if (!lesson) {
@@ -1245,8 +1884,6 @@ Changelog v0.1:
     var wasRead = st && (st.aulasLidas || []).indexOf(lesson.id) !== -1;
 
     var html = '';
-
-    // Toolbar superior
     html += '<div class="lesson-toolbar">';
     html += '<div class="lt-left">';
     html += '<button class="btn" data-action="open-module" data-module-id="' + esc(lesson.moduloId) + '">← Módulo ' + esc(lesson.moduloId) + '</button>';
@@ -1262,110 +1899,57 @@ Changelog v0.1:
     html += '<h1 class="page-title">' + esc(m ? m.titulo : lesson.moduloId) + '</h1>';
     html += '<p class="page-subtitle">Aula ' + esc(lesson.id) + ' · Módulo ' + esc(lesson.moduloId) + '</p>';
 
-    // Objetivo
     html += '<div class="lesson-block block-objetivo">';
     html += '<h3><span class="lb-icon">🎯</span> Objetivo</h3>';
     html += '<p>' + esc(lesson.objetivo) + '</p>';
     if (lesson.prerequisitos && lesson.prerequisitos.length) {
       var ptags = '';
-      for (var i = 0; i < lesson.prerequisitos.length; i++) {
-        ptags += '<span class="prereq-tag">' + esc(lesson.prerequisitos[i]) + '</span>';
-      }
+      for (var i = 0; i < lesson.prerequisitos.length; i++) ptags += '<span class="prereq-tag">' + esc(lesson.prerequisitos[i]) + '</span>';
       html += '<p style="margin-top:8px;font-size:13px;color:var(--text-muted);">Pré-requisitos:</p>';
       html += '<div class="prereq-list">' + ptags + '</div>';
     }
     html += '</div>';
 
-    // Introdução
-    html += '<div class="lesson-block">';
-    html += '<h3><span class="lb-icon">📖</span> Introdução</h3>';
-    html += '<p>' + esc(lesson.introducao) + '</p>';
-    html += '</div>';
+    html += '<div class="lesson-block"><h3><span class="lb-icon">📖</span> Introdução</h3><p>' + esc(lesson.introducao) + '</p></div>';
+    html += '<div class="lesson-block"><h3><span class="lb-icon">💡</span> Explicação simples</h3><p>' + esc(lesson.explicacaoSimples) + '</p></div>';
+    html += '<div class="lesson-block"><h3><span class="lb-icon">📐</span> Explicação técnica</h3><p>' + esc(lesson.explicacaoTecnica) + '</p></div>';
 
-    // Explicação simples
-    html += '<div class="lesson-block">';
-    html += '<h3><span class="lb-icon">💡</span> Explicação simples</h3>';
-    html += '<p>' + esc(lesson.explicacaoSimples) + '</p>';
-    html += '</div>';
-
-    // Explicação técnica
-    html += '<div class="lesson-block">';
-    html += '<h3><span class="lb-icon">📐</span> Explicação técnica</h3>';
-    html += '<p>' + esc(lesson.explicacaoTecnica) + '</p>';
-    html += '</div>';
-
-    // Exemplos
     if (lesson.exemplos && lesson.exemplos.length) {
-      html += '<div class="lesson-block">';
-      html += '<h3><span class="lb-icon">🔎</span> Exemplos</h3>';
-      html += '<ul>';
-      for (var e = 0; e < lesson.exemplos.length; e++) {
-        html += '<li>' + esc(lesson.exemplos[e]) + '</li>';
-      }
-      html += '</ul>';
-      html += '</div>';
+      html += '<div class="lesson-block"><h3><span class="lb-icon">🔎</span> Exemplos</h3><ul>';
+      for (var e = 0; e < lesson.exemplos.length; e++) html += '<li>' + esc(lesson.exemplos[e]) + '</li>';
+      html += '</ul></div>';
     }
 
-    // Comparações
     if (lesson.comparacoes && lesson.comparacoes.length) {
-      html += '<div class="lesson-block">';
-      html += '<h3><span class="lb-icon">⚖️</span> Comparações</h3>';
+      html += '<div class="lesson-block"><h3><span class="lb-icon">⚖️</span> Comparações</h3>';
       html += '<table class="compare-table"><thead><tr><th>Conceito A</th><th>Conceito B</th><th>Diferença-chave</th></tr></thead><tbody>';
       for (var c = 0; c < lesson.comparacoes.length; c++) {
         var cp = lesson.comparacoes[c];
         html += '<tr><td>' + esc(cp.termoA) + '</td><td>' + esc(cp.termoB) + '</td><td>' + esc(cp.diferenca) + '</td></tr>';
       }
-      html += '</tbody></table>';
-      html += '</div>';
+      html += '</tbody></table></div>';
     }
 
-    // Aplicação na Administração Pública
     if (lesson.aplicacaoAdministracaoPublica) {
-      html += '<div class="lesson-block block-aplicacao">';
-      html += '<h3><span class="lb-icon">🏛️</span> Aplicação na Administração Pública</h3>';
-      html += '<p>' + esc(lesson.aplicacaoAdministracaoPublica) + '</p>';
-      html += '</div>';
+      html += '<div class="lesson-block block-aplicacao"><h3><span class="lb-icon">🏛️</span> Aplicação na Administração Pública</h3><p>' + esc(lesson.aplicacaoAdministracaoPublica) + '</p></div>';
     }
-
-    // Pegadinhas
     if (lesson.pegadinhas && lesson.pegadinhas.length) {
-      html += '<div class="lesson-block block-pegadinha">';
-      html += '<h3><span class="lb-icon">⚠️</span> Pegadinhas de concurso</h3>';
-      html += '<ul>';
-      for (var p = 0; p < lesson.pegadinhas.length; p++) {
-        html += '<li>' + esc(lesson.pegadinhas[p]) + '</li>';
-      }
-      html += '</ul>';
-      html += '</div>';
+      html += '<div class="lesson-block block-pegadinha"><h3><span class="lb-icon">⚠️</span> Pegadinhas de concurso</h3><ul>';
+      for (var p = 0; p < lesson.pegadinhas.length; p++) html += '<li>' + esc(lesson.pegadinhas[p]) + '</li>';
+      html += '</ul></div>';
     }
-
-    // Erros comuns
     if (lesson.errosComuns && lesson.errosComuns.length) {
-      html += '<div class="lesson-block block-erros">';
-      html += '<h3><span class="lb-icon">🚫</span> Erros comuns</h3>';
-      html += '<ul>';
-      for (var er = 0; er < lesson.errosComuns.length; er++) {
-        html += '<li>' + esc(lesson.errosComuns[er]) + '</li>';
-      }
-      html += '</ul>';
-      html += '</div>';
+      html += '<div class="lesson-block block-erros"><h3><span class="lb-icon">🚫</span> Erros comuns</h3><ul>';
+      for (var er = 0; er < lesson.errosComuns.length; er++) html += '<li>' + esc(lesson.errosComuns[er]) + '</li>';
+      html += '</ul></div>';
     }
-
-    // Resumo
     if (lesson.resumo && lesson.resumo.length) {
-      html += '<div class="lesson-block block-resumo">';
-      html += '<h3><span class="lb-icon">✅</span> Resumo</h3>';
-      html += '<ul>';
-      for (var r = 0; r < lesson.resumo.length; r++) {
-        html += '<li>' + esc(lesson.resumo[r]) + '</li>';
-      }
-      html += '</ul>';
-      html += '</div>';
+      html += '<div class="lesson-block block-resumo"><h3><span class="lb-icon">✅</span> Resumo</h3><ul>';
+      for (var r = 0; r < lesson.resumo.length; r++) html += '<li>' + esc(lesson.resumo[r]) + '</li>';
+      html += '</ul></div>';
     }
 
-    // Modo professor programado
     html += renderProfessorBlock(lesson);
-
     html += footerHtml();
     return html;
   }
@@ -1380,7 +1964,6 @@ Changelog v0.1:
       { key: 'comoApareceEmConcurso', label: 'Como aparece em concurso' },
       { key: 'fazerPergunta',       label: 'Faça uma pergunta sobre isso' }
     ];
-
     var html = '';
     html += '<div class="lesson-block">';
     html += '<h3><span class="lb-icon">🧑‍🏫</span> Modo professor (conteúdo programado)</h3>';
@@ -1392,7 +1975,6 @@ Changelog v0.1:
       html += '<button class="btn btn-ghost" data-action="professor-answer" data-lesson-id="' + esc(lesson.id) + '" data-key="' + esc(a.key) + '"' + (disabled ? ' disabled' : '') + '>' + esc(a.label) + '</button>';
     }
     html += '</div>';
-
     if (professorAnswerOpen && professorAnswerOpen.lessonId === lesson.id) {
       var key = professorAnswerOpen.key;
       var content = '';
@@ -1403,19 +1985,221 @@ Changelog v0.1:
       }
       html += '<div class="professor-answer"><strong>Resposta programada</strong>' + esc(content) + '</div>';
     }
-
     html += '</div>';
     return html;
+  }
+
+  /* -------- Diagnóstico em execução (NOVO v0.3) -------- */
+  function renderDiagnosticRunning() {
+    var moduleId = diagRunning.moduleId;
+    var diag = getDiagnosticByModuleId(moduleId);
+    if (!diag) {
+      return '<h1 class="page-title">Diagnóstico não encontrado</h1>' +
+             '<button class="btn" data-nav="modulos">← Voltar aos módulos</button>';
+    }
+    var m = getModule(moduleId);
+    var idx = diagRunning.itemIndex;
+    var total = diag.itens.length;
+    if (idx < 0) idx = 0;
+    if (idx >= total) idx = total - 1;
+    var item = diag.itens[idx];
+    var answered = Object.prototype.hasOwnProperty.call(diagRunning.answers, item.id);
+    var userAnswer = diagRunning.answers[item.id];
+    var percent = Math.round(((idx) / total) * 100);
+
+    var html = '';
+
+    // Barra de progresso
+    html += '<div class="diag-progress">';
+    html += '<div class="diag-progress-bar"><div class="diag-progress-fill" style="width:' + percent + '%"></div></div>';
+    html += '<div class="diag-progress-label">Item ' + (idx + 1) + ' / ' + total + '</div>';
+    html += '</div>';
+
+    // Cabeçalho
+    html += '<h1 class="page-title">Diagnóstico — ' + esc(m ? m.titulo : moduleId) + '</h1>';
+    html += '<p class="page-subtitle">Módulo ' + esc(moduleId) + ' · ' + esc(DIAG_TYPE_LABELS[item.tipo] || item.tipo) + '</p>';
+
+    html += '<div class="diag-meta">';
+    html += '<span class="tag">Subtópico: ' + esc(item.subtopico) + '</span>';
+    html += '<span class="tag">' + esc(DIAG_TYPE_LABELS[item.tipo] || item.tipo) + '</span>';
+    html += '</div>';
+
+    // Pergunta
+    html += '<div class="diag-question">';
+    html += '<h2>' + esc(item.pergunta) + '</h2>';
+
+    if (isObjective(item)) {
+      html += '<div class="diag-options">';
+      for (var a = 0; a < item.alternativas.length; a++) {
+        var alt = item.alternativas[a];
+        var cls = 'diag-option';
+        if (answered) {
+          if (alt.id === item.gabarito) cls += ' correct';
+          else if (alt.id === userAnswer) cls += ' wrong';
+        } else if (alt.id === userAnswer) {
+          cls += ' selected';
+        }
+        html += '<button class="' + cls + '" data-action="diag-answer" data-alt="' + esc(alt.id) + '"' + (answered ? ' disabled' : '') + '>' +
+                  '<span class="opt-letter">' + esc(alt.id) + '</span>' +
+                  '<span>' + esc(alt.texto) + '</span>' +
+                '</button>';
+      }
+      html += '</div>';
+
+      if (answered) {
+        var acertou = userAnswer === item.gabarito;
+        html += '<div class="diag-feedback ' + (acertou ? 'ok' : 'no') + '">';
+        html += '<strong>' + (acertou ? '✓ Correto' : '✗ Incorreto') + '</strong>';
+        html += esc(item.explicacao);
+        html += '</div>';
+      }
+    } else if (item.tipo === 'autoavaliacao') {
+      html += '<p style="color:var(--text-muted);font-size:14px;margin-bottom:8px;">Marque com sinceridade — o sistema usa essa informação para ajustar as próximas recomendações.</p>';
+      if (answered) {
+        html += '<div class="diag-feedback ' + (userAnswer === 'sabia' ? 'ok' : 'no') + '">';
+        html += '<strong>' + (userAnswer === 'sabia' ? 'Você marcou: Eu sabia' : 'Você marcou: Eu não sabia') + '</strong>';
+        html += 'Gabarito conceitual: ' + esc(item.resposta);
+        html += '</div>';
+      } else {
+        html += '<div class="self-assess">';
+        html += '<button class="btn btn-primary" data-action="diag-answer" data-alt="sabia">Eu sabia</button>';
+        html += '<button class="btn" data-action="diag-answer" data-alt="nao_sabia">Eu não sabia</button>';
+        html += '</div>';
+      }
+    }
+
+    // Navegação
+    html += '<div class="diag-actions">';
+    html += '<div>';
+    if (idx > 0) {
+      html += '<button class="btn" data-action="diag-prev">← Item anterior</button>';
+    } else {
+      html += '<button class="btn" data-action="diag-cancel">Cancelar</button>';
+    }
+    html += '</div>';
+    html += '<div>';
+    if (answered && idx < total - 1) {
+      html += '<button class="btn btn-primary" data-action="diag-next">Próximo →</button>';
+    } else if (answered && idx === total - 1) {
+      html += '<button class="btn btn-purple" data-action="diag-finish">Finalizar diagnóstico →</button>';
+    }
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+
+    html += footerHtml();
+    return html;
+  }
+
+  /* -------- Resultado do diagnóstico (NOVO v0.3) -------- */
+  function renderDiagnosticResult() {
+    var moduleId = currentModuleId;
+    var m = getModule(moduleId);
+    if (!m) {
+      return '<h1 class="page-title">Módulo não encontrado</h1>' +
+             '<button class="btn" data-nav="modulos">← Voltar aos módulos</button>';
+    }
+    var st = getModuleUserState(moduleId);
+    if (!st.diagnostico || !st.diagnostico.result) {
+      return '<h1 class="page-title">Nenhum diagnóstico registrado</h1>' +
+             '<p class="page-subtitle">Faça o diagnóstico deste módulo antes de ver o resultado.</p>' +
+             '<button class="btn btn-primary" data-action="start-diag" data-module-id="' + esc(moduleId) + '">Fazer diagnóstico</button>';
+    }
+    var r = st.diagnostico.result;
+    var bs = r.bySubtopic || {};
+    var subtopicos = [];
+    for (var k in bs) if (bs.hasOwnProperty(k)) subtopicos.push(k);
+    // Ordena para exibir subtópicos desconhecidos primeiro
+    subtopicos.sort(function (a, b) {
+      var order = { 'desconhecido': 0, 'duvida': 1, 'conhecido': 2 };
+      return (order[bs[a].status] || 9) - (order[bs[b].status] || 9);
+    });
+
+    var resumo = summarizeResult(r);
+    var totalSub = subtopicos.length;
+
+    var html = '';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;">';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;">';
+    html += '<button class="btn" data-action="open-module" data-module-id="' + esc(moduleId) + '">← Módulo ' + esc(moduleId) + '</button>';
+    html += '<button class="btn" data-nav="modulos">📚 Módulos</button>';
+    html += '</div>';
+    html += '<div><button class="btn btn-purple" data-action="refazer-diag" data-module-id="' + esc(moduleId) + '">Refazer diagnóstico</button></div>';
+    html += '</div>';
+
+    html += '<h1 class="page-title">Resultado do diagnóstico</h1>';
+    html += '<p class="page-subtitle">' + esc(m.id) + ' — ' + esc(m.titulo) + ' · Concluído em ' + esc(formatDate(r.completedAt)) + '</p>';
+
+    html += '<div class="result-summary">';
+    html += resultStat('Subtópicos avaliados', totalSub);
+    html += resultStat('Conhecidos', resumo.conhecido);
+    html += resultStat('Em dúvida', resumo.duvida);
+    html += resultStat('Desconhecidos', resumo.desconhecido);
+    html += resultStat('Domínio estimado', Math.round((r.dominioEstimado || 0) * 100) + '%');
+    html += '</div>';
+
+    html += '<h2 class="section-title">Análise por subtópico</h2>';
+    html += '<p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">' +
+            'O status de cada subtópico é calculado cruzando acertos, erros e autoavaliação. ' +
+            'Não é apenas percentual: um subtópico só é marcado como <strong>conhecido</strong> ' +
+            'quando não há erros nem autoavaliação negativa.' +
+            '</p>';
+
+    for (var i = 0; i < subtopicos.length; i++) {
+      var sub = subtopicos[i];
+      var d = bs[sub];
+      html += '<div class="subtopic-result status-' + esc(d.status) + '">';
+      html += '<h3>' + esc(sub) + '<span class="status-badge status-' + esc(d.status) + '">' + esc(STATUS_LABELS[d.status]) + '</span></h3>';
+      html += '<div class="signals">';
+      html += '<span>Acertos: <strong>' + d.acertos + '</strong></span>';
+      html += '<span>Erros: <strong>' + d.erros + '</strong></span>';
+      if (d.sabia > 0 || d.nao_sabia > 0) {
+        html += '<span>Autoavaliação — sabia: <strong>' + d.sabia + '</strong> / não sabia: <strong>' + d.nao_sabia + '</strong></span>';
+      }
+      html += '</div>';
+      html += '<div class="recommendation">' + esc(d.recommendation) + '</div>';
+      html += '</div>';
+    }
+
+    // Recomendações gerais
+    html += '<h2 class="section-title">Próximos passos</h2>';
+    html += '<div class="notice">';
+    if (resumo.desconhecido > 0) {
+      html += '<strong>Prioridade alta.</strong> Você tem ' + resumo.desconhecido + ' subtópico(s) classificado(s) como desconhecido(s). Estude a aula desde o início e refaça o diagnóstico depois.';
+    } else if (resumo.duvida > 0) {
+      html += '<strong>Reforço recomendado.</strong> Você tem ' + resumo.duvida + ' subtópico(s) em dúvida. Releia a aula com atenção nos exemplos e comparações, depois refaça este diagnóstico.';
+    } else {
+      html += '<strong>Bom desempenho.</strong> Todos os subtópicos avaliados foram classificados como conhecidos. Siga para a aula (consolidação) e mantenha revisões periódicas.';
+    }
+    html += '</div>';
+
+    html += '<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">';
+    var lesson = getLessonByModuleId(moduleId);
+    if (lesson) {
+      html += '<button class="btn btn-primary" data-action="open-lesson" data-lesson-id="' + esc(lesson.id) + '">Estudar aula →</button>';
+    }
+    html += '<button class="btn" data-action="start-diag" data-module-id="' + esc(moduleId) + '">Refazer agora</button>';
+    html += '</div>';
+
+    html += footerHtml();
+    return html;
+  }
+
+  function resultStat(label, value) {
+    return '<div class="result-stat">' +
+      '<div class="rs-label">' + esc(label) + '</div>' +
+      '<div class="rs-value">' + esc(value) + '</div>' +
+    '</div>';
   }
 
   /* -------- Configurações -------- */
   function renderSettings() {
     var totalModulos = MODULES.length;
     var modulosComEstado = 0;
-    for (var i = 0; i < MODULES.length; i++) {
-      if (AppState.modules[MODULES[i].id]) modulosComEstado++;
-    }
+    for (var i = 0; i < MODULES.length; i++) if (AppState.modules[MODULES[i].id]) modulosComEstado++;
     var totalAulas = Object.keys(LESSONS).length;
+    var totalDiag = Object.keys(DIAGNOSTICS).length;
 
     var html = '';
     html += '<h1 class="page-title">Configurações</h1>';
@@ -1427,17 +2211,16 @@ Changelog v0.1:
     html += infoRow('Versão do schema', SCHEMA_VERSION);
     html += infoRow('Módulos catalogados', totalModulos);
     html += infoRow('Aulas cadastradas', totalAulas);
+    html += infoRow('Diagnósticos cadastrados', totalDiag);
     html += infoRow('Módulos com estado', modulosComEstado);
     html += infoRow('Criado em', formatDate(AppState.createdAt));
     html += infoRow('Atualizado em', formatDate(AppState.updatedAt));
     html += '</div>';
 
     html += '<h2 class="section-title">Zerar progresso</h2>';
-    html += '<div class="notice">Isso apaga todo o estado do usuário (módulos, estatísticas e histórico). ' +
+    html += '<div class="notice">Isso apaga todo o estado do usuário (módulos, diagnóstico, estatísticas e histórico). ' +
             'A ação é irreversível e exigirá confirmação.</div>';
-    html += '<p style="margin-top:12px;">' +
-            '<button class="btn btn-danger" data-action="reset-progress">Zerar progresso</button>' +
-            '</p>';
+    html += '<p style="margin-top:12px;"><button class="btn btn-danger" data-action="reset-progress">Zerar progresso</button></p>';
 
     html += footerHtml();
     return html;
@@ -1454,24 +2237,27 @@ Changelog v0.1:
     html += infoRow('Aplicativo', 'Administração, Administração Pública e Direito Administrativo');
     html += infoRow('Público-alvo', 'Concursos de nível médio (Administrativo / Assistente / Técnico)');
     html += infoRow('Versão', 'ADMIN-DIR v' + APP_VERSION);
-    html += infoRow('Fase', '2 — Conteúdo pedagógico (parcial)');
+    html += infoRow('Fase', '3 — Diagnóstico (parcial)');
     html += infoRow('Schema de dados', 'v' + SCHEMA_VERSION);
     html += infoRow('Aulas cadastradas', Object.keys(LESSONS).length + ' / ' + MODULES.length + ' módulos');
+    html += infoRow('Diagnósticos cadastrados', Object.keys(DIAGNOSTICS).length + ' / ' + MODULES.length + ' módulos');
     html += infoRow('Modo', 'Offline — sem servidor ou IA externa');
     html += '</div>';
 
     html += '<h2 class="section-title">Changelog</h2>';
     html += '<div class="info-list">';
+    html += infoRow('v0.3 — Fase 3',
+      '4 diagnósticos (ADM-01, ADM-02, AP-02, DA-02); análise por subtópico; recomendações; card no dashboard');
     html += infoRow('v0.2 — Fase 2',
-      '4 aulas de alta prioridade (ADM-01, ADM-02, AP-02, DA-02); tela de aula; modo professor programado; marcação de aula lida');
+      '4 aulas de alta prioridade; tela de aula; modo professor; marcação de leitura');
     html += infoRow('v0.1 — Fase 1',
       'Estrutura base, dashboard, módulos, persistência local, navegação');
     html += '</div>';
 
     html += '<h2 class="section-title">Próximas entregas</h2>';
     html += '<div class="notice">' +
-            'Fase 2 (continuação): novas aulas para os módulos de alta prioridade restantes. · ' +
-            'Fase 3: diagnóstico · Fase 4: motor de questões · Fase 5: banco de questões · ' +
+            'Fase 2/3 (continuação): novas aulas e diagnósticos para outros módulos de alta prioridade. · ' +
+            'Fase 4: motor de questões · Fase 5: banco de questões · ' +
             'Fase 6: flashcards · Fase 7: revisão espaçada · Fase 8: simulados · ' +
             'Fase 9: dashboard avançado · Fase 10: auditoria final.' +
             '</div>';
@@ -1482,7 +2268,7 @@ Changelog v0.1:
 
   function footerHtml() {
     return '<div class="app-footer">' +
-      '<span>ADMIN-DIR v' + esc(APP_VERSION) + ' · Fase 2</span>' +
+      '<span>ADMIN-DIR v' + esc(APP_VERSION) + ' · Fase 3</span>' +
       '<span>Offline · dados salvos neste navegador</span>' +
     '</div>';
   }
@@ -1498,7 +2284,6 @@ Changelog v0.1:
     saveState();
     navigate('modulo-detalhe', { moduleId: modId });
   }
-
   function openLesson(lessonId) {
     var lesson = getLessonById(lessonId);
     if (!lesson) return;
@@ -1508,31 +2293,23 @@ Changelog v0.1:
     saveState();
     navigate('licao', { lessonId: lessonId });
   }
-
   function markLessonRead(lessonId) {
     var lesson = getLessonById(lessonId);
     if (!lesson) return;
     var st = getModuleUserState(lesson.moduloId);
     if (!Array.isArray(st.aulasLidas)) st.aulasLidas = [];
-    if (st.aulasLidas.indexOf(lesson.id) === -1) {
-      st.aulasLidas.push(lesson.id);
-    }
+    if (st.aulasLidas.indexOf(lesson.id) === -1) st.aulasLidas.push(lesson.id);
     st.ultimaAtividade = new Date().toISOString();
     if (st.status === 'nao_iniciado') st.status = 'em_estudo';
     saveState();
     render();
   }
-
   function setModuleFilter(f) {
     if (['todas', 'ADM', 'AP', 'DA'].indexOf(f) === -1) return;
     moduleFilter = f;
     render();
   }
-
-  function toggleSidebar() {
-    document.body.classList.toggle('sidebar-open');
-  }
-
+  function toggleSidebar() { document.body.classList.toggle('sidebar-open'); }
   function showProfessorAnswer(lessonId, key) {
     if (professorAnswerOpen && professorAnswerOpen.lessonId === lessonId && professorAnswerOpen.key === key) {
       professorAnswerOpen = null;
@@ -1540,17 +2317,108 @@ Changelog v0.1:
       professorAnswerOpen = { lessonId: lessonId, key: key };
     }
     render();
-    // Restaura o scroll para o bloco de resposta, se possível
     var el = document.querySelector('.professor-answer');
-    if (el && el.scrollIntoView) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  /* ----- Diagnóstico ----- */
+  function startDiagnostic(modId) {
+    var diag = getDiagnosticByModuleId(modId);
+    if (!diag) return;
+    diagRunning.moduleId = modId;
+    diagRunning.answers = {};
+    diagRunning.itemIndex = 0;
+    diagRunning.revealed = {};
+    navigate('diagnostico', { moduleId: modId });
+  }
+
+  function answerDiag(altId) {
+    var diag = getDiagnosticByModuleId(diagRunning.moduleId);
+    if (!diag) return;
+    var item = diag.itens[diagRunning.itemIndex];
+    if (!item) return;
+    if (Object.prototype.hasOwnProperty.call(diagRunning.answers, item.id)) return; // já respondido
+    diagRunning.answers[item.id] = altId;
+    render();
+  }
+
+  function nextDiag() {
+    var diag = getDiagnosticByModuleId(diagRunning.moduleId);
+    if (!diag) return;
+    if (diagRunning.itemIndex < diag.itens.length - 1) {
+      diagRunning.itemIndex += 1;
+      render();
+      var main = document.getElementById('main');
+      if (main) main.scrollTop = 0;
     }
+  }
+  function prevDiag() {
+    if (diagRunning.itemIndex > 0) {
+      diagRunning.itemIndex -= 1;
+      render();
+      var main = document.getElementById('main');
+      if (main) main.scrollTop = 0;
+    }
+  }
+  function cancelDiag() {
+    var ok = window.confirm('Cancelar o diagnóstico em andamento? As respostas não serão salvas.');
+    if (!ok) return;
+    diagRunning.moduleId = null;
+    diagRunning.answers = {};
+    diagRunning.itemIndex = 0;
+    navigate('modulos');
+  }
+  function finishDiag() {
+    var moduleId = diagRunning.moduleId;
+    var diag = getDiagnosticByModuleId(moduleId);
+    if (!diag) return;
+    // Confere se todos os itens foram respondidos
+    for (var i = 0; i < diag.itens.length; i++) {
+      if (!Object.prototype.hasOwnProperty.call(diagRunning.answers, diag.itens[i].id)) {
+        window.alert('Existem itens não respondidos. Volte e complete o diagnóstico.');
+        diagRunning.itemIndex = i;
+        render();
+        return;
+      }
+    }
+
+    var result = computeDiagnosticResult(moduleId, diagRunning.answers);
+
+    // Persiste
+    var st = getModuleUserState(moduleId);
+    st.diagnostico = {
+      diagId: diag.id,
+      answers: Object.assign({}, diagRunning.answers),
+      result: result,
+      completedAt: result.completedAt,
+      tentativas: (st.diagnostico && st.diagnostico.tentativas ? st.diagnostico.tentativas : 0) + 1
+    };
+    st.dominioEstimado = result.dominioEstimado;
+    st.ultimaAtividade = new Date().toISOString();
+    if (st.status === 'nao_iniciado') st.status = 'em_estudo';
+    saveState();
+
+    // Limpa estado temporário
+    diagRunning.moduleId = null;
+    diagRunning.answers = {};
+    diagRunning.itemIndex = 0;
+
+    navigate('diag-resultado', { moduleId: moduleId });
+  }
+  function openDiagResult(modId) {
+    if (!getModuleUserState(modId).diagnostico) return;
+    navigate('diag-resultado', { moduleId: modId });
+  }
+  function refazerDiag(modId) {
+    var ok = window.confirm('Refazer o diagnóstico deste módulo? O resultado anterior será substituído pelo novo.');
+    if (!ok) return;
+    startDiagnostic(modId);
   }
 
   function resetProgress() {
     var ok = window.confirm(
       'Zerar todo o progresso?\n\n' +
-      'Esta ação apaga módulos, estatísticas e histórico salvos localmente. ' +
+      'Esta ação apaga módulos, diagnóstico, estatísticas e histórico salvos localmente. ' +
       'Não é possível desfazer.'
     );
     if (!ok) return;
@@ -1562,6 +2430,7 @@ Changelog v0.1:
     currentLessonId = null;
     moduleFilter = 'todas';
     professorAnswerOpen = null;
+    diagRunning = { moduleId: null, answers: {}, itemIndex: 0, revealed: {} };
     render();
     window.alert('Progresso zerado.');
   }
@@ -1571,55 +2440,33 @@ Changelog v0.1:
   ============================================================ */
   document.addEventListener('click', function (e) {
     var navEl = e.target.closest('[data-nav]');
-    if (navEl) {
-      e.preventDefault();
-      navigate(navEl.getAttribute('data-nav'));
-      return;
-    }
+    if (navEl) { e.preventDefault(); navigate(navEl.getAttribute('data-nav')); return; }
 
     var filterEl = e.target.closest('[data-filter]');
-    if (filterEl) {
-      e.preventDefault();
-      setModuleFilter(filterEl.getAttribute('data-filter'));
-      return;
-    }
+    if (filterEl) { e.preventDefault(); setModuleFilter(filterEl.getAttribute('data-filter')); return; }
 
     var actionEl = e.target.closest('[data-action]');
-    if (actionEl) {
-      var action = actionEl.getAttribute('data-action');
-      if (action === 'toggle-sidebar') {
-        e.preventDefault();
-        toggleSidebar();
-        return;
-      }
-      if (action === 'open-module') {
-        e.preventDefault();
-        openModule(actionEl.getAttribute('data-module-id'));
-        return;
-      }
-      if (action === 'open-lesson') {
-        e.preventDefault();
-        openLesson(actionEl.getAttribute('data-lesson-id'));
-        return;
-      }
-      if (action === 'mark-lesson-read') {
-        e.preventDefault();
-        markLessonRead(actionEl.getAttribute('data-lesson-id'));
-        return;
-      }
-      if (action === 'professor-answer') {
-        e.preventDefault();
-        showProfessorAnswer(
-          actionEl.getAttribute('data-lesson-id'),
-          actionEl.getAttribute('data-key')
-        );
-        return;
-      }
-      if (action === 'reset-progress') {
-        e.preventDefault();
-        resetProgress();
-        return;
-      }
+    if (!actionEl) return;
+    var action = actionEl.getAttribute('data-action');
+    e.preventDefault();
+
+    switch (action) {
+      case 'toggle-sidebar': toggleSidebar(); break;
+      case 'open-module': openModule(actionEl.getAttribute('data-module-id')); break;
+      case 'open-lesson': openLesson(actionEl.getAttribute('data-lesson-id')); break;
+      case 'mark-lesson-read': markLessonRead(actionEl.getAttribute('data-lesson-id')); break;
+      case 'professor-answer':
+        showProfessorAnswer(actionEl.getAttribute('data-lesson-id'), actionEl.getAttribute('data-key'));
+        break;
+      case 'start-diag': startDiagnostic(actionEl.getAttribute('data-module-id')); break;
+      case 'open-diag-result': openDiagResult(actionEl.getAttribute('data-module-id')); break;
+      case 'refazer-diag': refazerDiag(actionEl.getAttribute('data-module-id')); break;
+      case 'diag-answer': answerDiag(actionEl.getAttribute('data-alt')); break;
+      case 'diag-next': nextDiag(); break;
+      case 'diag-prev': prevDiag(); break;
+      case 'diag-cancel': cancelDiag(); break;
+      case 'diag-finish': finishDiag(); break;
+      case 'reset-progress': resetProgress(); break;
     }
   });
 
@@ -1633,6 +2480,7 @@ Changelog v0.1:
     currentLessonId = null;
     moduleFilter = 'todas';
     professorAnswerOpen = null;
+    diagRunning = { moduleId: null, answers: {}, itemIndex: 0, revealed: {} };
     render();
   }
 
