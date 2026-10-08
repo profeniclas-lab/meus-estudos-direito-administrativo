@@ -405,6 +405,48 @@ Changelog v0.1:
     .fc-card .fc-front { font-size: 17px; }
     .sim-mode-tab { min-width: 100%; }
   }
+  /* ===== Modo escuro (v1.1) ===== */
+  body.dark {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-alt: #172033;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --primary-soft: #1e3a8a;
+    --success-soft: #14532d;
+    --warning-soft: #78350f;
+    --danger-soft: #7f1d1d;
+    --purple-soft: #4c1d95;
+    --shadow: 0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+    --shadow-lg: 0 6px 20px rgba(0,0,0,.45);
+  }
+  body.dark .lesson-block.block-pegadinha { background: #422006; }
+  body.dark .lesson-block.block-erros { background: #450a0a; }
+  body.dark .lesson-block.block-resumo { background: #052e16; }
+  body.dark .priority-alta { background: #7f1d1d; color: #fecaca; }
+  body.dark .priority-media { background: #78350f; color: #fed7aa; }
+  body.dark .priority-baixa { background: #334155; color: #cbd5e1; }
+  body.dark .badge-aula,
+  body.dark .badge-facil,
+  body.dark .badge-ok { background: #14532d; color: #86efac; }
+  body.dark .badge-diag,
+  body.dark .badge-rev { background: #4c1d95; color: #c4b5fd; }
+  body.dark .badge-real { background: #1e3a8a; color: #93c5fd; }
+  body.dark .badge-did,
+  body.dark .badge-medio { background: #78350f; color: #fdba74; }
+  body.dark .badge-dificil,
+  body.dark .badge-err { background: #7f1d1d; color: #fca5a5; }
+  body.dark .badge-flash { background: #164e63; color: #a5f3fc; }
+  body.dark .badge-sim { background: #831843; color: #fbcfe8; }
+  body.dark .sim-review-badge { background: #831843; color: #fbcfe8; }
+  body.dark .sim-quicknav button.answered { background: #831843; color: #fbcfe8; border-color: #db2777; }
+  body.dark .rank-value.bad { background: #7f1d1d; color: #fca5a5; }
+  body.dark .rank-value.good { background: #14532d; color: #86efac; }
+  body.dark .fhr-ans.sabia { color: #86efac; }
+  body.dark .fhr-ans.duvida { color: #fdba74; }
+  body.dark .fhr-ans.nao { color: #fca5a5; }
+  body.dark .theme-btn { border-color: var(--border); }  
 </style>
 </head>
 <body>
@@ -5158,8 +5200,21 @@ Changelog v0.1:
     var modulosComEstado = 0;
     for (var i = 0; i < MODULES.length; i++) if (AppState.modules[MODULES[i].id]) modulosComEstado++;
     var html = '';
+    var temaAtual = (AppState.settings && AppState.settings.theme) || 'light';
+    var temaLabel = temaAtual === 'dark' ? '🌙 Escuro' : '☀️ Claro';
+    var proximoLabel = temaAtual === 'dark' ? 'Mudar para ☀️ Claro' : 'Mudar para 🌙 Escuro';
+
     html += '<h1 class="page-title">Configurações</h1>';
     html += '<p class="page-subtitle">Preferências e gestão do progresso.</p>';
+
+    html += '<h2 class="section-title">Aparência</h2>';
+    html += '<div class="info-list">';
+    html += '<div class="info-row"><span class="info-key">Tema atual</span><span class="info-val">' + esc(temaLabel) + '</span></div>';
+    html += '</div>';
+    html += '<p style="margin-top:12px;">';
+    html += '<button class="btn btn-primary theme-btn" data-action="toggle-theme">' + esc(proximoLabel) + '</button>';
+    html += '</p>';
+
     html += '<h2 class="section-title">Armazenamento</h2><div class="info-list">';
     html += infoRow('Chave de armazenamento', STORAGE_KEY);
     html += infoRow('Versão do schema', SCHEMA_VERSION);
@@ -5418,6 +5473,23 @@ Changelog v0.1:
   }
   function openDiagResult(modId) { if (!getModuleUserState(modId).diagnostico) return; navigate('diag-resultado', { moduleId: modId }); }
   function refazerDiag(modId) { var ok = window.confirm('Refazer o diagnóstico? O resultado anterior será substituído.'); if (!ok) return; startDiagnostic(modId); }
+    /* ============================================================
+     TEMA (modo claro / escuro)
+  ============================================================ */
+  function applyTheme(theme) {
+    var t = (theme === 'dark') ? 'dark' : 'light';
+    document.body.classList.toggle('dark', t === 'dark');
+    if (!AppState) return;
+    if (!AppState.settings) AppState.settings = {};
+    AppState.settings.theme = t;
+  }
+  function toggleTheme() {
+    var atual = (AppState && AppState.settings && AppState.settings.theme) || 'light';
+    var novo = atual === 'dark' ? 'light' : 'dark';
+    applyTheme(novo);
+    saveState();
+    render();
+  }
   function resetProgress() {
     var ok = window.confirm('Zerar todo o progresso?\n\nApaga módulos, diagnóstico, questões, flashcards, simulados, revisões e erros. Não é possível desfazer.');
     if (!ok) return;
@@ -5517,6 +5589,7 @@ Changelog v0.1:
         simuladoConfig.modo = 'SIMULADO';
         navigate('simulados');
         break;
+      case 'toggle-theme': toggleTheme(); break;
       case 'reset-progress': resetProgress(); break;
     }
   });
@@ -5543,6 +5616,7 @@ Changelog v0.1:
   ============================================================ */
   function init() {
     AppState = loadState();
+    applyTheme(AppState.settings && AppState.settings.theme);
     currentScreen = 'dashboard';
     currentModuleId = null;
     currentLessonId = null;
