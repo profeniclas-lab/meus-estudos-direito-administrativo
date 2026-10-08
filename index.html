@@ -5215,8 +5215,22 @@ Changelog v0.1:
     html += '<button class="btn btn-primary theme-btn" data-action="toggle-theme">' + esc(proximoLabel) + '</button>';
     html += '</p>';
 
-    html += '<h2 class="section-title">Armazenamento</h2><div class="info-list">';
-    html += infoRow('Chave de armazenamento', STORAGE_KEY);
+    /* ---- Backup completo ---- */
+    html += '<h2 class="section-title">Backup completo</h2>';
+    html += '<div class="notice">Exporta o estado inteiro (progresso, questões vistas, flashcards, simulados, tema). Útil para levar o app a outro dispositivo ou guardar cópia de segurança.</div>';
+    html += '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">';
+    html += '<button class="btn btn-primary" data-action="export-full-state">📤 Exportar backup completo</button>';
+    html += '</div>';
+    html += '<div class="io-box" style="margin-top:14px;">';
+    html += '<h3><span>📥</span> Importar backup completo</h3>';
+    html += '<p>Cole abaixo o JSON gerado pelo botão acima. O progresso atual será substituído <strong>somente após sua confirmação</strong>.</p>';
+    html += '<textarea id="importFullStateTextarea" placeholder=\'{"exportedAt":"...","appVersion":"1.0","state":{...}}\'></textarea>';
+    html += '<div class="io-actions">';
+    html += '<button class="btn btn-primary" data-action="import-full-state">Validar e restaurar</button>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<h2 class="section-title">Armazenamento</h2><div class="info-list">';    html += infoRow('Chave de armazenamento', STORAGE_KEY);
     html += infoRow('Versão do schema', SCHEMA_VERSION);
     html += infoRow('Módulos catalogados', totalModulos);
     html += infoRow('Aulas cadastradas', Object.keys(LESSONS).length);
@@ -5490,6 +5504,84 @@ Changelog v0.1:
     saveState();
     render();
   }
+  function resetProgress() { 
+  }    
+    /* ============================================================
+     BACKUP COMPLETO (estado do usuário)
+  ============================================================ */
+  function exportFullState() {
+    var payload = {
+      exportedAt: new Date().toISOString(),
+      appVersion: APP_VERSION,
+      schemaVersion: SCHEMA_VERSION,
+      tipo: 'BACKUP_COMPLETO',
+      state: AppState
+    };
+    var stamp = new Date().toISOString().slice(0, 10);
+    downloadJson('admin-dir-backup-' + stamp + '.json', payload);
+  }
+
+  function validateIncomingState(obj) {
+    var erros = [];
+    if (!obj || typeof obj !== 'object') {
+      return { erros: ['Arquivo inválido.'], state: null };
+    }
+    var state = obj.state || obj;
+    if (typeof state !== 'object' || state === null) {
+      return { erros: ['Estrutura "state" ausente ou inválida.'], state: null };
+    }
+    if (!state.schemaVersion) erros.push('Sem schemaVersion.');
+    if (state.modules !== undefined && (typeof state.modules !== 'object' || state.modules === null)) erros.push('Campo "modules" com formato inesperado.');
+    if (state.questions !== undefined && (typeof state.questions !== 'object' || state.questions === null)) erros.push('Campo "questions" com formato inesperado.');
+    if (state.flashcards !== undefined && (typeof state.flashcards !== 'object' || state.flashcards === null)) erros.push('Campo "flashcards" com formato inesperado.');
+    if (state.simulados !== undefined && !Array.isArray(state.simulados)) erros.push('Campo "simulados" deve ser array.');
+    return { erros: erros, state: state };
+  }
+
+  function importFullStateFromText(text) {
+    var parsed;
+    try { parsed = JSON.parse(text); }
+    catch (e) { window.alert('JSON inválido: ' + e.message); return; }
+    var check = validateIncomingState(parsed);
+    if (check.erros.length > 0) {
+      window.alert('Backup rejeitado:\n\n- ' + check.erros.join('\n- '));
+      return;
+    }
+    var st = check.state;
+    var resumo = [
+      'Módulos: ' + Object.keys(st.modules || {}).length,
+      'Questões vistas: ' + Object.keys(st.questions || {}).length,
+      'Flashcards vistos: ' + Object.keys(st.flashcards || {}).length,
+      'Simulados: ' + ((st.simulados && st.simulados.length) || 0)
+    ].join('\n');
+    var ok = window.confirm(
+      'Substituir o progresso atual pelo backup?\n\n' + resumo + '\n\n' +
+      'A ação não pode ser desfeita.'
+    );
+    if (!ok) return;
+
+    var base = createDefaultState();
+    AppState = {
+      schemaVersion: SCHEMA_VERSION,
+      appVersion: APP_VERSION,
+      createdAt: st.createdAt || base.createdAt,
+      updatedAt: new Date().toISOString(),
+      settings: Object.assign({}, base.settings, st.settings || {}),
+      modules: st.modules || {},
+      questions: st.questions || {},
+      flashcards: st.flashcards || {},
+      simulados: Array.isArray(st.simulados) ? st.simulados : [],
+      stats: Object.assign({}, base.stats, st.stats || {}),
+      lastScreen: 'dashboard'
+    };
+    saveState();
+    applyTheme(AppState.settings && AppState.settings.theme);
+    currentScreen = 'dashboard';
+    currentModuleId = null;
+    currentLessonId = null;
+    render();
+    window.alert('Backup restaurado com sucesso.');
+  }
   function resetProgress() {
     var ok = window.confirm('Zerar todo o progresso?\n\nApaga módulos, diagnóstico, questões, flashcards, simulados, revisões e erros. Não é possível desfazer.');
     if (!ok) return;
@@ -5590,7 +5682,13 @@ Changelog v0.1:
         navigate('simulados');
         break;
       case 'toggle-theme': toggleTheme(); break;
-      case 'reset-progress': resetProgress(); break;
+      case 'export-full-state': exportFullState(); break;
+      case 'import-full-state': {
+        var elFull = document.getElementById('importFullStateTextarea');
+        if (elFull) importFullStateFromText(elFull.value || '');
+        break;
+      }
+      case 'reset-progress': resetProgress(); break;    
     }
   });
 
